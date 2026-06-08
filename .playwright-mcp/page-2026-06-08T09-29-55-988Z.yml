@@ -1,0 +1,195 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - link "Hitchd home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - text: Hitchd.
+      - generic [ref=e5]:
+        - generic [ref=e6]:
+          - img [ref=e7]
+          - text: Now onboarding founding suppliers · Cebu
+        - link "Browse" [ref=e9] [cursor=pointer]:
+          - /url: "#showcase"
+      - generic [ref=e10]:
+        - button "Toggle color theme" [ref=e11]:
+          - img [ref=e12]
+        - link "List your business" [ref=e14] [cursor=pointer]:
+          - /url: "#apply"
+  - main [ref=e15]:
+    - heading "Hitchd Privacy Notice" [level=1] [ref=e16]
+    - paragraph [ref=e17]:
+      - text: "Last updated: 8 June 2026"
+      - text: "Effective date: 8 June 2026"
+    - paragraph [ref=e18]: This Privacy Notice explains how Hitchd (“Hitchd”, “we”, “us”) collects, uses, stores, shares, and protects personal data when wedding suppliers apply for or are listed in our directory at hitchd.ph. We are committed to handling your personal data in accordance with Republic Act No. 10173, the Data Privacy Act of 2012 (the “DPA”), its Implementing Rules and Regulations, and the issuances of the National Privacy Commission (the “NPC”).
+    - paragraph [ref=e19]: If you have any questions about this notice or how your data is handled, contact our Data Protection Officer using the details in the “How to contact us” section below.
+    - separator [ref=e20]
+    - heading "1. Who we are" [level=2] [ref=e21]
+    - paragraph [ref=e22]: Hitchd operates hitchd.ph, an online directory of wedding suppliers serving Cebu, Philippines.
+    - list [ref=e23]:
+      - listitem [ref=e24]: "Operator / Personal Information Controller: Martin Casey (sole trader), operating hitchd.ph"
+      - listitem [ref=e25]: "Business registration: Australian Business Number (ABN) 84 263 783 878 — registered as an Individual / Sole Trader in Australia"
+      - listitem [ref=e26]: "Data Protection Officer (DPO): Martin Casey"
+      - listitem [ref=e27]: "DPO contact: privacy@hitchd.ph"
+    - paragraph [ref=e28]: We are the Personal Information Controller responsible for the personal data described in this notice. We remain accountable for that data even where we use third parties to process it on our behalf.
+    - separator [ref=e29]
+    - heading "2. What personal data we collect" [level=2] [ref=e30]
+    - heading "When you apply for a founding listing" [level=3] [ref=e31]
+    - paragraph [ref=e32]: "When you submit the application form on hitchd.ph, we collect the information you provide:"
+    - list [ref=e33]:
+      - listitem [ref=e34]: Business name
+      - listitem [ref=e35]: Category (e.g. photography, catering, venues)
+      - listitem [ref=e36]: Area served (e.g. Cebu City, Mandaue, Lapu-Lapu / Mactan)
+      - listitem [ref=e37]: Contact name
+      - listitem [ref=e38]: Email address
+      - listitem [ref=e39]: Mobile number
+      - listitem [ref=e40]: Website or social media link (optional)
+      - listitem [ref=e41]: Price range (optional)
+    - paragraph [ref=e42]: "We also record, automatically and on the server, a small amount of information tied to your submission:"
+    - list [ref=e43]:
+      - listitem [ref=e44]: Whether you gave consent, and the date and time that consent was recorded
+      - listitem [ref=e45]: The date and time your application was received
+      - listitem [ref=e46]: The internal status of your application (e.g. pending review)
+    - paragraph [ref=e47]: We do not intentionally collect sensitive personal information (as defined under the DPA, such as data about health, religion, or government-issued identifiers) through this form. Please do not include such information in the free-text fields.
+    - blockquote [ref=e48]: "Note for sole proprietors and freelancers: where your business contact details are also your personal details (for example, a personal mobile number or name), we treat that information as personal data protected under the DPA."
+    - separator [ref=e49]
+    - heading "3. How we use your personal data, and our lawful basis" [level=2] [ref=e50]
+    - paragraph [ref=e51]: "We process your personal data for the following purposes:"
+    - table [ref=e53]:
+      - rowgroup [ref=e54]:
+        - row "Purpose Lawful basis under the DPA" [ref=e55]:
+          - columnheader "Purpose" [ref=e56]
+          - columnheader "Lawful basis under the DPA" [ref=e57]
+      - rowgroup [ref=e58]:
+        - row "To review your application and decide whether to create or activate your listing Your consent, given when you submit the form" [ref=e59]:
+          - cell "To review your application and decide whether to create or activate your listing" [ref=e60]
+          - cell "Your consent, given when you submit the form" [ref=e61]
+        - row "To contact you about your founding listing before and after launch Your consent, and our legitimate business interest in onboarding suppliers" [ref=e62]:
+          - cell "To contact you about your founding listing before and after launch" [ref=e63]
+          - cell "Your consent, and our legitimate business interest in onboarding suppliers" [ref=e64]
+        - row "To create and display your listing in the directory so couples can find you Your consent" [ref=e65]:
+          - cell "To create and display your listing in the directory so couples can find you" [ref=e66]
+          - cell "Your consent" [ref=e67]
+        - row "To respond to your enquiries and provide support Performance of our service to you" [ref=e68]:
+          - cell "To respond to your enquiries and provide support" [ref=e69]
+          - cell "Performance of our service to you" [ref=e70]
+        - row "To keep records, secure our systems, and comply with legal obligations Compliance with legal obligations and our legitimate interests" [ref=e71]:
+          - cell "To keep records, secure our systems, and comply with legal obligations" [ref=e72]
+          - cell "Compliance with legal obligations and our legitimate interests" [ref=e73]
+    - paragraph [ref=e74]: Your consent is recorded at the point of submission. You may withdraw consent at any time (see “Your rights” below); withdrawal does not affect the lawfulness of processing carried out before withdrawal.
+    - paragraph [ref=e75]: We will not use your personal data for purposes incompatible with those above without informing you and, where required, obtaining your consent.
+    - separator [ref=e76]
+    - heading "4. Who we share your personal data with" [level=2] [ref=e77]
+    - paragraph [ref=e78]: "We do not sell your personal data. We share it only with the service providers who help us operate Hitchd, and only as needed:"
+    - list [ref=e79]:
+      - listitem [ref=e80]: Supabase — our database provider, which stores your application and listing data on our behalf. Our Supabase database is hosted in Australia (Sydney, ap-southeast-2).
+      - listitem [ref=e81]: Resend — our email service provider, used to send us a notification when an application is received.
+      - listitem [ref=e82]: Google (Gmail) — we receive and read application notifications in a Gmail inbox, so your application details are also present there.
+    - paragraph [ref=e83]: These providers act as our Personal Information Processors. They are authorised to process your data only on our instructions and for the purposes described in this notice.
+    - paragraph [ref=e84]: Your personal data is stored and processed outside the Philippines. As a supplier in the Philippines, the data you submit is stored in Australia (our Supabase database in Sydney) and accessed by the operator, who is based in Australia; email is handled by Resend, which stores email metadata, logs, and account data in the United States, regardless of sending region. These are cross-border transfers, and we take reasonable steps to ensure your data continues to receive an adequate level of protection, consistent with the DPA.
+    - paragraph [ref=e85]: We may also disclose personal data where required by law, by a court, or by a competent government authority, or to protect our rights, users, or the public.
+    - separator [ref=e86]
+    - heading "5. How long we keep your personal data" [level=2] [ref=e87]
+    - paragraph [ref=e88]: We keep your personal data only for as long as necessary for the purposes set out in this notice.
+    - list [ref=e89]:
+      - listitem [ref=e90]: If your application leads to an active listing, we retain your data for as long as the listing is active and for a reasonable period afterwards.
+      - listitem [ref=e91]: If your application does not result in a listing, we retain it for up to 6 months and then securely delete it, unless we are required to keep it longer for legal reasons.
+    - paragraph [ref=e92]: When personal data is no longer needed, we securely dispose of it.
+    - separator [ref=e93]
+    - heading "6. How we protect your personal data" [level=2] [ref=e94]
+    - paragraph [ref=e95]: "We apply organisational and technical measures appropriate to the risk, including:"
+    - list [ref=e96]:
+      - listitem [ref=e97]: Storing application data in a database with access controls that prevent the public from reading, editing, or listing applicant records.
+      - listitem [ref=e98]: Restricting administrative access to authorised personnel only.
+      - listitem [ref=e99]: Transmitting data over encrypted connections.
+      - listitem [ref=e100]: Limiting the personal data we collect to what is necessary.
+    - paragraph [ref=e101]: No system can be guaranteed completely secure, but we work to protect your data and to address any incidents in line with our obligations under the DPA, including notifying you and the NPC where required.
+    - separator [ref=e102]
+    - heading "7. Your rights" [level=2] [ref=e103]
+    - paragraph [ref=e104]: "Under the Data Privacy Act, you have the right to:"
+    - list [ref=e105]:
+      - listitem [ref=e106]: Be informed about how your personal data is processed (this notice).
+      - listitem [ref=e107]: Access the personal data we hold about you.
+      - listitem [ref=e108]: Object to or withdraw consent for the processing of your personal data.
+      - listitem [ref=e109]: Rectify inaccurate or incomplete data.
+      - listitem [ref=e110]: Erase or block your data where it is incomplete, outdated, false, unlawfully obtained, or no longer necessary — this includes asking us to remove your listing at any time.
+      - listitem [ref=e111]: Data portability — to obtain a copy of your data in an electronic format.
+      - listitem [ref=e112]: Be indemnified for damages arising from inaccurate, incomplete, outdated, false, or unlawfully obtained personal data.
+      - listitem [ref=e113]: Lodge a complaint with the National Privacy Commission.
+    - paragraph [ref=e114]: To exercise any of these rights, contact our DPO using the details below. We will respond within a reasonable period as required by law. We may need to verify your identity before acting on a request.
+    - separator [ref=e115]
+    - heading "8. Changes to this notice" [level=2] [ref=e116]
+    - paragraph [ref=e117]: We may update this Privacy Notice from time to time. When we do, we will revise the “Last updated” date above and, where the changes are significant, take reasonable steps to inform you.
+    - separator [ref=e118]
+    - heading "9. How to contact us" [level=2] [ref=e119]
+    - paragraph [ref=e120]: "For any questions, requests, or concerns about your personal data or this notice, contact our Data Protection Officer:"
+    - list [ref=e121]:
+      - listitem [ref=e122]: "DPO: Martin Casey"
+      - listitem [ref=e123]: "Email: privacy@hitchd.ph"
+    - paragraph [ref=e124]: You also have the right to lodge a complaint with the National Privacy Commission (privacy.gov.ph) if you believe your data privacy rights have been violated.
+    - separator [ref=e125]
+    - paragraph [ref=e126]: This notice is provided for transparency about Hitchd’s data practices. It is not legal advice and should be reviewed by a qualified Philippine data-privacy professional before publication.
+  - contentinfo [ref=e127]:
+    - generic [ref=e128]:
+      - generic [ref=e130]:
+        - heading "We are onboarding suppliers across Cebu" [level=2] [ref=e131]
+        - paragraph [ref=e132]: These are the categories and areas opening at launch. Run a wedding business in Cebu? Claim a free founding listing before couples start searching.
+        - generic [ref=e133]:
+          - generic [ref=e134]:
+            - paragraph [ref=e135]: Cebu City
+            - list [ref=e136]:
+              - listitem [ref=e137]: Photographers
+              - listitem [ref=e138]: Hair & Makeup
+              - listitem [ref=e139]: Catering
+              - listitem [ref=e140]: Venues
+              - listitem [ref=e141]: Florists
+              - listitem [ref=e142]: Coordinators
+              - listitem [ref=e143]: Videographers
+              - listitem [ref=e144]: Cakes
+              - listitem [ref=e145]: Content creators
+          - generic [ref=e146]:
+            - paragraph [ref=e147]: Mactan
+            - list [ref=e148]:
+              - listitem [ref=e149]: Photographers
+              - listitem [ref=e150]: Hair & Makeup
+              - listitem [ref=e151]: Catering
+              - listitem [ref=e152]: Venues
+              - listitem [ref=e153]: Florists
+              - listitem [ref=e154]: Coordinators
+              - listitem [ref=e155]: Videographers
+              - listitem [ref=e156]: Cakes
+              - listitem [ref=e157]: Content creators
+          - generic [ref=e158]:
+            - paragraph [ref=e159]: Lapu-Lapu
+            - list [ref=e160]:
+              - listitem [ref=e161]: Photographers
+              - listitem [ref=e162]: Hair & Makeup
+              - listitem [ref=e163]: Catering
+              - listitem [ref=e164]: Venues
+              - listitem [ref=e165]: Florists
+              - listitem [ref=e166]: Coordinators
+              - listitem [ref=e167]: Videographers
+              - listitem [ref=e168]: Cakes
+              - listitem [ref=e169]: Content creators
+          - generic [ref=e170]:
+            - paragraph [ref=e171]: Mandaue
+            - list [ref=e172]:
+              - listitem [ref=e173]: Photographers
+              - listitem [ref=e174]: Hair & Makeup
+              - listitem [ref=e175]: Catering
+              - listitem [ref=e176]: Venues
+              - listitem [ref=e177]: Florists
+              - listitem [ref=e178]: Coordinators
+              - listitem [ref=e179]: Videographers
+              - listitem [ref=e180]: Cakes
+              - listitem [ref=e181]: Content creators
+        - link "Apply for a founding listing" [ref=e182] [cursor=pointer]:
+          - /url: "#apply"
+      - generic [ref=e183]:
+        - link "Hitchd." [ref=e184] [cursor=pointer]:
+          - /url: /
+        - generic [ref=e185]:
+          - link "Privacy" [ref=e186] [cursor=pointer]:
+            - /url: /privacy
+          - paragraph [ref=e187]: Wedding suppliers in Cebu, Philippines. © 2026 Hitchd.
+  - button "Open Next.js Dev Tools" [ref=e193] [cursor=pointer]:
+    - img [ref=e194]

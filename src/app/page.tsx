@@ -1,0 +1,36 @@
+import { SiteNav } from "@/components/site-nav";
+import { SiteFooter } from "@/components/site-footer";
+import { ApplyPrefillProvider } from "@/components/apply-context";
+import { HeroSearch } from "@/components/sections/hero-search";
+import { FoundingSupplier } from "@/components/sections/founding-supplier";
+import { CategoryGrid } from "@/components/sections/category-grid";
+import { PriceBand } from "@/components/sections/price-band";
+import { WeddingTypes } from "@/components/sections/wedding-types";
+import { Destination } from "@/components/sections/destination";
+
+// Pre-launch funnel: the homepage's primary job is converting a Cebu wedding
+// supplier into a founding applicant. The hero supplier CTA + nav both lead to
+// the application form (#apply) directly under the hero. Everything below #showcase
+// is honest couple-facing "vision," not a live, browsable marketplace.
+export default function Home() {
+  return (
+    <ApplyPrefillProvider>
+      <SiteNav />
+      <main>
+        <HeroSearch />
+
+        {/* Conversion centerpiece: value prop + application form */}
+        <FoundingSupplier />
+
+        {/* Showcase: what couples will see at launch (non-interactive) */}
+        <div id="showcase" className="scroll-mt-16">
+          <CategoryGrid />
+          <PriceBand />
+          <WeddingTypes />
+          <Destination />
+        </div>
+      </main>
+      <SiteFooter />
+    </ApplyPrefillProvider>
+  );
+}

@@ -1,0 +1,315 @@
+"use client";
+
+import { useEffect, useState } from "react";
+import Link from "next/link";
+import { PaperPlaneTilt, CheckCircle, WarningCircle, CaretDown } from "@phosphor-icons/react";
+import {
+  APPLY_CATEGORIES,
+  APPLY_AREAS,
+  useApplyPrefill,
+} from "@/components/apply-context";
+import { submitApplication } from "@/lib/actions/application";
+
+type ApplyData = {
+  business: string;
+  category: string;
+  area: string;
+  contact: string;
+  email: string;
+  mobile: string;
+  link: string;
+  priceRange: string;
+  consent: boolean;
+  company: string; // honeypot - stays empty for real people
+};
+
+type Status = "idle" | "submitting" | "success" | "error";
+
+const inputClass =
+  "w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/40";
+const selectClass = `${inputClass} appearance-none pr-10`;
+const labelClass = "mb-1.5 block text-xs font-medium text-muted";
+
+function FieldLabel({ children }: { children: React.ReactNode }) {
+  return <span className={labelClass}>{children}</span>;
+}
+
+function Optional() {
+  return <span className="font-normal text-muted/70">(optional)</span>;
+}
+
+export function ApplyForm() {
+  const prefill = useApplyPrefill();
+  const [data, setData] = useState<ApplyData>({
+    business: "",
+    category: prefill.category,
+    area: prefill.area,
+    contact: "",
+    email: "",
+    mobile: "",
+    link: "",
+    priceRange: "",
+    consent: false,
+    company: "",
+  });
+  const [status, setStatus] = useState<Status>("idle");
+  const [errorMsg, setErrorMsg] = useState("");
+
+  // Keep category/area in sync with the hero "I offer / In" selections so the
+  // form arrives pre-filled with what the supplier already chose up top.
+  useEffect(() => {
+    setData((d) => ({ ...d, category: prefill.category, area: prefill.area }));
+  }, [prefill.category, prefill.area]);
+
+  function update<K extends keyof ApplyData>(key: K, value: ApplyData[K]) {
+    setData((d) => ({ ...d, [key]: value }));
+  }
+
+  async function handleSubmit(e: React.FormEvent) {
+    e.preventDefault();
+    if (status === "submitting") return; // guard against double-submit
+    if (!data.consent) return; // submit is disabled, but guard anyway
+    setStatus("submitting");
+    setErrorMsg("");
+
+    // The server action re-validates everything and re-checks consent; the
+    // client checks above are just a fast/defensive first pass.
+    try {
+      const result = await submitApplication({
+        business: data.business,
+        category: data.category,
+        area: data.area,
+        contact: data.contact,
+        email: data.email,
+        mobile: data.mobile,
+        link: data.link,
+        priceRange: data.priceRange,
+        consent: data.consent,
+        company: data.company,
+      });
+      if (result.ok) {
+        setStatus("success");
+      } else {
+        setStatus("error");
+        setErrorMsg(result.error);
+      }
+    } catch {
+      setStatus("error");
+      setErrorMsg("Something went wrong. Please try again.");
+    }
+  }
+
+  if (status === "success") {
+    return (
+      <div className="rounded-2xl border border-line bg-surface px-6 py-12 text-center">
+        <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent-fg">
+          <CheckCircle size={24} weight="fill" />
+        </span>
+        <h3 className="mt-4 font-serif text-2xl font-medium text-ink">
+          Application received
+        </h3>
+        <p className="mx-auto mt-2 max-w-sm text-sm leading-relaxed text-muted">
+          Thanks for putting {data.business || "your business"} forward. We will
+          review it and reach out about your free founding listing before launch.
+        </p>
+      </div>
+    );
+  }
+
+  const submitting = status === "submitting";
+
+  return (
+    <form onSubmit={handleSubmit} className="grid gap-4">
+      <label className="block">
+        <FieldLabel>Business name</FieldLabel>
+        <input
+          type="text"
+          required
+          value={data.business}
+          onChange={(e) => update("business", e.target.value)}
+          maxLength={200}
+          className={inputClass}
+          placeholder="e.g. Aria Studios"
+        />
+      </label>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <FieldLabel>Category</FieldLabel>
+          <div className="relative">
+            <select
+              required
+              value={data.category}
+              onChange={(e) => update("category", e.target.value)}
+              className={selectClass}
+              aria-label="Category"
+            >
+              {APPLY_CATEGORIES.map((c) => (
+                <option key={c} value={c}>
+                  {c}
+                </option>
+              ))}
+            </select>
+            <CaretDown
+              size={16}
+              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted"
+            />
+          </div>
+        </label>
+
+        <label className="block">
+          <FieldLabel>Area served</FieldLabel>
+          <div className="relative">
+            <select
+              required
+              value={data.area}
+              onChange={(e) => update("area", e.target.value)}
+              className={selectClass}
+              aria-label="Area served"
+            >
+              {APPLY_AREAS.map((a) => (
+                <option key={a} value={a}>
+                  {a}
+                </option>
+              ))}
+            </select>
+            <CaretDown
+              size={16}
+              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted"
+            />
+          </div>
+        </label>
+      </div>
+
+      <label className="block">
+        <FieldLabel>Contact name</FieldLabel>
+        <input
+          type="text"
+          required
+          value={data.contact}
+          onChange={(e) => update("contact", e.target.value)}
+          maxLength={200}
+          className={inputClass}
+          placeholder="Who we should talk to"
+        />
+      </label>
+
+      <div className="grid gap-4 sm:grid-cols-2">
+        <label className="block">
+          <FieldLabel>Email</FieldLabel>
+          <input
+            type="email"
+            required
+            value={data.email}
+            onChange={(e) => update("email", e.target.value)}
+            maxLength={320}
+            className={inputClass}
+            placeholder="you@business.com"
+          />
+        </label>
+
+        <label className="block">
+          <FieldLabel>Mobile</FieldLabel>
+          <input
+            type="tel"
+            required
+            value={data.mobile}
+            onChange={(e) => update("mobile", e.target.value)}
+            maxLength={40}
+            className={inputClass}
+            placeholder="0917 000 0000"
+          />
+        </label>
+      </div>
+
+      <label className="block">
+        <FieldLabel>
+          Website or Instagram <Optional />
+        </FieldLabel>
+        <input
+          type="text"
+          value={data.link}
+          onChange={(e) => update("link", e.target.value)}
+          maxLength={500}
+          className={inputClass}
+          placeholder="instagram.com/yourstudio"
+        />
+      </label>
+
+      <label className="block">
+        <FieldLabel>
+          Price range <Optional />
+        </FieldLabel>
+        <input
+          type="text"
+          value={data.priceRange}
+          onChange={(e) => update("priceRange", e.target.value)}
+          maxLength={100}
+          className={inputClass}
+          placeholder="e.g. ₱35k-₱120k"
+        />
+      </label>
+
+      {/* Honeypot: hidden from people, tempting to bots. Kept submittable
+          (sr-only, not display:none); a non-empty value is dropped server-side. */}
+      <div aria-hidden className="sr-only">
+        <label>
+          Company
+          <input
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+            value={data.company}
+            onChange={(e) => update("company", e.target.value)}
+          />
+        </label>
+      </div>
+
+      <label className="flex items-start gap-3 pt-1">
+        <input
+          type="checkbox"
+          required
+          checked={data.consent}
+          onChange={(e) => update("consent", e.target.checked)}
+          className="mt-0.5 h-5 w-5 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
+        />
+        <span className="text-sm leading-relaxed text-muted">
+          I agree to have my business listed on The Vow Edit and accept the{" "}
+          <Link
+            href="/privacy"
+            target="_blank"
+            rel="noopener noreferrer"
+            onClick={(e) => e.stopPropagation()}
+            className="text-accent-fg underline underline-offset-2 transition-colors hover:text-ink"
+          >
+            Privacy Notice
+          </Link>
+          .
+        </span>
+      </label>
+
+      <button
+        type="submit"
+        disabled={submitting || !data.consent}
+        className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
+      >
+        <PaperPlaneTilt size={17} weight="fill" />
+        {submitting ? "Sending..." : "Apply for free founding listing"}
+      </button>
+
+      {status === "error" && (
+        <p
+          role="alert"
+          className="inline-flex items-start gap-1.5 text-sm leading-relaxed text-red-700 dark:text-red-400"
+        >
+          <WarningCircle size={16} weight="fill" className="mt-0.5 shrink-0" />
+          {errorMsg || "Something went wrong. Please try again."}
+        </p>
+      )}
+
+      <p className="text-center text-xs leading-relaxed text-muted">
+        Founding listings are free. No credit card, no commitment.
+      </p>
+    </form>
+  );
+}
