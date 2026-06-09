@@ -99,8 +99,9 @@ export function HeroSearch() {
             Be one of the first wedding suppliers listed in Cebu.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Launching soon in Cebu. Claim a free founding listing before couples
-            start searching.
+            Launching soon in Cebu. Claim a{" "}
+            <span className="font-semibold text-white">free</span> founding listing
+            before couples start searching.
           </p>
         </motion.div>
 

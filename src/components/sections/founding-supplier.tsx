@@ -52,11 +52,14 @@ export function FoundingSupplier() {
             moment they start planning.
           </p>
 
-          <ul className="mt-9 grid gap-7 sm:grid-cols-2">
+          <ul className="mt-9 grid gap-4 sm:grid-cols-2">
             {benefits.map((b) => {
               const Icon = b.icon;
               return (
-                <li key={b.title}>
+                <li
+                  key={b.title}
+                  className="rounded-xl border border-line bg-surface p-5"
+                >
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink">
                     <Icon size={20} weight="regular" />
                   </span>
