@@ -19,14 +19,23 @@ export function HeroSearch() {
 
   // Progressive enhancement: the poster always paints (it's the LCP). We only
   // load + play the decorative video once mounted, and only when it's welcome:
-  // not under reduced-motion, not on Save-Data, and not on small viewports.
+  // not under reduced-motion, not on Save-Data, not on a slow connection
+  // (effectiveType 2g/3g), and not on small viewports. Otherwise users keep the
+  // poster image and never download the video.
   const videoRef = useRef<HTMLVideoElement>(null);
   const [playVideo, setPlayVideo] = useState(false);
 
   useEffect(() => {
     if (reduce) return;
-    const conn = (navigator as { connection?: { saveData?: boolean } }).connection;
+    const conn = (
+      navigator as {
+        connection?: { saveData?: boolean; effectiveType?: string };
+      }
+    ).connection;
     if (conn?.saveData) return;
+    // Skip the heavy video on slow connections; the poster stays as the fallback.
+    if (conn?.effectiveType && ["slow-2g", "2g", "3g"].includes(conn.effectiveType))
+      return;
     if (!window.matchMedia("(min-width: 768px)").matches) return;
     setPlayVideo(true);
   }, [reduce]);
@@ -50,7 +59,7 @@ export function HeroSearch() {
 
   return (
     <section className="relative flex min-h-[100dvh] flex-col justify-end overflow-hidden bg-ink">
-      {/* Decorative background video. The poster (start-frame.png) paints first
+      {/* Decorative background video. The poster (start-frame.jpg) paints first
           and is the LCP; the video is layered in the SAME box (object-cover, no
           layout shift) and only loads/plays as progressive enhancement. */}
       <video

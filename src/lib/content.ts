@@ -55,7 +55,7 @@ export const categoryCopy: Record<string, CategoryCopy> = {
  * <source> ahead of the mp4 (smaller where supported). Leave "" to skip it.
  */
 export const heroMedia = {
-  poster: "/hero/start-frame.png",
+  poster: "/hero/start-frame.jpg",
   videoMp4: "/hero/hero-video.mp4",
   videoWebm: "", // e.g. "/hero/hero-video.webm" once exported
 };
