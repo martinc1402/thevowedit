@@ -6,7 +6,6 @@ import { FoundingSupplier } from "@/components/sections/founding-supplier";
 import { CategoryGrid } from "@/components/sections/category-grid";
 import { PriceBand } from "@/components/sections/price-band";
 import { WeddingTypes } from "@/components/sections/wedding-types";
-import { Destination } from "@/components/sections/destination";
 
 // Pre-launch funnel: the homepage's primary job is converting a Cebu wedding
 // supplier into a founding applicant. The hero supplier CTA + nav both lead to
@@ -27,7 +26,6 @@ export default function Home() {
           <CategoryGrid />
           <PriceBand />
           <WeddingTypes />
-          <Destination />
         </div>
       </main>
       <SiteFooter />
