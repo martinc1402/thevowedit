@@ -1,12 +1,17 @@
 "use client";
 
 import { createContext, useContext, useState } from "react";
-import { APPLY_CATEGORIES, APPLY_LOCATIONS, APPLY_SCOPE } from "@/lib/apply-options";
+import {
+  APPLY_CATEGORIES,
+  APPLY_LOCATIONS,
+  APPLY_ALL_AREAS,
+  APPLY_SCOPE,
+} from "@/lib/apply-options";
 
 // Re-exported so existing imports (`from "@/components/apply-context"`) in the
 // hero and form keep working. The canonical lists live in @/lib/apply-options
 // (no React) so the server action can import them for validation too.
-export { APPLY_CATEGORIES, APPLY_LOCATIONS, APPLY_SCOPE };
+export { APPLY_CATEGORIES, APPLY_LOCATIONS, APPLY_ALL_AREAS, APPLY_SCOPE };
 
 // `area` carries an LGU slug (e.g. "cebu-city"), not a label. It maps to the
 // supplier_applications.area_served column once the server resolves it to a label.

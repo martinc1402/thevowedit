@@ -1,11 +1,12 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { PaperPlaneTilt, CheckCircle, WarningCircle, CaretDown } from "@phosphor-icons/react";
 import {
   APPLY_CATEGORIES,
   APPLY_LOCATIONS,
+  APPLY_ALL_AREAS,
   useApplyPrefill,
 } from "@/components/apply-context";
 import { submitApplication } from "@/lib/actions/application";
@@ -13,7 +14,7 @@ import { submitApplication } from "@/lib/actions/application";
 type ApplyData = {
   business: string;
   category: string;
-  area: string;
+  areas: string[]; // LGU slugs, or the island-wide sentinel (APPLY_ALL_AREAS.slug)
   contact: string;
   email: string;
   mobile: string;
@@ -43,7 +44,7 @@ export function ApplyForm() {
   const [data, setData] = useState<ApplyData>({
     business: "",
     category: prefill.category,
-    area: prefill.area,
+    areas: prefill.area ? [prefill.area] : [],
     contact: "",
     email: "",
     mobile: "",
@@ -55,20 +56,54 @@ export function ApplyForm() {
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
 
-  // Keep category/area in sync with the hero "I offer / In" selections so the
-  // form arrives pre-filled with what the supplier already chose up top.
+  // Once the supplier touches the area checkboxes, stop seeding from the hero so a
+  // later hero "In" change can't clobber their multi-selection.
+  const areasTouched = useRef(false);
+
+  // Keep category in sync with the hero "I offer" selection, and seed the areas
+  // with the hero "In" choice until the supplier edits the checkboxes themselves.
   useEffect(() => {
-    setData((d) => ({ ...d, category: prefill.category, area: prefill.area }));
+    setData((d) => ({
+      ...d,
+      category: prefill.category,
+      areas: areasTouched.current ? d.areas : prefill.area ? [prefill.area] : [],
+    }));
   }, [prefill.category, prefill.area]);
 
   function update<K extends keyof ApplyData>(key: K, value: ApplyData[K]) {
     setData((d) => ({ ...d, [key]: value }));
   }
 
+  const ALL = APPLY_ALL_AREAS.slug;
+  const islandWide = data.areas.includes(ALL);
+
+  // Toggle the island-wide sentinel: it stands alone, so selecting it replaces any
+  // individual picks; unselecting clears the selection.
+  function toggleAllAreas() {
+    areasTouched.current = true;
+    setData((d) => ({ ...d, areas: d.areas.includes(ALL) ? [] : [ALL] }));
+  }
+
+  // Toggle one LGU: always drop the island-wide sentinel first so the two modes
+  // never mix.
+  function toggleArea(slug: string) {
+    areasTouched.current = true;
+    setData((d) => {
+      const without = d.areas.filter((s) => s !== slug && s !== ALL);
+      const next = d.areas.includes(slug) ? without : [...without, slug];
+      return { ...d, areas: next };
+    });
+  }
+
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
     if (status === "submitting") return; // guard against double-submit
     if (!data.consent) return; // submit is disabled, but guard anyway
+    if (data.areas.length === 0) {
+      setStatus("error");
+      setErrorMsg("Please select at least one area you serve, or All of Cebu.");
+      return;
+    }
     setStatus("submitting");
     setErrorMsg("");
 
@@ -78,7 +113,7 @@ export function ApplyForm() {
       const result = await submitApplication({
         business: data.business,
         category: data.category,
-        area: data.area,
+        areas: data.areas,
         contact: data.contact,
         email: data.email,
         mobile: data.mobile,
@@ -133,53 +168,71 @@ export function ApplyForm() {
         />
       </label>
 
-      <div className="grid gap-4 sm:grid-cols-2">
-        <label className="block">
-          <FieldLabel>Category</FieldLabel>
-          <div className="relative">
-            <select
-              required
-              value={data.category}
-              onChange={(e) => update("category", e.target.value)}
-              className={selectClass}
-              aria-label="Category"
-            >
-              {APPLY_CATEGORIES.map((c) => (
-                <option key={c} value={c}>
-                  {c}
-                </option>
-              ))}
-            </select>
-            <CaretDown
-              size={16}
-              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted"
-            />
-          </div>
-        </label>
+      <label className="block">
+        <FieldLabel>Category</FieldLabel>
+        <div className="relative">
+          <select
+            required
+            value={data.category}
+            onChange={(e) => update("category", e.target.value)}
+            className={selectClass}
+            aria-label="Category"
+          >
+            {APPLY_CATEGORIES.map((c) => (
+              <option key={c} value={c}>
+                {c}
+              </option>
+            ))}
+          </select>
+          <CaretDown
+            size={16}
+            className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted"
+          />
+        </div>
+      </label>
 
-        <label className="block">
-          <FieldLabel>Area served</FieldLabel>
-          <div className="relative">
-            <select
-              required
-              value={data.area}
-              onChange={(e) => update("area", e.target.value)}
-              className={selectClass}
-              aria-label="Area served"
-            >
-              {APPLY_LOCATIONS.map((a) => (
-                <option key={a.slug} value={a.slug}>
-                  {a.label}
-                </option>
-              ))}
-            </select>
-            <CaretDown
-              size={16}
-              className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted"
+      <fieldset className="block">
+        <FieldLabel>
+          Areas served{" "}
+          <span className="font-normal text-muted/70">(select all that apply)</span>
+        </FieldLabel>
+        <div className="rounded-xl border border-line bg-surface">
+          {/* Island-wide stands alone: ticking it clears + disables the list. */}
+          <label className="flex cursor-pointer items-center gap-2.5 border-b border-line px-4 py-3">
+            <input
+              type="checkbox"
+              checked={islandWide}
+              onChange={toggleAllAreas}
+              className="h-4 w-4 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
             />
+            <span className="text-sm font-medium text-ink">
+              Serves all of Cebu{" "}
+              <span className="font-normal text-muted">(island-wide)</span>
+            </span>
+          </label>
+          <div
+            className={`grid max-h-52 grid-cols-1 gap-x-4 gap-y-1 overflow-y-auto p-3 sm:grid-cols-2 ${
+              islandWide ? "pointer-events-none opacity-45" : ""
+            }`}
+          >
+            {APPLY_LOCATIONS.map((a) => (
+              <label
+                key={a.slug}
+                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5"
+              >
+                <input
+                  type="checkbox"
+                  checked={data.areas.includes(a.slug)}
+                  onChange={() => toggleArea(a.slug)}
+                  disabled={islandWide}
+                  className="h-4 w-4 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
+                />
+                <span className="text-sm text-ink">{a.label}</span>
+              </label>
+            ))}
           </div>
-        </label>
-      </div>
+        </div>
+      </fieldset>
 
       <label className="block">
         <FieldLabel>Contact name</FieldLabel>
@@ -290,7 +343,7 @@ export function ApplyForm() {
 
       <button
         type="submit"
-        disabled={submitting || !data.consent}
+        disabled={submitting || !data.consent || data.areas.length === 0}
         className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
       >
         <PaperPlaneTilt size={17} weight="fill" />

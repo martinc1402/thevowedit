@@ -99,7 +99,7 @@ export async function sendInquiryEmail(
 export type ApplicationEmailFields = {
   businessName: string;
   category: string;
-  areaServed: string;
+  areasServed: string; // comma-joined area labels, or "All of Cebu"
   contactName: string;
   email: string;
   mobile: string;
@@ -125,7 +125,7 @@ export async function sendApplicationEmail(
   const rows: [string, string][] = [
     ["Business", f.businessName],
     ["Category", f.category],
-    ["Area served", f.areaServed],
+    ["Areas served", f.areasServed],
     ["Contact", f.contactName],
     ["Email", f.email],
     ["Mobile", f.mobile],

@@ -72,3 +72,29 @@ export function isValidLgu(scope: Scope, lguSlug: string): boolean {
 export function lguLabel(scope: Scope, lguSlug: string): string {
   return scope.lgus.find((l) => l.slug === lguSlug)?.label ?? lguSlug;
 }
+
+// "Serves all of <scope>" island-wide sentinel. Scope-relative so a future
+// national expansion stays a pure data change: every scope gets its own
+// "all-<slug>" value and "All of <Label>" display automatically.
+
+/** The island-wide sentinel value for a scope, e.g. "all-cebu". */
+export function allAreasValue(scope: Scope): string {
+  return `all-${scope.slug}`;
+}
+
+/** The island-wide display label for a scope, e.g. "All of Cebu". */
+export function allAreasLabel(scope: Scope): string {
+  return `All of ${scope.label}`;
+}
+
+/** True when `value` is a valid area selection: a real LGU OR the island-wide sentinel. */
+export function isValidAreaSelection(scope: Scope, value: string): boolean {
+  return value === allAreasValue(scope) || isValidLgu(scope, value);
+}
+
+/** Resolve any area selection value (LGU slug or sentinel) to its display label. */
+export function areaSelectionLabel(scope: Scope, value: string): string {
+  return value === allAreasValue(scope)
+    ? allAreasLabel(scope)
+    : lguLabel(scope, value);
+}

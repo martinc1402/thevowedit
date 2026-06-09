@@ -9,7 +9,7 @@
 // label and stores the scope alongside it, so national expansion is a data change
 // in locations.ts, not a refactor here.
 
-import { ACTIVE_SCOPE } from "@/lib/locations";
+import { ACTIVE_SCOPE, allAreasValue, allAreasLabel } from "@/lib/locations";
 
 export const APPLY_CATEGORIES = [
   "Photographers",
@@ -28,3 +28,9 @@ export const APPLY_SCOPE = ACTIVE_SCOPE;
 
 /** City/municipality options for the active scope: readonly { slug, label }[]. */
 export const APPLY_LOCATIONS = ACTIVE_SCOPE.lgus;
+
+/** Island-wide option for the active scope, e.g. { slug: "all-cebu", label: "All of Cebu" }. */
+export const APPLY_ALL_AREAS = {
+  slug: allAreasValue(ACTIVE_SCOPE),
+  label: allAreasLabel(ACTIVE_SCOPE),
+};

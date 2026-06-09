@@ -3,13 +3,17 @@
 import { headers } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import { APPLY_CATEGORIES, APPLY_SCOPE } from "@/lib/apply-options";
-import { isValidLgu, lguLabel } from "@/lib/locations";
+import {
+  isValidAreaSelection,
+  areaSelectionLabel,
+  allAreasValue,
+} from "@/lib/locations";
 import { sendApplicationEmail } from "@/lib/email";
 
 export type ApplicationInput = {
   business: string;
   category: string;
-  area: string;
+  areas: string[]; // LGU slugs and/or the island-wide sentinel ("all-<scope>")
   contact: string;
   email: string;
   mobile: string;
@@ -100,7 +104,16 @@ export async function submitApplication(
   // against non-string payloads.
   const business = cap(input.business, 200);
   const category = cap(input.category, 100);
-  const area = cap(input.area, 100); // an LGU slug within the active scope
+  // Areas: an array of LGU slugs and/or the island-wide sentinel. Coerce
+  // defensively (server actions accept arbitrary payloads), cap each value,
+  // drop blanks, dedupe, and bound the count as an abuse cap.
+  const areas = Array.from(
+    new Set(
+      (Array.isArray(input.areas) ? input.areas : [])
+        .map((a) => cap(a, 100))
+        .filter(Boolean),
+    ),
+  ).slice(0, 40);
   const contact = cap(input.contact, 200);
   const email = cap(input.email, 320);
   const mobile = cap(input.mobile, 40);
@@ -121,19 +134,30 @@ export async function submitApplication(
     return { ok: false, error: "Please enter a valid mobile number." };
   }
 
-  // Category must be from our canonical list, and the location must be a valid
-  // LGU slug within the active scope (reject tampered values).
-  if (
-    !(APPLY_CATEGORIES as readonly string[]).includes(category) ||
-    !isValidLgu(APPLY_SCOPE, area)
-  ) {
-    return { ok: false, error: "Please pick a category and area from the list." };
+  // Category must be from our canonical list (reject tampered values).
+  if (!(APPLY_CATEGORIES as readonly string[]).includes(category)) {
+    return { ok: false, error: "Please pick a category from the list." };
   }
 
-  // Store a clean, human-readable area label (resolved from the validated slug)
-  // alongside the scope, so the dashboard stays readable and expansion later just
-  // adds scopes in locations.ts.
-  const areaLabel = lguLabel(APPLY_SCOPE, area);
+  // At least one area, and every selected value must be a valid LGU or the
+  // island-wide sentinel within the active scope (reject tampered values).
+  if (areas.length === 0) {
+    return {
+      ok: false,
+      error: "Please select at least one area you serve, or All of Cebu.",
+    };
+  }
+  if (!areas.every((a) => isValidAreaSelection(APPLY_SCOPE, a))) {
+    return { ok: false, error: "Please pick areas from the list." };
+  }
+
+  // Island-wide stands alone: if the sentinel is present, store just that.
+  // Otherwise store clean, human-readable labels for each picked LGU, so the
+  // dashboard stays readable and expansion later just adds scopes in locations.ts.
+  const areaLabels = areas.includes(allAreasValue(APPLY_SCOPE))
+    ? [areaSelectionLabel(APPLY_SCOPE, allAreasValue(APPLY_SCOPE))]
+    : areas.map((a) => areaSelectionLabel(APPLY_SCOPE, a));
+  const areaSummary = areaLabels.join(", ");
 
   // Consent is the source of truth here, not the client checkbox.
   if (input.consent !== true) {
@@ -159,7 +183,8 @@ export async function submitApplication(
     .insert({
       business_name: business,
       category,
-      area_served: areaLabel,
+      area_served: areaSummary, // comma-joined summary for the legacy not-null column
+      areas_served: areaLabels, // structured list (text[])
       province: APPLY_SCOPE.slug,
       contact_name: contact,
       email,
@@ -184,7 +209,7 @@ export async function submitApplication(
     const result = await sendApplicationEmail({
       businessName: business,
       category,
-      areaServed: areaLabel,
+      areasServed: areaSummary,
       contactName: contact,
       email,
       mobile,

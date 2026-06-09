@@ -13,7 +13,8 @@ create table if not exists public.supplier_applications (
   created_at    timestamptz not null default now(),
   business_name text not null,
   category      text not null,
-  area_served   text not null,                 -- LGU label within the scope, e.g. "Cebu City"
+  area_served   text not null,                 -- comma-joined summary of areas_served, e.g. "Cebu City, Mactan"
+  areas_served  text[] not null default '{}',  -- all area labels served, or {"All of Cebu"} for island-wide
   province      text not null default 'cebu',  -- launch scope slug; expansion adds more scopes
   contact_name  text not null,
   email         text not null,
