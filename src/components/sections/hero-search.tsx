@@ -58,7 +58,7 @@ export function HeroSearch() {
     "w-full appearance-none rounded-xl border border-line bg-surface px-4 py-3.5 text-base text-ink outline-none transition focus:border-accent focus:ring-2 focus:ring-accent/40";
 
   return (
-    <section className="relative flex min-h-[100dvh] flex-col justify-end overflow-hidden bg-ink">
+    <section className="relative flex min-h-[100dvh] flex-col justify-center overflow-hidden bg-ink">
       {/* Decorative background video. The poster (start-frame.jpg) paints first
           and is the LCP; the video is layered in the SAME box (object-cover, no
           layout shift) and only loads/plays as progressive enhancement. */}
@@ -88,7 +88,7 @@ export function HeroSearch() {
         className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
       />
 
-      <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-10 pt-24 sm:px-6 lg:px-10 lg:pb-16">
+      <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 py-24 sm:px-6 lg:px-10">
         <motion.div
           initial={reduce ? false : { opacity: 0, y: 28 }}
           animate={{ opacity: 1, y: 0 }}
