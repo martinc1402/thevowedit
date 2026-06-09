@@ -33,10 +33,7 @@ const benefits = [
 
 export function FoundingSupplier() {
   return (
-    <section
-      id="apply"
-      className="scroll-mt-20 bg-surface-2/50"
-    >
+    <section className="bg-surface-2/50">
       <div className="mx-auto grid max-w-[1400px] gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:px-10 lg:py-28">
         <Reveal className="lg:max-w-xl">
           <p className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-accent-fg">
@@ -76,7 +73,13 @@ export function FoundingSupplier() {
         </Reveal>
 
         <Reveal delay={0.08}>
-          <div className="rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_44px_-28px_rgba(20,16,12,0.4)] sm:p-7">
+          {/* #apply scroll target lives on the form card so every "Apply" CTA lands
+              on the form itself — on mobile the form stacks below the benefit cards,
+              so targeting the section would under-shoot. scroll-mt clears the nav. */}
+          <div
+            id="apply"
+            className="scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_44px_-28px_rgba(20,16,12,0.4)] sm:p-7"
+          >
             <h3 className="font-serif text-2xl font-medium text-ink">
               Apply for a founding listing
             </h3>
