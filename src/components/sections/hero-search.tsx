@@ -14,8 +14,9 @@ export function HeroSearch() {
   const reduce = useReducedMotion();
   const { setPrefill } = useApplyPrefill();
   const [category, setCategory] = useState<string>(APPLY_CATEGORIES[0]);
-  // `area` holds an LGU slug; the <option> values are slugs, labels are shown.
-  const [area, setArea] = useState<string>(APPLY_LOCATIONS[0].slug);
+  // `area` holds an LGU slug, or "" until the supplier picks one (no default, so
+  // nothing is pre-selected in the application form below).
+  const [area, setArea] = useState<string>("");
 
   // Progressive enhancement: the poster always paints (it's the LCP). We only
   // load + play the decorative video once mounted, and only when it's welcome:
@@ -147,6 +148,9 @@ export function HeroSearch() {
                   className={selectClass}
                   aria-label="Area served"
                 >
+                  <option value="" disabled>
+                    Select an area
+                  </option>
                   {APPLY_LOCATIONS.map((a) => (
                     <option key={a.slug} value={a.slug}>
                       {a.label}

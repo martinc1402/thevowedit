@@ -13,8 +13,8 @@ import {
 // (no React) so the server action can import them for validation too.
 export { APPLY_CATEGORIES, APPLY_LOCATIONS, APPLY_ALL_AREAS, APPLY_SCOPE };
 
-// `area` carries an LGU slug (e.g. "cebu-city"), not a label. It maps to the
-// supplier_applications.area_served column once the server resolves it to a label.
+// `area` carries an LGU slug (e.g. "cebu-city"), not a label, or "" when the
+// supplier hasn't chosen one in the hero. It seeds the form's first area chip.
 type Prefill = { category: string; area: string };
 
 type ApplyPrefillValue = Prefill & {
@@ -31,7 +31,7 @@ const ApplyPrefillContext = createContext<ApplyPrefillValue | null>(null);
 export function ApplyPrefillProvider({ children }: { children: React.ReactNode }) {
   const [prefill, setState] = useState<Prefill>({
     category: APPLY_CATEGORIES[0],
-    area: APPLY_LOCATIONS[0].slug,
+    area: "", // no area pre-selected; the hero "In" picker seeds this if used
   });
 
   const setPrefill = (next: Partial<Prefill>) =>
