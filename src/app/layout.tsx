@@ -14,15 +14,15 @@ const cormorant = Cormorant_Garamond({
 export const metadata: Metadata = {
   metadataBase: new URL("https://thevowedit.ph"),
   title: {
-    default: "The Vow Edit - Verified wedding suppliers in Cebu",
+    default: "The Vow Edit - Wedding suppliers in Cebu, launching soon",
     template: "%s - The Vow Edit",
   },
   description:
-    "Search verified Cebu wedding photographers, HMUA, catering, venues and more. Real price ranges, no inquire-for-a-quote runaround.",
+    "A new Cebu wedding-supplier directory launching soon, with transparent price ranges instead of the inquire-for-a-quote runaround. Suppliers can claim a free founding listing now.",
   openGraph: {
-    title: "The Vow Edit - Verified wedding suppliers in Cebu",
+    title: "The Vow Edit - Wedding suppliers in Cebu, launching soon",
     description:
-      "Search verified Cebu wedding suppliers with real, transparent pricing.",
+      "Launching soon in Cebu. Wedding suppliers can claim a free founding listing before couples start searching.",
     siteName: "The Vow Edit",
     type: "website",
     locale: "en_PH",

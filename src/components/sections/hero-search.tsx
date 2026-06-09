@@ -2,11 +2,11 @@
 
 import { useEffect, useRef, useState } from "react";
 import { motion, useReducedMotion } from "motion/react";
-import { CaretDown, ArrowRight, CheckCircle } from "@phosphor-icons/react";
+import { CaretDown, ArrowRight } from "@phosphor-icons/react";
 import { heroMedia } from "@/lib/content";
 import {
   APPLY_CATEGORIES,
-  APPLY_AREAS,
+  APPLY_LOCATIONS,
   useApplyPrefill,
 } from "@/components/apply-context";
 
@@ -14,11 +14,8 @@ export function HeroSearch() {
   const reduce = useReducedMotion();
   const { setPrefill } = useApplyPrefill();
   const [category, setCategory] = useState<string>(APPLY_CATEGORIES[0]);
-  const [area, setArea] = useState<string>(APPLY_AREAS[0]);
-
-  // Secondary couple capture (UI-only stub).
-  const [notifyEmail, setNotifyEmail] = useState("");
-  const [notified, setNotified] = useState(false);
+  // `area` holds an LGU slug; the <option> values are slugs, labels are shown.
+  const [area, setArea] = useState<string>(APPLY_LOCATIONS[0].slug);
 
   // Progressive enhancement: the poster always paints (it's the LCP). We only
   // load + play the decorative video once mounted, and only when it's welcome:
@@ -46,13 +43,6 @@ export function HeroSearch() {
   // the native #apply anchor smooth-scrolls them down to it.
   function handleApply() {
     setPrefill({ category, area });
-  }
-
-  function handleNotify(e: React.FormEvent) {
-    e.preventDefault();
-    if (!notifyEmail) return;
-    // TODO: connect to Supabase via server action - handled in a later step.
-    setNotified(true);
   }
 
   const selectClass =
@@ -86,7 +76,7 @@ export function HeroSearch() {
       />
       <div
         aria-hidden
-        className="absolute inset-0 bg-gradient-to-t from-black/55 via-transparent to-transparent"
+        className="absolute inset-0 bg-gradient-to-t from-black/70 via-black/10 to-transparent"
       />
 
       <div className="relative z-10 mx-auto w-full max-w-[1400px] px-4 pb-10 pt-24 sm:px-6 lg:px-10 lg:pb-16">
@@ -96,16 +86,12 @@ export function HeroSearch() {
           transition={{ duration: 0.8, ease: [0.16, 1, 0.3, 1] }}
           className="max-w-2xl"
         >
-          <h1 className="font-serif text-[2.7rem] font-medium leading-[1.04] text-white sm:text-6xl lg:text-7xl">
-            Find trusted wedding suppliers in Cebu.
+          <h1 className="font-serif text-4xl font-medium leading-[1.05] text-white sm:text-5xl lg:text-6xl">
+            Be one of the first wedding suppliers listed in Cebu.
           </h1>
           <p className="mt-4 max-w-xl text-base leading-relaxed text-white/85 sm:text-lg">
-            Compare real prices from photographers, caterers, venues and more.
-            No inquire-for-a-quote guesswork.
-          </p>
-          <p className="mt-4 text-sm font-medium leading-relaxed text-white/90 sm:text-base">
-            Launching soon in Cebu. We are inviting wedding suppliers to claim a
-            free founding listing.
+            Launching soon in Cebu. Claim a free founding listing before couples
+            start searching.
           </p>
         </motion.div>
 
@@ -151,9 +137,9 @@ export function HeroSearch() {
                   className={selectClass}
                   aria-label="Area served"
                 >
-                  {APPLY_AREAS.map((a) => (
-                    <option key={a} value={a}>
-                      {a}
+                  {APPLY_LOCATIONS.map((a) => (
+                    <option key={a.slug} value={a.slug}>
+                      {a.label}
                     </option>
                   ))}
                 </select>
@@ -170,51 +156,10 @@ export function HeroSearch() {
               onClick={handleApply}
               className="inline-flex h-[52px] items-center justify-center gap-2 rounded-xl bg-accent px-6 text-base font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] lg:w-auto"
             >
-              Apply for free listing
+              Apply for a founding listing
               <ArrowRight size={18} weight="bold" />
             </a>
           </div>
-        </motion.div>
-
-        {/* Secondary, couple-facing capture. Visibly secondary to the supplier CTA. */}
-        <motion.div
-          initial={reduce ? false : { opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.8, delay: 0.22, ease: [0.16, 1, 0.3, 1] }}
-          className="mt-5 max-w-3xl"
-        >
-          {notified ? (
-            <p className="inline-flex items-center gap-2 text-sm text-white/90">
-              <CheckCircle size={17} weight="fill" className="text-white" />
-              You are on the list. We will email you when The Vow Edit launches.
-            </p>
-          ) : (
-            <form
-              onSubmit={handleNotify}
-              className="flex flex-col gap-2 sm:flex-row sm:items-center"
-            >
-              <label className="text-sm text-white/80">
-                Planning a wedding? Get notified at launch.
-              </label>
-              <div className="flex gap-2">
-                <input
-                  type="email"
-                  required
-                  value={notifyEmail}
-                  onChange={(e) => setNotifyEmail(e.target.value)}
-                  placeholder="you@email.com"
-                  aria-label="Email for launch updates"
-                  className="w-full rounded-full border border-white/25 bg-white/10 px-4 py-2 text-sm text-white outline-none backdrop-blur-sm transition placeholder:text-white/60 focus:border-white/60 focus:ring-2 focus:ring-white/30 sm:w-64"
-                />
-                <button
-                  type="submit"
-                  className="shrink-0 rounded-full border border-white/30 bg-white/10 px-4 py-2 text-sm font-medium text-white backdrop-blur-sm transition-colors hover:bg-white/20 active:scale-[0.98]"
-                >
-                  Notify me
-                </button>
-              </div>
-            </form>
-          )}
         </motion.div>
       </div>
     </section>

@@ -11,8 +11,8 @@ export function CategoryGrid() {
           Categories we are onboarding suppliers in
         </h2>
         <p className="mt-3 text-base leading-relaxed text-muted">
-          A preview of what couples will browse at launch. Every category opens
-          with verified suppliers and pricing shown upfront.
+          A preview of what couples will browse at launch. Suppliers will be
+          verified, with pricing shown upfront.
         </p>
       </Reveal>
 
@@ -53,7 +53,7 @@ export function CategoryGrid() {
           href="#apply"
           className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]"
         >
-          Apply to claim your category
+          Apply for a founding listing
         </Link>
       </Reveal>
     </section>

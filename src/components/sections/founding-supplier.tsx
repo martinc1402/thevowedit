@@ -21,8 +21,8 @@ const benefits = [
   },
   {
     icon: SealCheck,
-    title: "The verified badge",
-    body: "Get checked and carry the verified badge couples look for when they decide who to message.",
+    title: "A verified badge",
+    body: "We are verifying founding suppliers before launch, so couples can see at a glance who has been checked.",
   },
   {
     icon: Trophy,
@@ -75,7 +75,7 @@ export function FoundingSupplier() {
         <Reveal delay={0.08}>
           <div className="rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_44px_-28px_rgba(20,16,12,0.4)] sm:p-7">
             <h3 className="font-serif text-2xl font-medium text-ink">
-              Apply for your founding listing
+              Apply for a founding listing
             </h3>
             <p className="mt-1.5 text-sm leading-relaxed text-muted">
               Takes a minute. We will be in touch before launch.

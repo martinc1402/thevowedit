@@ -2,7 +2,8 @@
 
 import { headers } from "next/headers";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
-import { APPLY_CATEGORIES, APPLY_AREAS } from "@/lib/apply-options";
+import { APPLY_CATEGORIES, APPLY_SCOPE } from "@/lib/apply-options";
+import { isValidLgu, lguLabel } from "@/lib/locations";
 import { sendApplicationEmail } from "@/lib/email";
 
 export type ApplicationInput = {
@@ -99,7 +100,7 @@ export async function submitApplication(
   // against non-string payloads.
   const business = cap(input.business, 200);
   const category = cap(input.category, 100);
-  const area = cap(input.area, 100);
+  const area = cap(input.area, 100); // an LGU slug within the active scope
   const contact = cap(input.contact, 200);
   const email = cap(input.email, 320);
   const mobile = cap(input.mobile, 40);
@@ -120,13 +121,19 @@ export async function submitApplication(
     return { ok: false, error: "Please enter a valid mobile number." };
   }
 
-  // Category / area must be from our canonical lists (reject tampered values).
+  // Category must be from our canonical list, and the location must be a valid
+  // LGU slug within the active scope (reject tampered values).
   if (
     !(APPLY_CATEGORIES as readonly string[]).includes(category) ||
-    !(APPLY_AREAS as readonly string[]).includes(area)
+    !isValidLgu(APPLY_SCOPE, area)
   ) {
     return { ok: false, error: "Please pick a category and area from the list." };
   }
+
+  // Store a clean, human-readable area label (resolved from the validated slug)
+  // alongside the scope, so the dashboard stays readable and expansion later just
+  // adds scopes in locations.ts.
+  const areaLabel = lguLabel(APPLY_SCOPE, area);
 
   // Consent is the source of truth here, not the client checkbox.
   if (input.consent !== true) {
@@ -152,7 +159,8 @@ export async function submitApplication(
     .insert({
       business_name: business,
       category,
-      area_served: area,
+      area_served: areaLabel,
+      province: APPLY_SCOPE.slug,
       contact_name: contact,
       email,
       mobile,
@@ -176,7 +184,7 @@ export async function submitApplication(
     const result = await sendApplicationEmail({
       businessName: business,
       category,
-      areaServed: area,
+      areaServed: areaLabel,
       contactName: contact,
       email,
       mobile,

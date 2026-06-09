@@ -20,8 +20,8 @@ export function PriceBand() {
               What does a Cebu wedding actually cost?
             </h2>
             <p className="mt-4 max-w-md text-base leading-relaxed text-accent-ink/80">
-              Real ranges from actual Cebu suppliers, not "inquire for a quote." See
-              where your budget goes before you message anyone.
+              Ballpark price ranges to help you plan a Cebu wedding budget.
+              Typical guidance to set expectations, not quotes.
             </p>
           </Reveal>
 

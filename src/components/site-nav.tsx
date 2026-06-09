@@ -5,9 +5,10 @@ import Link from "next/link";
 import { List, X, SealCheck } from "@phosphor-icons/react";
 import { ThemeToggle } from "@/components/theme-toggle";
 
-// Pre-launch: nothing is browsable yet. "Browse" smooth-scrolls to the showcase
-// of what couples will see at launch; the primary action is applying to list.
-const navLinks = [{ label: "Browse", href: "#showcase" }];
+// Pre-launch: nothing is browsable yet, so no nav links for MVP. The primary
+// action is applying to list. Restore entries here (e.g. Browse) once the
+// directory is live and the .map() below renders them automatically.
+const navLinks: { label: string; href: string }[] = [];
 
 function StatusPill({ className = "" }: { className?: string }) {
   return (
@@ -15,7 +16,7 @@ function StatusPill({ className = "" }: { className?: string }) {
       className={`inline-flex items-center gap-1.5 rounded-full border border-line bg-surface-2 px-3 py-1 text-xs font-medium text-muted ${className}`}
     >
       <SealCheck size={13} weight="fill" className="text-accent-fg" />
-      Now onboarding founding suppliers · Cebu
+      Now onboarding founding suppliers · Starting in Cebu
     </span>
   );
 }
@@ -41,7 +42,7 @@ export function SiteNav() {
       <nav className="mx-auto flex h-16 max-w-[1400px] items-center justify-between gap-4 px-4 sm:px-6 lg:px-10">
         <Wordmark />
 
-        <div className="hidden items-center gap-6 lg:flex">
+        <div className="hidden items-center gap-6 xl:flex">
           <StatusPill />
           {navLinks.map((l) => (
             <Link
@@ -60,7 +61,7 @@ export function SiteNav() {
             href="#apply"
             className="hidden rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] sm:inline-flex"
           >
-            List your business
+            Apply for a founding listing
           </Link>
           <button
             type="button"
@@ -95,7 +96,7 @@ export function SiteNav() {
                 onClick={() => setOpen(false)}
                 className="flex-1 rounded-full bg-accent px-5 py-3 text-center text-sm font-medium text-accent-ink"
               >
-                List your business
+                Apply for a founding listing
               </Link>
               <ThemeToggle />
             </div>

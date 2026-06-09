@@ -1,8 +1,8 @@
 import type { MetadataRoute } from "next";
 
-// Pre-launch robots policy. The directory routes return 404 while MVP_LAUNCH is
-// true (see src/lib/launch.ts); the explicit disallows keep crawlers off the
-// known prefixes in the meantime. Remove them when the directory goes live.
+// MVP robots policy. Only the homepage and /privacy are live, so everything is
+// crawlable; the directory routes were removed for MVP. Add disallows back here
+// if non-public routes return.
 const BASE = "https://thevowedit.ph";
 
 export default function robots(): MetadataRoute.Robots {
@@ -10,7 +10,6 @@ export default function robots(): MetadataRoute.Robots {
     rules: {
       userAgent: "*",
       allow: "/",
-      disallow: ["/browse", "/supplier/"],
     },
     sitemap: `${BASE}/sitemap.xml`,
   };

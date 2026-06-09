@@ -5,7 +5,7 @@ import Link from "next/link";
 import { PaperPlaneTilt, CheckCircle, WarningCircle, CaretDown } from "@phosphor-icons/react";
 import {
   APPLY_CATEGORIES,
-  APPLY_AREAS,
+  APPLY_LOCATIONS,
   useApplyPrefill,
 } from "@/components/apply-context";
 import { submitApplication } from "@/lib/actions/application";
@@ -167,9 +167,9 @@ export function ApplyForm() {
               className={selectClass}
               aria-label="Area served"
             >
-              {APPLY_AREAS.map((a) => (
-                <option key={a} value={a}>
-                  {a}
+              {APPLY_LOCATIONS.map((a) => (
+                <option key={a.slug} value={a.slug}>
+                  {a.label}
                 </option>
               ))}
             </select>
@@ -294,7 +294,7 @@ export function ApplyForm() {
         className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
       >
         <PaperPlaneTilt size={17} weight="fill" />
-        {submitting ? "Sending..." : "Apply for free founding listing"}
+        {submitting ? "Sending..." : "Apply for a founding listing"}
       </button>
 
       {status === "error" && (

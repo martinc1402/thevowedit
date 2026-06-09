@@ -1,7 +1,8 @@
 import type { MetadataRoute } from "next";
 
-// Pre-launch sitemap: only the two live pages. Expand this (and the robots
-// disallow list) when the directory routes come back — see src/lib/launch.ts.
+// MVP sitemap: only the two live pages (homepage + privacy). The public
+// directory (browse / category / supplier) was removed for MVP; add its URLs
+// back here when it returns.
 const BASE = "https://thevowedit.ph";
 
 export default function sitemap(): MetadataRoute.Sitemap {
