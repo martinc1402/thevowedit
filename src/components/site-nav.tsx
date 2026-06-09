@@ -59,7 +59,7 @@ export function SiteNav() {
           <ThemeToggle className="hidden sm:inline-flex" />
           <Link
             href="#apply"
-            className="hidden rounded-full bg-accent px-5 py-2.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] sm:inline-flex"
+            className="hidden rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] sm:inline-flex"
           >
             Apply for a founding listing
           </Link>
@@ -94,7 +94,7 @@ export function SiteNav() {
               <Link
                 href="#apply"
                 onClick={() => setOpen(false)}
-                className="flex-1 rounded-full bg-accent px-5 py-3 text-center text-sm font-medium text-accent-ink"
+                className="flex-1 rounded-xl bg-accent px-5 py-3 text-center text-sm font-medium text-accent-ink"
               >
                 Apply for a founding listing
               </Link>

@@ -2,7 +2,7 @@
 
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { PaperPlaneTilt, CheckCircle, WarningCircle, CaretDown } from "@phosphor-icons/react";
+import { PaperPlaneTilt, CheckCircle, WarningCircle, CaretDown, X } from "@phosphor-icons/react";
 import {
   APPLY_CATEGORIES,
   APPLY_LOCATIONS,
@@ -84,16 +84,28 @@ export function ApplyForm() {
     setData((d) => ({ ...d, areas: d.areas.includes(ALL) ? [] : [ALL] }));
   }
 
-  // Toggle one LGU: always drop the island-wide sentinel first so the two modes
-  // never mix.
-  function toggleArea(slug: string) {
+  // Add one LGU via the picker: drop the island-wide sentinel (the two modes never
+  // mix) and ignore duplicates.
+  function addArea(slug: string) {
+    if (!slug) return;
     areasTouched.current = true;
-    setData((d) => {
-      const without = d.areas.filter((s) => s !== slug && s !== ALL);
-      const next = d.areas.includes(slug) ? without : [...without, slug];
-      return { ...d, areas: next };
-    });
+    setData((d) => ({
+      ...d,
+      areas: [...d.areas.filter((s) => s !== ALL && s !== slug), slug],
+    }));
   }
+
+  // Remove one LGU chip.
+  function removeArea(slug: string) {
+    areasTouched.current = true;
+    setData((d) => ({ ...d, areas: d.areas.filter((s) => s !== slug) }));
+  }
+
+  // The picked LGUs (excludes the sentinel) and the LGUs still available to add.
+  const selectedLgus = data.areas.filter((s) => s !== ALL);
+  const availableLgus = APPLY_LOCATIONS.filter((a) => !data.areas.includes(a.slug));
+  const labelOf = (slug: string) =>
+    APPLY_LOCATIONS.find((a) => a.slug === slug)?.label ?? slug;
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -192,45 +204,73 @@ export function ApplyForm() {
       </label>
 
       <fieldset className="block">
-        <FieldLabel>
-          Areas served{" "}
-          <span className="font-normal text-muted/70">(select all that apply)</span>
-        </FieldLabel>
-        <div className="rounded-xl border border-line bg-surface">
-          {/* Island-wide stands alone: ticking it clears + disables the list. */}
-          <label className="flex cursor-pointer items-center gap-2.5 border-b border-line px-4 py-3">
-            <input
-              type="checkbox"
-              checked={islandWide}
-              onChange={toggleAllAreas}
-              className="h-4 w-4 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
-            />
-            <span className="text-sm font-medium text-ink">
-              Serves all of Cebu{" "}
-              <span className="font-normal text-muted">(island-wide)</span>
-            </span>
-          </label>
-          <div
-            className={`grid max-h-52 grid-cols-1 gap-x-4 gap-y-1 overflow-y-auto p-3 sm:grid-cols-2 ${
-              islandWide ? "pointer-events-none opacity-45" : ""
-            }`}
-          >
-            {APPLY_LOCATIONS.map((a) => (
-              <label
-                key={a.slug}
-                className="flex cursor-pointer items-center gap-2.5 rounded-lg px-1.5 py-1.5"
+        <FieldLabel>Areas served</FieldLabel>
+
+        {/* Island-wide stands alone: ticking it clears the chips + disables the picker. */}
+        <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-line bg-surface px-4 py-3">
+          <input
+            type="checkbox"
+            checked={islandWide}
+            onChange={toggleAllAreas}
+            className="h-4 w-4 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
+          />
+          <span className="text-sm font-medium text-ink">
+            Serves all of Cebu{" "}
+            <span className="font-normal text-muted">(island-wide)</span>
+          </span>
+        </label>
+
+        {/* Divider + sub-label leading into the individual-area picker. */}
+        <div className="mt-3 mb-2 flex items-center gap-3">
+          <span className="text-xs text-muted">or choose specific areas</span>
+          <span aria-hidden className="h-px flex-1 bg-line" />
+        </div>
+
+        {/* Selected areas as removable chips, above the picker. */}
+        {selectedLgus.length > 0 && (
+          <div className="mb-2 flex flex-wrap gap-2">
+            {selectedLgus.map((slug) => (
+              <span
+                key={slug}
+                className="inline-flex items-center gap-1 rounded-lg bg-accent/10 py-1 pl-3 pr-1.5 text-sm text-accent-fg"
               >
-                <input
-                  type="checkbox"
-                  checked={data.areas.includes(a.slug)}
-                  onChange={() => toggleArea(a.slug)}
-                  disabled={islandWide}
-                  className="h-4 w-4 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
-                />
-                <span className="text-sm text-ink">{a.label}</span>
-              </label>
+                {labelOf(slug)}
+                <button
+                  type="button"
+                  onClick={() => removeArea(slug)}
+                  aria-label={`Remove ${labelOf(slug)}`}
+                  className="inline-flex h-5 w-5 items-center justify-center rounded-md text-accent-fg/70 transition-colors hover:bg-accent/20 hover:text-accent-fg"
+                >
+                  <X size={12} weight="bold" />
+                </button>
+              </span>
             ))}
           </div>
+        )}
+
+        {/* Add picker: a simple dropdown of the LGUs not yet chosen. Resets to the
+            placeholder after each pick; disabled while island-wide is selected. */}
+        <div className="relative">
+          <select
+            value=""
+            onChange={(e) => addArea(e.target.value)}
+            disabled={islandWide}
+            aria-label="Add an area you serve"
+            className={`${selectClass} ${islandWide ? "opacity-45" : ""}`}
+          >
+            <option value="" disabled>
+              Add an area…
+            </option>
+            {availableLgus.map((a) => (
+              <option key={a.slug} value={a.slug}>
+                {a.label}
+              </option>
+            ))}
+          </select>
+          <CaretDown
+            size={16}
+            className="pointer-events-none absolute right-3.5 top-1/2 -translate-y-1/2 text-muted"
+          />
         </div>
       </fieldset>
 
@@ -344,7 +384,7 @@ export function ApplyForm() {
       <button
         type="submit"
         disabled={submitting || !data.consent || data.areas.length === 0}
-        className="mt-1 inline-flex items-center justify-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
+        className="mt-1 inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] disabled:cursor-not-allowed disabled:opacity-60 disabled:active:scale-100"
       >
         <PaperPlaneTilt size={17} weight="fill" />
         {submitting ? "Sending..." : "Apply for a founding listing"}

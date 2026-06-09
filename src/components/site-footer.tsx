@@ -26,7 +26,7 @@ export function SiteFooter() {
 
           <Link
             href="#apply"
-            className="inline-flex shrink-0 items-center gap-2 self-start rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] lg:self-auto"
+            className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl bg-accent px-6 py-3 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] lg:self-auto"
           >
             Apply for a founding listing
           </Link>
