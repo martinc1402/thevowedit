@@ -38,6 +38,10 @@ yarn-error.log*
 # vercel
 .vercel
 
+# raw source media — originals live here locally; the served (optimized) copies
+# are committed under public/. Keep this out of git so the repo stays lean.
+/assets
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts
