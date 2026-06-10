@@ -1,4 +1,3 @@
-import Link from "next/link";
 import Image from "next/image";
 import { categories } from "@/lib/content";
 import { Reveal, RevealGroup, RevealItem } from "@/components/reveal";
@@ -49,12 +48,12 @@ export function CategoryGrid() {
 
       <Reveal className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center">
         <p className="text-base text-muted">Offer one of these in Cebu?</p>
-        <Link
+        <a
           href="#apply"
           className="inline-flex items-center gap-2 rounded-full bg-accent px-6 py-3 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]"
         >
           Apply for a founding listing
-        </Link>
+        </a>
       </Reveal>
     </section>
   );

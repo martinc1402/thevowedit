@@ -24,12 +24,12 @@ export function SiteFooter() {
             </p>
           </div>
 
-          <Link
+          <a
             href="#apply"
             className="inline-flex shrink-0 items-center gap-2 self-start rounded-xl bg-accent px-6 py-3 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] lg:self-auto"
           >
             Apply for a founding listing
-          </Link>
+          </a>
         </div>
 
         <div className="mt-14 flex flex-col items-start justify-between gap-4 border-t border-line pt-8 sm:flex-row sm:items-center">
