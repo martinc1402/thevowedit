@@ -96,3 +96,46 @@
   --accent-fg: #faf6f0;    /* cream highlight text/icon */
   color-scheme: dark;
 }
+
+/* Animated CTA ring: a soft cream highlight slowly travels around a panel's
+   border to draw the eye to it as a call-to-action. Masked conic gradient
+   (cream-on-wine, no glow). Honors prefers-reduced-motion. */
+@property --cta-angle {
+  syntax: "<angle>";
+  initial-value: 0deg;
+  inherits: false;
+}
+@keyframes cta-rotate {
+  to {
+    --cta-angle: 360deg;
+  }
+}
+
+.cta-ring {
+  position: relative;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .cta-ring::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    border-radius: inherit; /* matches rounded-2xl */
+    padding: 1.5px; /* ring thickness */
+    background: conic-gradient(
+      from var(--cta-angle),
+      transparent 0deg 230deg,
+      var(--accent) 300deg,
+      transparent 350deg 360deg
+    );
+    /* reveal only the border ring (mask out the centre) */
+    -webkit-mask:
+      linear-gradient(#000 0 0) content-box,
+      linear-gradient(#000 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+    opacity: 0.7;
+    animation: cta-rotate 7s linear infinite;
+  }
+}

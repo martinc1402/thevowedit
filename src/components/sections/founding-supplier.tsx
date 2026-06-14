@@ -78,7 +78,7 @@ export function FoundingSupplier() {
               so targeting the section would under-shoot. scroll-mt clears the nav. */}
           <div
             id="apply"
-            className="theme-wine text-ink scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_44px_-28px_rgba(20,16,12,0.4)] sm:p-7"
+            className="cta-ring relative theme-wine text-ink scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_44px_-28px_rgba(20,16,12,0.4)] sm:p-7"
           >
             <h3 className="font-serif text-2xl font-medium text-ink">
               Apply for a founding listing
