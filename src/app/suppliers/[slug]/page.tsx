@@ -3,15 +3,23 @@ import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { Reveal } from "@/components/reveal";
-import { getSupplierBySlug, formatPrice } from "@/lib/suppliers";
+import {
+  getSupplierBySlug,
+  listSimilarSuppliers,
+  formatPrice,
+} from "@/lib/suppliers";
 import { categories } from "@/lib/content";
 import { SupplierGallery } from "@/components/sections/supplier/supplier-gallery";
 import { SupplierHeader } from "@/components/sections/supplier/supplier-header";
 import { PriceBlock } from "@/components/sections/supplier/price-block";
 import { PackageTiers } from "@/components/sections/supplier/package-tiers";
+import { PricingNotes } from "@/components/sections/supplier/pricing-notes";
 import { SupplierAbout } from "@/components/sections/supplier/supplier-about";
+import { VideoEmbed } from "@/components/sections/supplier/video-embed";
+import { SupplierLogistics } from "@/components/sections/supplier/supplier-logistics";
 import { SupplierReviews } from "@/components/sections/supplier/supplier-reviews";
 import { SupplierContact } from "@/components/sections/supplier/supplier-contact";
+import { SimilarSuppliers } from "@/components/sections/supplier/similar-suppliers";
 
 const labelFor = (slug: string) =>
   categories.find((c) => c.slug === slug)?.label ?? slug;
@@ -49,6 +57,7 @@ export default async function SupplierPage({ params }: Params) {
   if (!supplier) notFound();
 
   const s = supplier;
+  const similar = await listSimilarSuppliers(s.categories[0] ?? "", s.slug);
 
   return (
     <>
@@ -85,11 +94,25 @@ export default async function SupplierPage({ params }: Params) {
               <PackageTiers packages={s.packages} />
             </Reveal>
             <Reveal>
+              <PricingNotes notes={s.pricingNotes} />
+            </Reveal>
+            <Reveal>
               <SupplierAbout
                 name={s.name}
                 description={s.description}
                 bio={s.bio}
                 teamPhoto={s.teamPhoto}
+              />
+            </Reveal>
+            <Reveal>
+              <VideoEmbed videoUrl={s.videoUrl} name={s.name} />
+            </Reveal>
+            <Reveal>
+              <SupplierLogistics
+                responseTimeNote={s.responseTimeNote}
+                worksWithOverseasCouples={s.worksWithOverseasCouples}
+                travelFeeNote={s.travelFeeNote}
+                bookingTerms={s.bookingTerms}
               />
             </Reveal>
             <Reveal>
@@ -110,6 +133,9 @@ export default async function SupplierPage({ params }: Params) {
                 phone={s.phone}
                 email={s.email}
               />
+            </Reveal>
+            <Reveal>
+              <SimilarSuppliers suppliers={similar} />
             </Reveal>
           </div>
         </div>
