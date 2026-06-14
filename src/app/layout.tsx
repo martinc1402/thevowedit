@@ -1,7 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Cormorant_Garamond } from "next/font/google";
 import { GeistSans } from "geist/font/sans";
-import { ThemeProvider } from "@/components/theme-provider";
 import "./globals.css";
 
 const cormorant = Cormorant_Garamond({
@@ -30,10 +29,7 @@ export const metadata: Metadata = {
 };
 
 export const viewport: Viewport = {
-  themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#f5f2ed" },
-    { media: "(prefers-color-scheme: dark)", color: "#15120f" },
-  ],
+  themeColor: "#581824",
 };
 
 export default function RootLayout({
@@ -44,12 +40,9 @@ export default function RootLayout({
   return (
     <html
       lang="en"
-      suppressHydrationWarning
       className={`${GeistSans.variable} ${cormorant.variable} h-full antialiased`}
     >
-      <body className="min-h-full bg-bg text-ink">
-        <ThemeProvider>{children}</ThemeProvider>
-      </body>
+      <body className="min-h-full bg-bg text-ink">{children}</body>
     </html>
   );
 }

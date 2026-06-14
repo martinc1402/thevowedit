@@ -1,4 +1,5 @@
 import Link from "next/link";
+import { Wordmark } from "@/components/wordmark";
 
 // Pre-launch footer: a single honest blurb + one apply CTA. The richer
 // location × category matrix (Cebu City / Mactan / ... × every category) was a
@@ -11,13 +12,7 @@ export function SiteFooter() {
       <div className="mx-auto max-w-[1400px] px-4 py-16 sm:px-6 lg:px-10">
         <div className="flex flex-col gap-8 lg:flex-row lg:items-end lg:justify-between">
           <div className="max-w-xl">
-            <Link
-              href="/"
-              className="font-serif text-2xl font-semibold tracking-tight text-ink"
-              aria-label="The Vow Edit home"
-            >
-              The Vow Edit<span className="text-accent-fg">.</span>
-            </Link>
+            <Wordmark />
             <p className="mt-3 text-sm leading-relaxed text-muted">
               A wedding-supplier directory for Cebu, launching soon. Onboarding
               founding suppliers across Cebu.

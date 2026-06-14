@@ -27,7 +27,7 @@ type ApplyData = {
 type Status = "idle" | "submitting" | "success" | "error";
 
 const inputClass =
-  "w-full rounded-xl border border-line bg-surface px-4 py-3 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/40";
+  "theme-light w-full rounded-xl border border-line bg-bg px-4 py-3 text-base text-ink outline-none transition placeholder:text-muted/70 focus:border-accent focus:ring-2 focus:ring-accent/40";
 const selectClass = `${inputClass} appearance-none pr-10`;
 const labelClass = "mb-1.5 block text-xs font-medium text-muted";
 
@@ -182,7 +182,7 @@ export function ApplyForm() {
 
       <label className="block">
         <FieldLabel>Category</FieldLabel>
-        <div className="relative">
+        <div className="theme-light relative">
           <select
             required
             value={data.category}
@@ -207,12 +207,12 @@ export function ApplyForm() {
         <FieldLabel>Areas served</FieldLabel>
 
         {/* Island-wide stands alone: ticking it clears the chips + disables the picker. */}
-        <label className="flex cursor-pointer items-center gap-2.5 rounded-xl border border-line bg-surface px-4 py-3">
+        <label className="theme-light flex cursor-pointer items-center gap-2.5 rounded-xl border border-line bg-bg px-4 py-3">
           <input
             type="checkbox"
             checked={islandWide}
             onChange={toggleAllAreas}
-            className="h-4 w-4 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
+            className="h-4 w-4 shrink-0 rounded border-line accent-[#581824] [color-scheme:light] focus:ring-2 focus:ring-accent/40"
           />
           <span className="text-sm font-medium text-ink">
             Serves all of Cebu{" "}
@@ -250,7 +250,7 @@ export function ApplyForm() {
 
         {/* Add picker: a simple dropdown of the LGUs not yet chosen. Resets to the
             placeholder after each pick; disabled while island-wide is selected. */}
-        <div className="relative">
+        <div className="theme-light relative">
           <select
             value=""
             onChange={(e) => addArea(e.target.value)}
@@ -364,7 +364,7 @@ export function ApplyForm() {
           required
           checked={data.consent}
           onChange={(e) => update("consent", e.target.checked)}
-          className="mt-0.5 h-5 w-5 shrink-0 rounded border-line text-accent accent-accent focus:ring-2 focus:ring-accent/40"
+          className="mt-0.5 h-5 w-5 shrink-0 rounded border-line accent-[#581824] [color-scheme:light] focus:ring-2 focus:ring-accent/40"
         />
         <span className="text-sm leading-relaxed text-muted">
           I agree to have my business listed on The Vow Edit and accept the{" "}
@@ -393,7 +393,7 @@ export function ApplyForm() {
       {status === "error" && (
         <p
           role="alert"
-          className="inline-flex items-start gap-1.5 text-sm leading-relaxed text-red-700 dark:text-red-400"
+          className="inline-flex items-start gap-1.5 text-sm leading-relaxed text-rose-200"
         >
           <WarningCircle size={16} weight="fill" className="mt-0.5 shrink-0" />
           {errorMsg || "Something went wrong. Please try again."}

@@ -33,7 +33,7 @@ const benefits = [
 
 export function FoundingSupplier() {
   return (
-    <section className="bg-surface-2/50">
+    <section className="theme-light bg-bg text-ink">
       <div className="mx-auto grid max-w-[1400px] gap-12 px-4 py-20 sm:px-6 lg:grid-cols-[1fr_1.05fr] lg:gap-16 lg:px-10 lg:py-28">
         <Reveal className="lg:max-w-xl">
           <p className="mb-5 inline-flex items-center gap-2 text-sm font-medium text-accent-fg">
@@ -55,7 +55,7 @@ export function FoundingSupplier() {
               return (
                 <li
                   key={b.title}
-                  className="rounded-xl border border-line bg-surface p-5"
+                  className="theme-wine text-ink rounded-xl border border-line bg-surface p-5"
                 >
                   <span className="inline-flex h-10 w-10 items-center justify-center rounded-full bg-accent text-accent-ink">
                     <Icon size={20} weight="regular" />
@@ -78,7 +78,7 @@ export function FoundingSupplier() {
               so targeting the section would under-shoot. scroll-mt clears the nav. */}
           <div
             id="apply"
-            className="scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_44px_-28px_rgba(20,16,12,0.4)] sm:p-7"
+            className="theme-wine text-ink scroll-mt-24 rounded-2xl border border-line bg-surface p-5 shadow-[0_18px_44px_-28px_rgba(20,16,12,0.4)] sm:p-7"
           >
             <h3 className="font-serif text-2xl font-medium text-ink">
               Apply for a founding listing

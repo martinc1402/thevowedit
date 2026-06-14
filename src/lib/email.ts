@@ -45,24 +45,24 @@ export async function sendInquiryEmail(
   ];
 
   const html = `
-    <div style="font-family:system-ui,sans-serif;color:#211c17;max-width:560px">
+    <div style="font-family:system-ui,sans-serif;color:#581824;max-width:560px">
       <h2 style="margin:0 0 16px">New inquiry for ${esc(f.supplierName)}</h2>
       <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
         ${rows
           .map(
             ([k, v]) =>
               `<tr>
-                 <td style="padding:6px 12px 6px 0;color:#6b6459;white-space:nowrap;vertical-align:top">${esc(k)}</td>
+                 <td style="padding:6px 12px 6px 0;color:#8a5560;white-space:nowrap;vertical-align:top">${esc(k)}</td>
                  <td style="padding:6px 0;vertical-align:top">${esc(v)}</td>
                </tr>`,
           )
           .join("")}
       </table>
-      <div style="padding:14px 16px;background:#f5f2ed;border-radius:12px">
-        <div style="color:#6b6459;font-size:13px;margin-bottom:6px">Message</div>
+      <div style="padding:14px 16px;background:#faf6f0;border-radius:12px">
+        <div style="color:#8a5560;font-size:13px;margin-bottom:6px">Message</div>
         <div style="white-space:pre-wrap">${esc(f.message)}</div>
       </div>
-      <p style="color:#6b6459;font-size:13px;margin-top:16px">
+      <p style="color:#8a5560;font-size:13px;margin-top:16px">
         Reply to this email to reach ${esc(f.coupleName)} directly, then forward to the supplier.
       </p>
     </div>`;
@@ -135,20 +135,20 @@ export async function sendApplicationEmail(
   ];
 
   const html = `
-    <div style="font-family:system-ui,sans-serif;color:#211c17;max-width:560px">
+    <div style="font-family:system-ui,sans-serif;color:#581824;max-width:560px">
       <h2 style="margin:0 0 16px">New founding-supplier application: ${esc(f.businessName)}</h2>
       <table style="border-collapse:collapse;width:100%;margin-bottom:16px">
         ${rows
           .map(
             ([k, v]) =>
               `<tr>
-                 <td style="padding:6px 12px 6px 0;color:#6b6459;white-space:nowrap;vertical-align:top">${esc(k)}</td>
+                 <td style="padding:6px 12px 6px 0;color:#8a5560;white-space:nowrap;vertical-align:top">${esc(k)}</td>
                  <td style="padding:6px 0;vertical-align:top">${esc(v)}</td>
                </tr>`,
           )
           .join("")}
       </table>
-      <p style="color:#6b6459;font-size:13px;margin-top:16px">
+      <p style="color:#8a5560;font-size:13px;margin-top:16px">
         Reply to this email to reach ${esc(f.contactName)} at ${esc(f.businessName)} directly.
       </p>
     </div>`;

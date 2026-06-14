@@ -1,0 +1,296 @@
+- generic [active] [ref=e1]:
+  - banner [ref=e2]:
+    - navigation [ref=e3]:
+      - link "The Vow Edit home" [ref=e4] [cursor=pointer]:
+        - /url: /
+        - img [ref=e5]
+        - generic [ref=e6]: The Vow Edit.
+      - generic [ref=e8]:
+        - img [ref=e9]
+        - text: Now onboarding founding suppliers · Starting in Cebu
+      - link "Apply for a founding listing" [ref=e12] [cursor=pointer]:
+        - /url: "#apply"
+  - main [ref=e13]:
+    - generic [ref=e17]:
+      - generic [ref=e18]:
+        - heading "Be one of the first wedding suppliers listed in Cebu." [level=1] [ref=e19]
+        - paragraph [ref=e20]: Launching soon in Cebu. Claim a free founding listing before couples start searching.
+      - generic [ref=e22]:
+        - generic [ref=e23]:
+          - generic [ref=e24]: I offer
+          - generic [ref=e25]:
+            - combobox "What you offer" [ref=e26]:
+              - option "Photographers" [selected]
+              - option "Hair & Makeup"
+              - option "Catering"
+              - option "Venues"
+              - option "Florists"
+              - option "Coordinators"
+              - option "Videographers"
+              - option "Cakes"
+              - option "Content creators"
+            - img
+        - generic [ref=e27]:
+          - generic [ref=e28]: In
+          - generic [ref=e29]:
+            - combobox "Area served" [ref=e30]:
+              - option "Select an area" [disabled] [selected]
+              - option "Cebu City"
+              - option "Mandaue City"
+              - option "Lapu-Lapu City (Mactan)"
+              - option "Talisay City"
+              - option "Toledo City"
+              - option "Danao City"
+              - option "Carcar City"
+              - option "Naga City"
+              - option "Bogo City"
+              - option "Cordova"
+              - option "Consolacion"
+              - option "Liloan"
+              - option "Minglanilla"
+              - option "Compostela"
+              - option "Moalboal"
+              - option "Oslob"
+              - option "Badian"
+              - option "Argao"
+              - option "Dalaguete"
+              - option "Daanbantayan (Malapascua)"
+              - option "Bantayan"
+              - option "Santander"
+              - option "Other (Cebu)"
+            - img
+        - link "Apply for a founding listing" [ref=e31] [cursor=pointer]:
+          - /url: "#apply"
+          - text: Apply for a founding listing
+          - img [ref=e32]
+    - generic [ref=e35]:
+      - generic [ref=e36]:
+        - paragraph [ref=e37]:
+          - img [ref=e38]
+          - text: For Cebu wedding suppliers
+        - heading "Run a wedding business in Cebu?" [level=2] [ref=e40]
+        - paragraph [ref=e41]: We are inviting the first wedding suppliers in Cebu to claim a free founding listing before launch. Apply now to get found by couples the moment they start planning.
+        - list [ref=e42]:
+          - listitem [ref=e43]:
+            - img [ref=e45]
+            - heading "A free founding listing" [level=3] [ref=e47]
+            - paragraph [ref=e48]: Claim your spot at no cost. Founding suppliers are listed free, with no commission on bookings.
+          - listitem [ref=e49]:
+            - img [ref=e51]
+            - heading "Get found at launch" [level=3] [ref=e53]
+            - paragraph [ref=e54]: Be in front of Cebu couples the day they start searching, not months after everyone else.
+          - listitem [ref=e55]:
+            - img [ref=e57]
+            - heading "A verified badge" [level=3] [ref=e59]
+            - paragraph [ref=e60]: We are verifying founding suppliers before launch, so couples can see at a glance who has been checked.
+          - listitem [ref=e61]:
+            - img [ref=e63]
+            - heading "Early-mover advantage" [level=3] [ref=e65]
+            - paragraph [ref=e66]: First suppliers in a category set the bar and keep the visibility that comes with being early.
+      - generic [ref=e68]:
+        - heading "Apply for a founding listing" [level=3] [ref=e69]
+        - paragraph [ref=e70]: Takes a minute. We will be in touch before launch.
+        - generic [ref=e72]:
+          - generic [ref=e73]:
+            - generic [ref=e74]: Business name
+            - textbox "Business name" [ref=e75]:
+              - /placeholder: e.g. Aria Studios
+          - generic [ref=e76]:
+            - generic [ref=e77]: Category
+            - generic [ref=e78]:
+              - combobox "Category" [ref=e79]:
+                - option "Photographers" [selected]
+                - option "Hair & Makeup"
+                - option "Catering"
+                - option "Venues"
+                - option "Florists"
+                - option "Coordinators"
+                - option "Videographers"
+                - option "Cakes"
+                - option "Content creators"
+              - img
+          - group [ref=e80]:
+            - generic [ref=e81]: Areas served
+            - generic [ref=e82] [cursor=pointer]:
+              - checkbox "Serves all of Cebu (island-wide)" [ref=e83]
+              - generic [ref=e84]: Serves all of Cebu (island-wide)
+            - generic [ref=e86]: or choose specific areas
+            - generic [ref=e88]:
+              - combobox "Add an area you serve" [ref=e89]:
+                - option "Add an area…" [disabled] [selected]
+                - option "Cebu City"
+                - option "Mandaue City"
+                - option "Lapu-Lapu City (Mactan)"
+                - option "Talisay City"
+                - option "Toledo City"
+                - option "Danao City"
+                - option "Carcar City"
+                - option "Naga City"
+                - option "Bogo City"
+                - option "Cordova"
+                - option "Consolacion"
+                - option "Liloan"
+                - option "Minglanilla"
+                - option "Compostela"
+                - option "Moalboal"
+                - option "Oslob"
+                - option "Badian"
+                - option "Argao"
+                - option "Dalaguete"
+                - option "Daanbantayan (Malapascua)"
+                - option "Bantayan"
+                - option "Santander"
+                - option "Other (Cebu)"
+              - img
+          - generic [ref=e90]:
+            - generic [ref=e91]: Contact name
+            - textbox "Contact name" [ref=e92]:
+              - /placeholder: Who we should talk to
+          - generic [ref=e93]:
+            - generic [ref=e94]:
+              - generic [ref=e95]: Email
+              - textbox "Email" [ref=e96]:
+                - /placeholder: you@business.com
+            - generic [ref=e97]:
+              - generic [ref=e98]: Mobile
+              - textbox "Mobile" [ref=e99]:
+                - /placeholder: 0917 000 0000
+          - generic [ref=e100]:
+            - generic [ref=e101]: Website or Instagram (optional)
+            - textbox "Website or Instagram (optional)" [ref=e102]:
+              - /placeholder: instagram.com/yourstudio
+          - generic [ref=e103]:
+            - generic [ref=e104]: Price range (optional)
+            - textbox "Price range (optional)" [ref=e105]:
+              - /placeholder: e.g. ₱35k-₱120k
+          - generic [ref=e107]:
+            - text: Company
+            - textbox [ref=e108]
+          - generic [ref=e109]:
+            - checkbox "I agree to have my business listed on The Vow Edit and accept the Privacy Notice." [ref=e110]
+            - generic [ref=e111]:
+              - text: I agree to have my business listed on The Vow Edit and accept the
+              - link "Privacy Notice" [ref=e112] [cursor=pointer]:
+                - /url: /privacy
+              - text: .
+          - button "Apply for a founding listing" [disabled] [ref=e113]:
+            - img [ref=e114]
+            - text: Apply for a founding listing
+          - paragraph [ref=e116]: Founding listings are free. No credit card, no commitment.
+    - generic [ref=e117]:
+      - generic [ref=e118]:
+        - generic [ref=e119]:
+          - heading "Categories we are onboarding suppliers in" [level=2] [ref=e120]
+          - paragraph [ref=e121]: A preview of what couples will browse at launch. Suppliers will be verified, with pricing shown upfront.
+        - generic [ref=e122]:
+          - generic [ref=e125]:
+            - img "Wedding photographer in Cebu" [ref=e126]
+            - generic [ref=e128]:
+              - heading "Photographers" [level=3] [ref=e129]
+              - paragraph [ref=e130]: Full-day & elopement coverage
+          - generic [ref=e133]:
+            - img "Hair and makeup artist in Cebu" [ref=e134]
+            - generic [ref=e136]:
+              - heading "Hair & Makeup" [level=3] [ref=e137]
+              - paragraph [ref=e138]: Bridal HMUA & entourage
+          - generic [ref=e141]:
+            - img "Wedding catering in Cebu" [ref=e142]
+            - generic [ref=e144]:
+              - heading "Catering" [level=3] [ref=e145]
+              - paragraph [ref=e146]: Plated, buffet & grazing
+          - generic [ref=e149]:
+            - img "Wedding venue in Cebu" [ref=e150]
+            - generic [ref=e152]:
+              - heading "Venues" [level=3] [ref=e153]
+              - paragraph [ref=e154]: Beach, garden, ballroom
+          - generic [ref=e157]:
+            - img "Wedding florist in Cebu" [ref=e158]
+            - generic [ref=e160]:
+              - heading "Florists" [level=3] [ref=e161]
+              - paragraph [ref=e162]: Bouquets & installations
+          - generic [ref=e165]:
+            - img "Wedding coordinator in Cebu" [ref=e166]
+            - generic [ref=e168]:
+              - heading "Coordinators" [level=3] [ref=e169]
+              - paragraph [ref=e170]: On-the-day to full planning
+          - generic [ref=e173]:
+            - img "Wedding videographer in Cebu" [ref=e174]
+            - generic [ref=e176]:
+              - heading "Videographers" [level=3] [ref=e177]
+              - paragraph [ref=e178]: Films & same-day edits
+          - generic [ref=e181]:
+            - img "Wedding cake in Cebu" [ref=e182]
+            - generic [ref=e184]:
+              - heading "Cakes" [level=3] [ref=e185]
+              - paragraph [ref=e186]: Tiered & dessert tables
+          - generic [ref=e189]:
+            - img "Wedding content creator in Cebu" [ref=e190]
+            - generic [ref=e192]:
+              - heading "Content creators" [level=3] [ref=e193]
+              - paragraph [ref=e194]: Reels, TikTok & same-day social
+        - generic [ref=e195]:
+          - paragraph [ref=e196]: Offer one of these in Cebu?
+          - link "Apply for a founding listing" [ref=e197] [cursor=pointer]:
+            - /url: "#apply"
+      - generic [ref=e200]:
+        - generic [ref=e201]:
+          - paragraph [ref=e202]: Price transparency
+          - heading "What does a Cebu wedding actually cost?" [level=2] [ref=e203]
+          - paragraph [ref=e204]: Ballpark price ranges to help you plan a Cebu wedding budget. Typical guidance to set expectations, not quotes.
+        - generic [ref=e205]:
+          - generic [ref=e206]:
+            - generic [ref=e207]:
+              - paragraph [ref=e208]: Photography
+              - paragraph [ref=e209]: ₱35kto₱120k
+              - paragraph [ref=e210]: full-day coverage
+            - generic [ref=e211]:
+              - paragraph [ref=e212]: Catering
+              - paragraph [ref=e213]: ₱850to₱1,800
+              - paragraph [ref=e214]: per head, plated
+            - generic [ref=e215]:
+              - paragraph [ref=e216]: Venue rental
+              - paragraph [ref=e217]: ₱60kto₱250k
+              - paragraph [ref=e218]: ceremony + reception
+          - paragraph [ref=e219]: Indicative ranges based on typical Cebu wedding pricing, updated for 2026.
+      - generic [ref=e221]:
+        - generic [ref=e222]:
+          - heading "The weddings couples are picturing" [level=2] [ref=e223]
+          - paragraph [ref=e224]: Many couples in Cebu choose the setting first. At launch they will find suppliers who already work that kind of day.
+        - generic [ref=e225]:
+          - generic [ref=e227]:
+            - img "Beach wedding in Mactan, Cebu" [ref=e229]
+            - generic [ref=e230]:
+              - heading "Beach & Mactan" [level=3] [ref=e231]
+              - paragraph [ref=e232]: Island resorts and shoreline ceremonies
+          - generic [ref=e234]:
+            - img "Garden wedding in Cebu" [ref=e236]
+            - generic [ref=e237]:
+              - heading "Garden" [level=3] [ref=e238]
+              - paragraph [ref=e239]: Highland estates above the city
+          - generic [ref=e241]:
+            - img "Church wedding in Cebu" [ref=e243]
+            - generic [ref=e244]:
+              - heading "Church" [level=3] [ref=e245]
+              - paragraph [ref=e246]: Heritage cathedrals and chapels
+          - generic [ref=e248]:
+            - img "Hotel ballroom wedding in Cebu" [ref=e250]
+            - generic [ref=e251]:
+              - heading "Hotel ballroom" [level=3] [ref=e252]
+              - paragraph [ref=e253]: City receptions, fully styled
+  - contentinfo [ref=e254]:
+    - generic [ref=e255]:
+      - generic [ref=e256]:
+        - generic [ref=e257]:
+          - link "The Vow Edit home" [ref=e258] [cursor=pointer]:
+            - /url: /
+            - img [ref=e259]
+            - generic [ref=e260]: The Vow Edit.
+          - paragraph [ref=e261]: A wedding-supplier directory for Cebu, launching soon. Onboarding founding suppliers across Cebu.
+        - link "Apply for a founding listing" [ref=e262] [cursor=pointer]:
+          - /url: "#apply"
+      - generic [ref=e263]:
+        - paragraph [ref=e264]: Wedding suppliers in Cebu, Philippines. © 2026 The Vow Edit.
+        - link "Privacy" [ref=e265] [cursor=pointer]:
+          - /url: /privacy
+  - button "Open Next.js Dev Tools" [ref=e271] [cursor=pointer]:
+    - img [ref=e272]

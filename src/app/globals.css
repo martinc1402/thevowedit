@@ -1,39 +1,25 @@
 @import "tailwindcss";
 
-/* Class-based dark mode driven by next-themes (attribute="class") */
-@custom-variant dark (&:where(.dark, .dark *));
-
 /*
-  Palette: warm ivory paper + charcoal ink, single locked accent = deep forest green.
-  Drawn from adovasio.png (sampled bg #F5F2ED). One accent across the whole page.
+  Palette: a single locked wine theme. Burgundy field (#581824) + off-white ink
+  (#FAF6F0), strictly two colours. Cream is the accent surface: CTAs are cream
+  buttons with wine text, and the price band is a full cream "paper" block.
+  Form inputs and cards are a raised wine surface separated from the page by the
+  hairline border. One theme only (no light/dark toggle).
   Radius system: cards/surfaces = rounded-2xl, buttons/badges/pills = rounded-full.
 */
 :root {
-  --bg: #f5f2ed;
-  --surface: #fbfaf6;
-  --surface-2: #ece7dc;
-  --ink: #211c17;
-  --muted: #6b6459;
-  --line: #e3ded3;
-  --accent: #3b4a3c;        /* green surface: buttons, price band, badge */
-  --accent-hover: #2f3b30;
-  --accent-ink: #f5f2ed;    /* text on the green surface */
-  --accent-fg: #3b4a3c;     /* green as foreground text/icon on light bg */
-  --scrim: 31, 26, 20;      /* ink rgb for hero gradient scrim */
-}
-
-.dark {
-  --bg: #15120f;
-  --surface: #1f1b17;
-  --surface-2: #2a241e;
-  --ink: #f2eee6;
-  --muted: #a89f90;
-  --line: #322c24;
-  --accent: #46583f;        /* a touch lighter so the green block reads on near-black */
-  --accent-hover: #54684b;
-  --accent-ink: #f4f1e9;
-  --accent-fg: #93ad8a;     /* light sage for AA contrast on dark bg */
-  --scrim: 10, 8, 6;
+  --bg: #581824;            /* burgundy / wine page field */
+  --surface: #6e2734;       /* raised wine: form inputs, cards, success panel */
+  --surface-2: #82343f;     /* higher wine: status pill, chips, hover rows */
+  --ink: #faf6f0;           /* off-white primary text */
+  --muted: #d8c2c2;         /* warm rose-cream secondary text */
+  --line: #864350;          /* soft wine hairline borders */
+  --accent: #faf6f0;        /* cream surface: CTAs + price band paper */
+  --accent-hover: #ece3d6;  /* warm cream on CTA hover */
+  --accent-ink: #581824;    /* wine text on cream buttons */
+  --accent-fg: #faf6f0;     /* cream highlight text/icon on wine */
+  --scrim: 88 24 36;        /* burgundy rgb for hero gradient scrim */
 }
 
 @theme inline {
@@ -63,21 +49,12 @@
     font-feature-settings: "cv11", "ss01";
     -webkit-font-smoothing: antialiased;
     text-rendering: optimizeLegibility;
+    /* Wine theme is dark: native select popups + checkbox chrome render dark. */
+    color-scheme: dark;
   }
   ::selection {
     background-color: var(--accent);
     color: var(--accent-ink);
-  }
-  /* Native controls follow the theme so the hero select/inputs look right in both modes */
-  select,
-  input,
-  textarea {
-    color-scheme: light;
-  }
-  .dark select,
-  .dark input,
-  .dark textarea {
-    color-scheme: dark;
   }
 }
 
@@ -85,4 +62,37 @@
   html {
     scroll-behavior: auto;
   }
+}
+
+/* Scoped light theme: warm off-white field + burgundy ink, used as a deliberate
+   light block on the otherwise-wine page. Inverts the accent so CTAs become wine
+   buttons with cream text. Applied via the `theme-light` class on a section. */
+.theme-light {
+  --bg: #fbf8f4;            /* warm off-white page field */
+  --surface: #ffffff;      /* white cards / inputs */
+  --surface-2: #f1e9e1;    /* warm tint (image placeholders) */
+  --ink: #581824;          /* burgundy primary text */
+  --muted: #8a626a;        /* muted mauve-burgundy secondary text (AA on white) */
+  --line: #e8dcd4;         /* warm light hairline */
+  --accent: #581824;       /* wine surface: CTAs */
+  --accent-hover: #6e2734; /* darker wine on hover */
+  --accent-ink: #faf6f0;   /* cream text on wine buttons */
+  --accent-fg: #581824;    /* burgundy highlight text/icon */
+  color-scheme: light;     /* native select/checkbox chrome renders light here */
+}
+
+/* Scoped wine theme: re-asserts the root burgundy palette so cards can sit as
+   wine blocks inside a `.theme-light` section. Mirrors the :root tokens. */
+.theme-wine {
+  --bg: #581824;
+  --surface: #6e2734;      /* raised wine: the card fill */
+  --surface-2: #82343f;
+  --ink: #faf6f0;          /* cream text */
+  --muted: #d8c2c2;        /* rose-cream secondary text */
+  --line: #864350;         /* soft wine hairline */
+  --accent: #faf6f0;       /* cream: icon badge + CTA fill */
+  --accent-hover: #ece3d6;
+  --accent-ink: #581824;   /* wine glyph/label on cream */
+  --accent-fg: #faf6f0;    /* cream highlight text/icon */
+  color-scheme: dark;
 }

@@ -3,7 +3,7 @@
 import { useState } from "react";
 import Link from "next/link";
 import { List, X, SealCheck } from "@phosphor-icons/react";
-import { ThemeToggle } from "@/components/theme-toggle";
+import { Wordmark } from "@/components/wordmark";
 
 // Pre-launch: nothing is browsable yet, so no nav links for MVP. The primary
 // action is applying to list. Restore entries here (e.g. Browse) once the
@@ -18,19 +18,6 @@ function StatusPill({ className = "" }: { className?: string }) {
       <SealCheck size={13} weight="fill" className="text-accent-fg" />
       Now onboarding founding suppliers · Starting in Cebu
     </span>
-  );
-}
-
-function Wordmark() {
-  return (
-    <Link
-      href="/"
-      className="font-serif text-2xl font-semibold tracking-tight text-ink"
-      aria-label="The Vow Edit home"
-    >
-      The Vow Edit
-      <span className="text-accent-fg">.</span>
-    </Link>
   );
 }
 
@@ -56,7 +43,6 @@ export function SiteNav() {
         </div>
 
         <div className="flex items-center gap-2">
-          <ThemeToggle className="hidden sm:inline-flex" />
           <a
             href="#apply"
             className="hidden rounded-xl bg-accent px-5 py-2.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98] sm:inline-flex"
@@ -90,16 +76,13 @@ export function SiteNav() {
                 {l.label}
               </Link>
             ))}
-            <div className="mt-2 flex items-center gap-3">
-              <a
-                href="#apply"
-                onClick={() => setOpen(false)}
-                className="flex-1 rounded-xl bg-accent px-5 py-3 text-center text-sm font-medium text-accent-ink"
-              >
-                Apply for a founding listing
-              </a>
-              <ThemeToggle />
-            </div>
+            <a
+              href="#apply"
+              onClick={() => setOpen(false)}
+              className="mt-2 rounded-xl bg-accent px-5 py-3 text-center text-sm font-medium text-accent-ink"
+            >
+              Apply for a founding listing
+            </a>
           </div>
         </div>
       )}

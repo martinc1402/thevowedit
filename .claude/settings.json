@@ -1,0 +1,11 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(claude mcp *)",
+      "Bash(rm /Users/martincasey/Projects/hitchd/.mcp.json && echo \"removed .mcp.json\")"
+    ],
+    "additionalDirectories": [
+      "/Users/martincasey/Projects/hitchd"
+    ]
+  }
+}

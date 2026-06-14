@@ -24,7 +24,7 @@ export const categories: Category[] = [
   { slug: "coordinators", label: "Coordinators", href: "/coordinators/cebu", blurb: "On-the-day to full planning", image: "/images/cebu/category-coordinators.jpg", alt: "Wedding coordinator in Cebu" },
   { slug: "videographers", label: "Videographers", href: "/videographers/cebu", blurb: "Films & same-day edits", image: "/images/cebu/category-videographers.jpg", alt: "Wedding videographer in Cebu" },
   { slug: "cakes", label: "Cakes", href: "/cakes/cebu", blurb: "Tiered & dessert tables", image: "/images/cebu/category-cakes.jpg", alt: "Wedding cake in Cebu" },
-  { slug: "content-creators", label: "Content creators", href: "/content-creators/cebu", blurb: "Reels, TikTok & same-day social", image: "/images/cebu/category-content-creators.jpg", alt: "Wedding content creator in Cebu" },
+  { slug: "content-creators", label: "Content creators", href: "/content-creators/cebu", blurb: "Reels, TikTok & same-day social", image: "/images/cebu/category-content-creators-v2.jpg", alt: "Wedding content creator in Cebu" },
 ];
 
 export type CategoryCopy = {
