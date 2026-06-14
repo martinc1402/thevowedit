@@ -17,6 +17,11 @@ create table if not exists public.suppliers (
   price_max                   int,
   currency                    text not null default 'PHP',
   per_service_pricing         jsonb,                          -- { "photographers": {"min":..,"max":..}, ... }
+  price_typical               int,                            -- "typical amount couples spend"
+  pricing_notes               text,                           -- what's included / pricing FAQ
+  price_includes_sc_vat       boolean,                        -- caterer transparency (rate already includes SC + VAT?)
+  response_time_note          text,                           -- e.g. "usually replies within a day"
+  booking_terms               text,                           -- downpayment %, payment methods
   short_description           text,                           -- card blurb
   description                 text,                           -- long "About" copy
   verified                    boolean not null default false,
@@ -46,6 +51,11 @@ create table if not exists public.suppliers (
 alter table public.suppliers add column if not exists video_url text;
 alter table public.suppliers add column if not exists team_photo text;
 alter table public.suppliers add column if not exists bio text;
+alter table public.suppliers add column if not exists price_typical int;
+alter table public.suppliers add column if not exists pricing_notes text;
+alter table public.suppliers add column if not exists price_includes_sc_vat boolean;
+alter table public.suppliers add column if not exists response_time_note text;
+alter table public.suppliers add column if not exists booking_terms text;
 
 -- Contains-query indexes (GIN) for categories / serves_areas array lookups.
 create index if not exists suppliers_categories_gin   on public.suppliers using gin (categories);
