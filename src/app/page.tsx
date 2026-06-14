@@ -19,8 +19,9 @@ export default function Home() {
         <HeroLogo />
 
         {/* Raised, opaque content that scrolls up and over the pinned hero
-            (the "hold & cover" reveal). */}
-        <div className="relative z-10">
+            (the "hold & cover" reveal). bg-bg makes it a solid wine panel so the
+            pinned logo never shows through transparent/translucent sections. */}
+        <div className="relative z-10 bg-bg">
           {/* Conversion centerpiece: value prop + application form */}
           <FoundingSupplier />
 
