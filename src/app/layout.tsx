@@ -25,6 +25,15 @@ export const metadata: Metadata = {
     siteName: "The Vow Edit",
     type: "website",
     locale: "en_PH",
+    // og:image is supplied automatically by src/app/opengraph-image.png
+    // (Next file convention), with the absolute URL from metadataBase.
+  },
+  twitter: {
+    // X/LinkedIn render the large image; falls back to the og:image above.
+    card: "summary_large_image",
+    title: "The Vow Edit - Wedding suppliers in Cebu, launching soon",
+    description:
+      "Launching soon in Cebu. Wedding suppliers can claim a free founding listing before couples start searching.",
   },
 };
 
