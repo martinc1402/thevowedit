@@ -55,6 +55,8 @@ export function ApplyForm() {
   });
   const [status, setStatus] = useState<Status>("idle");
   const [errorMsg, setErrorMsg] = useState("");
+  const [reference, setReference] = useState("");
+  const [emailed, setEmailed] = useState(false);
 
   // Once the supplier touches the area checkboxes, stop seeding from the hero so a
   // later hero "In" change can't clobber their multi-selection.
@@ -135,6 +137,8 @@ export function ApplyForm() {
         company: data.company,
       });
       if (result.ok) {
+        setReference(result.reference);
+        setEmailed(result.emailed);
         setStatus("success");
       } else {
         setStatus("error");
@@ -159,6 +163,22 @@ export function ApplyForm() {
           Thanks for putting {data.business || "your business"} forward. We will
           review it and reach out about your free founding listing before launch.
         </p>
+        {reference && (
+          <div className="mx-auto mt-6 max-w-sm">
+            <div className="rounded-xl border border-line bg-surface-2 px-5 py-4">
+              <p className="text-xs font-medium uppercase tracking-[0.14em] text-muted">
+                Your reference
+              </p>
+              <p className="mt-1 font-mono text-lg font-semibold tracking-wide text-ink">
+                {reference}
+              </p>
+            </div>
+            <p className="mt-2 text-xs leading-relaxed text-muted">
+              Keep this for your records.
+              {emailed ? " We have emailed you a confirmation." : ""}
+            </p>
+          </div>
+        )}
       </div>
     );
   }

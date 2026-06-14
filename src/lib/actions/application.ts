@@ -8,7 +8,10 @@ import {
   areaSelectionLabel,
   allAreasValue,
 } from "@/lib/locations";
-import { sendApplicationEmail } from "@/lib/email";
+import {
+  sendApplicationEmail,
+  sendApplicantConfirmationEmail,
+} from "@/lib/email";
 
 export type ApplicationInput = {
   business: string;
@@ -23,7 +26,16 @@ export type ApplicationInput = {
   company: string; // honeypot - real users leave this empty
 };
 
-export type ApplicationResult = { ok: true } | { ok: false; error: string };
+export type ApplicationResult =
+  | { ok: true; reference: string; emailed: boolean }
+  | { ok: false; error: string };
+
+// Human-facing reference / tracking code, derived from the row's UUID id so it
+// maps 1:1 to the stored application (support can look it up by id prefix). No
+// extra DB column needed. e.g. "TVE-3F9A2C1B".
+function formatReference(id: string): string {
+  return "TVE-" + id.replace(/-/g, "").slice(0, 8).toUpperCase();
+}
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const MOBILE_RE = /^[0-9+()\-\s]{7,20}$/;
@@ -87,7 +99,7 @@ export async function submitApplication(
   // don't tip them off, and don't store spam. Type-guarded so a non-string
   // payload can't throw here.
   if (typeof input.company === "string" && input.company.trim() !== "") {
-    return { ok: true };
+    return { ok: true, reference: "", emailed: false };
   }
 
   // Throttle bursts from a single client before doing any work or writing.
@@ -178,7 +190,8 @@ export async function submitApplication(
     return { ok: false, error: GENERIC_ERROR };
   }
 
-  const { error: insertError } = await admin
+  // Return the new row id so we can derive the applicant's reference code.
+  const { data: inserted, error: insertError } = await admin
     .from("supplier_applications")
     .insert({
       business_name: business,
@@ -194,17 +207,27 @@ export async function submitApplication(
       consent_given: true,
       consent_at: consentAt,
       // status defaults to 'pending' in the DB
-    });
+    })
+    .select("id")
+    .single();
 
-  if (insertError) {
+  if (insertError || !inserted?.id) {
     // Log a short, non-PII message only - never the applicant record or raw
     // Supabase error detail surfaced to the client.
-    console.error("[application] insert failed:", insertError.message);
+    console.error("[application] insert failed:", insertError?.message);
     return { ok: false, error: GENERIC_ERROR };
   }
 
-  // Best-effort notification. Never fails the request - the application is
-  // already saved, so it is never silently lost even if email is unconfigured.
+  const reference = formatReference(inserted.id as string);
+  const receivedAt = new Date().toLocaleString("en-PH", {
+    timeZone: "Asia/Manila",
+    dateStyle: "medium",
+    timeStyle: "short",
+  });
+
+  // Best-effort notification to the team. Never fails the request - the
+  // application is already saved, so it is never silently lost even if email is
+  // unconfigured.
   try {
     const result = await sendApplicationEmail({
       businessName: business,
@@ -215,18 +238,35 @@ export async function submitApplication(
       mobile,
       link,
       priceRange,
-      receivedAt: new Date().toLocaleString("en-PH", {
-        timeZone: "Asia/Manila",
-        dateStyle: "medium",
-        timeStyle: "short",
-      }),
+      reference,
+      receivedAt,
     });
     if (!result.sent) {
-      console.warn("[application] email not sent:", result.reason);
+      console.warn("[application] team email not sent:", result.reason);
     }
   } catch (e) {
-    console.error("[application] email error:", e);
+    console.error("[application] team email error:", e);
   }
 
-  return { ok: true };
+  // Best-effort confirmation to the applicant (with their reference code). Also
+  // never fails the request: requires RESEND_API_KEY + a verified sending domain
+  // to actually deliver; otherwise it is logged and the request still succeeds.
+  let emailed = false;
+  try {
+    const result = await sendApplicantConfirmationEmail({
+      to: email,
+      businessName: business,
+      contactName: contact,
+      reference,
+      receivedAt,
+    });
+    emailed = result.sent;
+    if (!result.sent) {
+      console.warn("[application] confirmation email not sent:", result.reason);
+    }
+  } catch (e) {
+    console.error("[application] confirmation email error:", e);
+  }
+
+  return { ok: true, reference, emailed };
 }
