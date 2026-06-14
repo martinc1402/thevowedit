@@ -11,7 +11,6 @@ import { CaretDown } from "@phosphor-icons/react";
 // fades out before the content covers it.
 
 const WINE = "#581824";
-const EASE = [0.16, 1, 0.3, 1] as const;
 
 const LOGO_MASK = {
   maskImage: "url(/images/icons/the-vow-edit.svg)",
@@ -45,9 +44,15 @@ export function HeroLogo() {
         aria-label="The Vow Edit"
         className={LOGO_CLASS}
         style={LOGO_MASK}
-        initial={{ opacity: 0, scale: 1.2 }}
+        initial={{ opacity: 0, scale: 0.9 }}
         animate={{ opacity: 1, scale: 1.7 }}
-        transition={{ duration: reduce ? 0 : 1.05, ease: EASE }}
+        transition={{
+          opacity: { duration: reduce ? 0 : 1.4, ease: "easeInOut" },
+          // Spring gives a subtle overshoot: grows slightly past 1.7, settles back.
+          scale: reduce
+            ? { duration: 0 }
+            : { type: "spring", duration: 1.6, bounce: 0.28 },
+        }}
       />
 
       {/* Scroll cue: bounces (unless reduced motion), fades out as you scroll. */}
