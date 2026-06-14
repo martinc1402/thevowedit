@@ -48,18 +48,6 @@ export const categoryCopy: Record<string, CategoryCopy> = {
   },
 };
 
-/**
- * Hero background media (served from /public/hero/). The poster paints first and
- * is the LCP; the video is decorative progressive enhancement layered over it.
- * `videoWebm` is optional — set it once you export a WebM and it renders as a
- * <source> ahead of the mp4 (smaller where supported). Leave "" to skip it.
- */
-export const heroMedia = {
-  poster: "/hero/start-frame.jpg",
-  videoMp4: "/hero/hero-video.mp4",
-  videoWebm: "", // e.g. "/hero/hero-video.webm" once exported
-};
-
 /** Categories shown in the hero search dropdown. */
 export const searchCategories = categories.map((c) => ({ value: c.slug, label: c.label }));
 

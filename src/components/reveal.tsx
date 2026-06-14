@@ -24,13 +24,17 @@ export function Reveal({
   const reduce = useReducedMotion();
   const MotionTag = motion[as];
 
+  // `initial` must NOT branch on `reduce`: it renders to the DOM, and the server
+  // has no media query (always non-reduced), so a reduce-dependent initial would
+  // mismatch on hydration for reduced-motion clients. Keep initial constant and
+  // make reduced motion a zero-duration transition instead (snap, no slide/fade).
   return (
     <MotionTag
       className={className}
-      initial={reduce ? false : { opacity: 0, y }}
+      initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.2 }}
-      transition={{ duration: 0.7, delay, ease: EASE }}
+      transition={{ duration: reduce ? 0 : 0.7, delay: reduce ? 0 : delay, ease: EASE }}
     >
       {children}
     </MotionTag>
@@ -69,13 +73,14 @@ export function RevealItem({
 }) {
   const reduce = useReducedMotion();
 
+  // Constant `initial` to avoid a reduced-motion hydration mismatch (see Reveal).
   return (
     <motion.div
       className={className}
-      initial={reduce ? false : { opacity: 0, y }}
+      initial={{ opacity: 0, y }}
       whileInView={{ opacity: 1, y: 0 }}
       viewport={{ once: true, amount: 0.15 }}
-      transition={{ duration: 0.6, ease: EASE }}
+      transition={{ duration: reduce ? 0 : 0.6, ease: EASE }}
     >
       {children}
     </motion.div>

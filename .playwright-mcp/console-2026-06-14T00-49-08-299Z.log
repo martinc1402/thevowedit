@@ -1,0 +1,880 @@
+[     373ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[     415ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  115068ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  115096ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  115132ms] [WARNING] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  115180ms] Error: Hydration failed because the server rendered HTML didn't match the client. As a result this tree will be regenerated on the client. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+https://react.dev/link/hydration-mismatch
+
+  ...
+    <InnerScrollAndFocusHandlerOld focusAndScrollRef={{scrollRef:null, ...}} cacheNode={{rsc:{...}, ...}}>
+      <ErrorBoundary errorComponent={undefined} errorStyles={undefined} errorScripts={undefined}>
+        <LoadingBoundary name="/" loading={null}>
+          <HTTPAccessFallbackBoundary notFound={{...}} forbidden={undefined} unauthorized={undefined}>
+            <HTTPAccessFallbackErrorBoundary pathname="/" notFound={{...}} forbidden={undefined} unauthorized={undefined} ...>
+              <RedirectBoundary>
+                <RedirectErrorBoundary router={{...}}>
+                  <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+                    <SegmentViewNode type="page" pagePath="page.tsx">
+                      <SegmentTrieNode>
+                      <Home>
+                        <ApplyPrefillProvider>
+                          <SiteNav>
+                          <main>
+                            <HeroCinematic>
+                              <section
++                               className="relative flex min-h-[100dvh] items-center justify-center overflow-hidden bg-bg"
+-                               className="relative bg-bg"
+-                               style={{height:"400vh"}}
+                              >
++                               <img
++                                 src="/hero/poster.jpg"
++                                 alt=""
++                                 aria-hidden={true}
++                                 className="absolute inset-0 h-full w-full object-cover"
++                               >
+-                               <div
+-                                 className="sticky top-0 h-[100dvh] overflow-hidden"
+-                                 style={{background-color:"rgb(88, 24..."}}
+-                               >
+                                ...
+                            ...
+                          ...
+                    ...
+                  ...
+      ...
+
+    at throwOnHydrationMismatch (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:3318:56)
+    at beginWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:6758:918)
+    at runWithFiberInDEV (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:965:74)
+    at performUnitOfWork (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9555:97)
+    at workLoopConcurrentByScheduler (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9551:58)
+    at renderRootConcurrent (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9534:71)
+    at performWorkOnRoot (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:9061:150)
+    at performWorkOnRootViaSchedulerTask (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_react-dom_096_9a-._.js:10255:9)
+    at MessagePort.performWorkUntilDeadline (http://localhost:3000/_next/static/chunks/node_modules_next_dist_compiled_1amofcm._.js:2647:64)
+[  115370ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  115387ms] [LOG] [Fast Refresh] done in 119ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  161830ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  162018ms] [LOG] [Fast Refresh] done in 294ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  171872ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  172075ms] [LOG] [Fast Refresh] done in 154ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  180154ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  180181ms] [LOG] [Fast Refresh] done in 79ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  190833ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  190859ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  192730ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  192747ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  192770ms] [WARNING] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  192790ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HTTPAccessFallbackErrorBoundary pathname="/" notFound={<SegmentViewNode>} forbidden={undefined} ...>
+      <RedirectBoundary>
+        <RedirectErrorBoundary router={{...}}>
+          <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:<Fragment>, ...}} segmentPath={[...]} ...>
+            <SegmentViewNode type="page" pagePath="page.tsx">
+              <SegmentTrieNode>
+              <Home>
+                <ApplyPrefillProvider>
+                  <SiteNav>
+                  <main>
+                    <HeroCinematic>
+                    <FoundingSupplier>
+                      <section className="theme-ligh...">
+                        <div className="mx-auto gr...">
+                          <Reveal className="lg:max-w-xl">
+                            <motion.div className="lg:max-w-xl" initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="lg:max-w-xl"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                          <Reveal delay={0.08}>
+                            <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className=""
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                    <div id="showcase" className="scroll-mt-16">
+                      <CategoryGrid>
+                        <section id="categories" className="mx-auto ma...">
+                          <Reveal className="mb-9 max-w...">
+                            <motion.div className="mb-9 max-w..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="mb-9 max-w-2xl lg:mb-12"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                          <RevealGroup className="grid grid-...">
+                            <div className="grid grid-...">
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                          <Reveal className="mt-9 flex ...">
+                            <motion.div className="mt-9 flex ..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                      <PriceBand>
+                        <section id="pricing" className="bg-accent ...">
+                          <div className="mx-auto ma...">
+                            <div className="grid gap-1...">
+                              <Reveal>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <Reveal>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                      <WeddingTypes>
+                        <section className="bg-surface...">
+                          <div className="mx-auto ma...">
+                            <Reveal className="mb-9 flex ...">
+                              <motion.div className="mb-9 flex ..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                                <div
+                                  className="mb-9 flex flex-col gap-3 lg:mb-12 lg:flex-row lg:items-end lg:justify-bet..."
+                                  style={{
+-                                   opacity: "0"
+-                                   transform: "translateY(24px)"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
+                            <RevealGroup className="grid grid-...">
+                              <div className="grid grid-...">
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                  ...
+            ...
+          ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[  192971ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  192999ms] [LOG] [Fast Refresh] done in 128ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  225727ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  225746ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  225771ms] [WARNING] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  225794ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HTTPAccessFallbackErrorBoundary pathname="/" notFound={{...}} forbidden={undefined} unauthorized={undefined} ...>
+      <RedirectBoundary>
+        <RedirectErrorBoundary router={{...}}>
+          <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+            <SegmentViewNode type="page" pagePath="page.tsx">
+              <SegmentTrieNode>
+              <Home>
+                <ApplyPrefillProvider>
+                  <SiteNav>
+                  <main>
+                    <HeroCinematic>
+                    <FoundingSupplier>
+                      <section className="theme-ligh...">
+                        <div className="mx-auto gr...">
+                          <Reveal className="lg:max-w-xl">
+                            <motion.div className="lg:max-w-xl" initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="lg:max-w-xl"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                          <Reveal delay={0.08}>
+                            <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className=""
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                    <div id="showcase" className="scroll-mt-16">
+                      <CategoryGrid>
+                        <section id="categories" className="mx-auto ma...">
+                          <Reveal className="mb-9 max-w...">
+                            <motion.div className="mb-9 max-w..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="mb-9 max-w-2xl lg:mb-12"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                          <RevealGroup className="grid grid-...">
+                            <div className="grid grid-...">
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                          <Reveal className="mt-9 flex ...">
+                            <motion.div className="mt-9 flex ..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                      <PriceBand>
+                        <section id="pricing" className="bg-accent ...">
+                          <div className="mx-auto ma...">
+                            <div className="grid gap-1...">
+                              <Reveal>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <Reveal>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                      <WeddingTypes>
+                        <section className="bg-surface...">
+                          <div className="mx-auto ma...">
+                            <Reveal className="mb-9 flex ...">
+                              <motion.div className="mb-9 flex ..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                                <div
+                                  className="mb-9 flex flex-col gap-3 lg:mb-12 lg:flex-row lg:items-end lg:justify-bet..."
+                                  style={{
+-                                   opacity: "0"
+-                                   transform: "translateY(24px)"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
+                            <RevealGroup className="grid grid-...">
+                              <div className="grid grid-...">
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                  ...
+            ...
+          ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[  258003ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  258033ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  258069ms] [WARNING] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  258092ms] [ERROR] A tree hydrated but some attributes of the server rendered HTML didn't match the client properties. This won't be patched up. This can happen if a SSR-ed Client Component used:
+
+- A server/client branch `if (typeof window !== 'undefined')`.
+- Variable input such as `Date.now()` or `Math.random()` which changes each time it's called.
+- Date formatting in a user's locale which doesn't match the server.
+- External changing data without sending a snapshot of it along with the HTML.
+- Invalid HTML tag nesting.
+
+It can also happen if the client has a browser extension installed which messes with the HTML before React loaded.
+
+%s%s https://react.dev/link/hydration-mismatch 
+
+  ...
+    <HTTPAccessFallbackErrorBoundary pathname="/" notFound={{...}} forbidden={undefined} unauthorized={undefined} ...>
+      <RedirectBoundary>
+        <RedirectErrorBoundary router={{...}}>
+          <InnerLayoutRouter url="/" tree={[...]} params={{}} cacheNode={{rsc:{...}, ...}} segmentPath={[...]} ...>
+            <SegmentViewNode type="page" pagePath="page.tsx">
+              <SegmentTrieNode>
+              <Home>
+                <ApplyPrefillProvider>
+                  <SiteNav>
+                  <main>
+                    <HeroCinematic>
+                    <FoundingSupplier>
+                      <section className="theme-ligh...">
+                        <div className="mx-auto gr...">
+                          <Reveal className="lg:max-w-xl">
+                            <motion.div className="lg:max-w-xl" initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="lg:max-w-xl"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                          <Reveal delay={0.08}>
+                            <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className=""
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                    <div id="showcase" className="scroll-mt-16">
+                      <CategoryGrid>
+                        <section id="categories" className="mx-auto ma...">
+                          <Reveal className="mb-9 max-w...">
+                            <motion.div className="mb-9 max-w..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="mb-9 max-w-2xl lg:mb-12"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                          <RevealGroup className="grid grid-...">
+                            <div className="grid grid-...">
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <RevealItem>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                          <Reveal className="mt-9 flex ...">
+                            <motion.div className="mt-9 flex ..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                              <div
+                                className="mt-9 flex flex-col items-start gap-3 sm:flex-row sm:items-center"
+                                style={{
+-                                 opacity: "0"
+-                                 transform: "translateY(24px)"
+                                }}
+                                ref={function useMotionRef.useCallback}
+                              >
+                      <PriceBand>
+                        <section id="pricing" className="bg-accent ...">
+                          <div className="mx-auto ma...">
+                            <div className="grid gap-1...">
+                              <Reveal>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                              <Reveal>
+                                <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                  <div
+                                    className=""
+                                    style={{
+-                                     opacity: "0"
+-                                     transform: "translateY(24px)"
+                                    }}
+                                    ref={function useMotionRef.useCallback}
+                                  >
+                      <WeddingTypes>
+                        <section className="bg-surface...">
+                          <div className="mx-auto ma...">
+                            <Reveal className="mb-9 flex ...">
+                              <motion.div className="mb-9 flex ..." initial={false} whileInView={{opacity:1,y:0}} ...>
+                                <div
+                                  className="mb-9 flex flex-col gap-3 lg:mb-12 lg:flex-row lg:items-end lg:justify-bet..."
+                                  style={{
+-                                   opacity: "0"
+-                                   transform: "translateY(24px)"
+                                  }}
+                                  ref={function useMotionRef.useCallback}
+                                >
+                            <RevealGroup className="grid grid-...">
+                              <div className="grid grid-...">
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                                <RevealItem>
+                                  <motion.div className="" initial={false} whileInView={{opacity:1,y:0}} ...>
+                                    <div
+                                      className=""
+                                      style={{
+-                                       opacity: "0"
+-                                       transform: "translateY(24px)"
+                                      }}
+                                      ref={function useMotionRef.useCallback}
+                                    >
+                  ...
+            ...
+          ...
+ @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:3318
+[  328801ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  328840ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  403790ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  403901ms] [LOG] [Fast Refresh] done in 230ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  405320ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  405398ms] [LOG] [Fast Refresh] done in 179ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  546565ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  546794ms] [LOG] [Fast Refresh] done in 145ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  547755ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  547893ms] [LOG] [Fast Refresh] done in 204ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  560178ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  560210ms] [LOG] [Fast Refresh] done in 112ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  568331ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  568358ms] [LOG] [Fast Refresh] done in 46ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  591498ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  591541ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  591580ms] [WARNING] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  593789ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  593813ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  642450ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  642489ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  687713ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  687913ms] [LOG] [Fast Refresh] done in 223ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  716733ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  716745ms] [LOG] [Fast Refresh] done in 85ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  723874ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  723892ms] [LOG] [Fast Refresh] done in 96ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  747077ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  747108ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  783894ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  783918ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  828596ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  828609ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[  833831ms] [WARNING] Canvas2D: Multiple readback operations using getImageData are faster with the willReadFrequently attribute set to true. See: https://html.spec.whatwg.org/multipage/canvas.html#concept-canvas-will-read-frequently @ :3
+[ 1403065ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1403208ms] [LOG] [Fast Refresh] done in 252ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1411396ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1412058ms] [WARNING] [HMR] Invalid message: {"isTrusted":true}
+TypeError: Cannot convert undefined or null to object
+    at Object.keys (<anonymous>)
+    at extractModulesFromTurbopackMessage (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13754:39)
+    at TurbopackHmr.onTurbopackMessage (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13701:32)
+    at processMessage (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:14059:30)
+    at WebSocket.handleMessage (http://localhost:3000/_next/static/chunks/node_modules_next_dist_client_0r5nbpw._.js:13458:52) @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1412597ms] [LOG] [Fast Refresh] done in 762ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1412701ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1413182ms] [LOG] [Fast Refresh] done in 556ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1413816ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1413832ms] [LOG] [Fast Refresh] done in 117ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1414045ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1414056ms] [LOG] [Fast Refresh] done in 114ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1442617ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1442638ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1445346ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1445367ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1445397ms] [WARNING] You have Reduced Motion enabled on your device. Animations may not appear as expected.. For more information and steps for solving, visit https://motion.dev/troubleshooting/reduced-motion-disabled @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1445524ms] [LOG] [Fast Refresh] rebuilding @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1445560ms] [LOG] [Fast Refresh] done in 136ms @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1473821ms] [INFO] %cDownload the React DevTools for a better development experience: https://react.dev/link/react-devtools font-weight:bold @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477
+[ 1473836ms] [LOG] [HMR] connected @ http://localhost:3000/_next/static/chunks/node_modules_next_dist_1ybzpk2._.js:2477

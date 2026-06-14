@@ -20,7 +20,7 @@ export function WeddingTypes() {
         <RevealGroup className="grid grid-cols-1 gap-4 sm:grid-cols-2">
           {weddingTypes.map((t) => (
             <RevealItem key={t.href}>
-              <div className="overflow-hidden rounded-2xl border border-line bg-surface">
+              <div className="theme-light overflow-hidden rounded-2xl bg-bg">
                 <div className="relative aspect-[16/10] w-full overflow-hidden bg-surface-2">
                   <Image
                     src={t.image}
