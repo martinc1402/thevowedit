@@ -11,17 +11,23 @@ const cormorant = Cormorant_Garamond({
 });
 
 export const metadata: Metadata = {
-  metadataBase: new URL("https://thevowedit.ph"),
+  // Must match the live serving host so og:image / canonical resolve to the same
+  // domain Facebook fetches (the site is served at www.thevowedit.ph).
+  metadataBase: new URL("https://www.thevowedit.ph"),
   title: {
     default: "The Vow Edit - Wedding suppliers in Cebu, launching soon",
     template: "%s - The Vow Edit",
   },
   description:
     "A new Cebu wedding-supplier directory launching soon, with transparent price ranges instead of the inquire-for-a-quote runaround. Suppliers can claim a free founding listing now.",
+  alternates: {
+    canonical: "/",
+  },
   openGraph: {
     title: "The Vow Edit - Wedding suppliers in Cebu, launching soon",
     description:
       "Launching soon in Cebu. Wedding suppliers can claim a free founding listing before couples start searching.",
+    url: "/",
     siteName: "The Vow Edit",
     type: "website",
     locale: "en_PH",
