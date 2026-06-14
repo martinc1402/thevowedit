@@ -101,6 +101,8 @@ export default async function SupplierPage({ params }: Params) {
             </Reveal>
             <Reveal>
               <SupplierContact
+                supplierId={s.id}
+                supplierSlug={s.slug}
                 name={s.name}
                 instagram={s.instagram}
                 facebook={s.facebook}
