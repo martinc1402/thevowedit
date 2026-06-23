@@ -10,7 +10,7 @@ export function PricingNotes({ notes }: { notes: string | null }) {
       >
         What&apos;s included
       </h2>
-      <div className="mt-4 rounded-2xl border border-line bg-surface-2 px-5 py-5">
+      <div className="mt-4 border-l-2 border-accent-fg pl-5">
         <p className="max-w-[65ch] whitespace-pre-line text-sm leading-relaxed text-muted">
           {notes}
         </p>

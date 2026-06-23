@@ -1,23 +1,23 @@
 import {
-  InstagramLogo,
-  FacebookLogo,
-  Globe,
-  Phone,
-  EnvelopeSimple,
-  ChatCircle,
-} from "@phosphor-icons/react/dist/ssr";
-import { InquiryForm } from "@/components/sections/supplier/inquiry-form";
+  ContactPills,
+  type ContactChannel,
+} from "@/components/sections/supplier/contact-pills";
 
 const handle = (v: string) => v.replace(/^@/, "").replace(/\/$/, "");
 const withProtocol = (v: string) => (/^https?:\/\//.test(v) ? v : `https://${v}`);
-
-type Link = { href: string; label: string; Icon: typeof Globe };
+const hostOf = (v: string) => {
+  try {
+    return new URL(withProtocol(v)).hostname.replace(/^www\./, "");
+  } catch {
+    return handle(v);
+  }
+};
 
 // Contact section. PH couples reach vendors chat-first, so Instagram / Messenger
-// / phone are surfaced directly. (A platform-routed inquiry form is Phase 2.)
+// are surfaced as the showcased channels (the platform-routed inquiry form is
+// kept out of launch — see inquiry-form.tsx). The first channel leads as a
+// filled tile; the rest sit in a bordered grid below it.
 export function SupplierContact({
-  supplierId,
-  supplierSlug,
   name,
   instagram,
   facebook,
@@ -25,8 +25,6 @@ export function SupplierContact({
   phone,
   email,
 }: {
-  supplierId: string;
-  supplierSlug: string;
   name: string;
   instagram: string | null;
   facebook: string | null;
@@ -34,35 +32,55 @@ export function SupplierContact({
   phone: string | null;
   email: string | null;
 }) {
-  const links: Link[] = [];
+  const channels: ContactChannel[] = [];
   if (instagram)
-    links.push({
+    channels.push({
       href: `https://instagram.com/${handle(instagram)}`,
       label: "Instagram",
-      Icon: InstagramLogo,
+      detail: `@${handle(instagram)}`,
+      icon: "instagram",
+      external: true,
     });
   if (facebook) {
-    links.push({
+    channels.push({
       href: `https://m.me/${handle(facebook)}`,
       label: "Messenger",
-      Icon: ChatCircle,
+      icon: "messenger",
+      external: true,
     });
-    links.push({
+    channels.push({
       href: `https://facebook.com/${handle(facebook)}`,
       label: "Facebook",
-      Icon: FacebookLogo,
+      icon: "facebook",
+      external: true,
     });
   }
   if (phone)
-    links.push({ href: `tel:${phone}`, label: phone, Icon: Phone });
+    channels.push({
+      href: `tel:${phone}`,
+      label: "Call",
+      detail: phone,
+      icon: "phone",
+      external: false,
+    });
   if (website)
-    links.push({
+    channels.push({
       href: withProtocol(website),
       label: "Website",
-      Icon: Globe,
+      detail: hostOf(website),
+      icon: "website",
+      external: true,
     });
   if (email)
-    links.push({ href: `mailto:${email}`, label: "Email", Icon: EnvelopeSimple });
+    channels.push({
+      href: `mailto:${email}`,
+      label: "Email",
+      detail: email,
+      icon: "email",
+      external: false,
+    });
+
+  if (channels.length === 0) return null;
 
   return (
     <section id="contact" aria-labelledby="contact-heading" className="scroll-mt-24">
@@ -73,36 +91,11 @@ export function SupplierContact({
         Get in touch
       </h2>
       <p className="mt-2 text-sm leading-relaxed text-muted">
-        Send {name} a message about your day. We will pass it straight to them.
+        Reach {name}{" "}directly. They&rsquo;re quickest to reply on chat.
       </p>
 
-      <div className="mt-5">
-        <InquiryForm
-          supplierId={supplierId}
-          supplierSlug={supplierSlug}
-          supplierName={name}
-        />
-      </div>
-
-      {links.length > 0 && (
-        <div className="mt-8 border-t border-line pt-6">
-          <p className="text-sm text-muted">Or reach {name} directly:</p>
-          <div className="mt-3 flex flex-wrap gap-3">
-            {links.map((l) => (
-              <a
-                key={l.label}
-                href={l.href}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 rounded-xl border border-line bg-surface px-5 py-2.5 text-sm font-medium text-ink transition-colors hover:bg-surface-2"
-              >
-                <l.Icon size={18} />
-                {l.label}
-              </a>
-            ))}
-          </div>
-        </div>
-      )}
+      {/* Compact pills. The lead channel is filled for a touch of hierarchy. */}
+      <ContactPills channels={channels} />
     </section>
   );
 }

@@ -4,8 +4,18 @@ import { categories } from "@/lib/content";
 const LABELS = new Map(categories.map((c) => [c.slug, c.label]));
 const labelFor = (slug: string) => LABELS.get(slug) ?? slug;
 
-export function SupplierHeader({
-  name,
+// The supplier name, rendered above the gallery (Airbnb-style title hierarchy).
+export function SupplierTitle({ name }: { name: string }) {
+  return (
+    <h1 className="font-serif text-4xl font-medium leading-tight text-ink sm:text-5xl">
+      {name}
+    </h1>
+  );
+}
+
+// Supporting metadata, rendered below the gallery: category chips + Verified
+// badge, then location + rating.
+export function SupplierMeta({
   categories: cats,
   verified,
   basedIn,
@@ -13,7 +23,6 @@ export function SupplierHeader({
   rating,
   reviewCount,
 }: {
-  name: string;
   categories: string[];
   verified: boolean;
   basedIn: string;
@@ -23,7 +32,7 @@ export function SupplierHeader({
 }) {
   const areas = servesAreas.length ? servesAreas.join(", ") : basedIn;
   return (
-    <header>
+    <div>
       <div className="flex flex-wrap items-center gap-2">
         {cats.map((slug) => (
           <span
@@ -40,10 +49,6 @@ export function SupplierHeader({
           </span>
         )}
       </div>
-
-      <h1 className="mt-3 font-serif text-4xl font-medium leading-tight text-ink sm:text-5xl">
-        {name}
-      </h1>
 
       <div className="mt-3 flex flex-wrap items-center gap-x-5 gap-y-2 text-sm text-muted">
         <span className="inline-flex items-center gap-1.5">
@@ -62,6 +67,6 @@ export function SupplierHeader({
           </span>
         )}
       </div>
-    </header>
+    </div>
   );
 }

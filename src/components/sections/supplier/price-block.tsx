@@ -20,7 +20,7 @@ export function PriceBlock({
 
   const headline =
     priceMin != null && priceMax != null && priceMax > priceMin
-      ? `${formatPrice(priceMin, currency)} – ${formatPrice(priceMax, currency)}`
+      ? `${formatPrice(priceMin, currency)} - ${formatPrice(priceMax, currency)}`
       : priceMin != null
         ? `from ${formatPrice(priceMin, currency)}`
         : priceTypical != null

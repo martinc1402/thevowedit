@@ -3,14 +3,10 @@ import { notFound } from "next/navigation";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { Reveal } from "@/components/reveal";
-import {
-  getSupplierBySlug,
-  listSimilarSuppliers,
-  formatPrice,
-} from "@/lib/suppliers";
+import { getSupplierBySlug, formatPrice } from "@/lib/suppliers";
 import { categories } from "@/lib/content";
 import { SupplierGallery } from "@/components/sections/supplier/supplier-gallery";
-import { SupplierHeader } from "@/components/sections/supplier/supplier-header";
+import { SupplierTitle, SupplierMeta } from "@/components/sections/supplier/supplier-header";
 import { PriceBlock } from "@/components/sections/supplier/price-block";
 import { PackageTiers } from "@/components/sections/supplier/package-tiers";
 import { PricingNotes } from "@/components/sections/supplier/pricing-notes";
@@ -19,7 +15,6 @@ import { VideoEmbed } from "@/components/sections/supplier/video-embed";
 import { SupplierLogistics } from "@/components/sections/supplier/supplier-logistics";
 import { SupplierReviews } from "@/components/sections/supplier/supplier-reviews";
 import { SupplierContact } from "@/components/sections/supplier/supplier-contact";
-import { SimilarSuppliers } from "@/components/sections/supplier/similar-suppliers";
 
 const labelFor = (slug: string) =>
   categories.find((c) => c.slug === slug)?.label ?? slug;
@@ -57,18 +52,21 @@ export default async function SupplierPage({ params }: Params) {
   if (!supplier) notFound();
 
   const s = supplier;
-  const similar = await listSimilarSuppliers(s.categories[0] ?? "", s.slug);
 
   return (
     <>
       <SiteNav />
       <main className="theme-light bg-bg text-ink">
         <div className="mx-auto max-w-[1000px] px-4 pb-28 pt-8 sm:px-6 sm:pb-16 sm:pt-12">
-          <SupplierGallery images={s.images} name={s.name} />
+          {/* Title leads above the gallery (Airbnb-style hierarchy). */}
+          <SupplierTitle name={s.name} />
 
-          <div className="mt-8">
-            <SupplierHeader
-              name={s.name}
+          <div className="mt-6">
+            <SupplierGallery images={s.images} name={s.name} />
+          </div>
+
+          <div className="mt-5">
+            <SupplierMeta
               categories={s.categories}
               verified={s.verified}
               basedIn={s.basedIn}
@@ -78,8 +76,8 @@ export default async function SupplierPage({ params }: Params) {
             />
           </div>
 
-          {/* Price leads — the differentiator and the #1 decision factor. */}
-          <div className="mt-7">
+          {/* Price leads the body — the differentiator and #1 decision factor. */}
+          <div className="mt-6">
             <PriceBlock
               priceMin={s.priceMin}
               priceMax={s.priceMax}
@@ -124,8 +122,6 @@ export default async function SupplierPage({ params }: Params) {
             </Reveal>
             <Reveal>
               <SupplierContact
-                supplierId={s.id}
-                supplierSlug={s.slug}
                 name={s.name}
                 instagram={s.instagram}
                 facebook={s.facebook}
@@ -133,9 +129,6 @@ export default async function SupplierPage({ params }: Params) {
                 phone={s.phone}
                 email={s.email}
               />
-            </Reveal>
-            <Reveal>
-              <SimilarSuppliers suppliers={similar} />
             </Reveal>
           </div>
         </div>

@@ -45,22 +45,19 @@ export function SupplierLogistics({
       >
         Good to know
       </h2>
-      <dl className="mt-5 grid gap-4 sm:grid-cols-2">
+      {/* A divided list rather than boxed cards: reads as an editorial spec
+          sheet and keeps this section distinct from the surrounding grids. */}
+      <dl className="mt-5 divide-y divide-line border-t border-line">
         {items.map((it) => (
-          <div
-            key={it.label}
-            className="flex gap-3 rounded-2xl border border-line bg-surface-2 p-4"
-          >
-            <span className="mt-0.5 inline-flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-accent-ink">
-              <it.Icon size={18} weight="regular" />
-            </span>
-            <div>
-              <dt className="text-xs font-medium uppercase tracking-[0.12em] text-muted">
-                {it.label}
-              </dt>
-              <dd className="mt-0.5 text-sm leading-relaxed text-ink">
-                {it.value}
-              </dd>
+          <div key={it.label} className="flex items-start gap-4 py-5">
+            <it.Icon
+              size={20}
+              weight="regular"
+              className="mt-0.5 shrink-0 text-accent-fg"
+            />
+            <div className="grid flex-1 gap-1 sm:grid-cols-[180px_1fr] sm:gap-6">
+              <dt className="text-sm font-medium text-ink">{it.label}</dt>
+              <dd className="text-sm leading-relaxed text-muted">{it.value}</dd>
             </div>
           </div>
         ))}

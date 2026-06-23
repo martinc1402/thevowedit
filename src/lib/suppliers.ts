@@ -172,68 +172,6 @@ export async function getSupplierBySlug(slug: string): Promise<Supplier | null> 
   return mapRow(data as unknown as Record<string, unknown>);
 }
 
-// Lightweight shape for a supplier card (similar-suppliers, future listings).
-export type SupplierCardData = {
-  slug: string;
-  name: string;
-  categories: string[];
-  priceMin: number | null;
-  currency: string;
-  rating: number | null;
-  verified: boolean;
-  image: string | null; // images[0]
-  location: string;
-};
-
-// Other suppliers sharing a category (for the "Similar suppliers" module).
-// Fetches a handful, then sorts images-first -> verified -> rating so the rows
-// with photos lead, and slices to `limit`.
-export async function listSimilarSuppliers(
-  category: string,
-  excludeSlug: string,
-  limit = 4,
-): Promise<SupplierCardData[]> {
-  if (!category) return [];
-  const supabase = getSupabasePublic();
-  const { data, error } = await supabase
-    .from("suppliers")
-    .select(
-      "slug, name, categories, price_min, currency, rating, verified, images, location",
-    )
-    .contains("categories", [category])
-    .neq("slug", excludeSlug)
-    .limit(12);
-
-  if (error) {
-    console.error("[suppliers] listSimilarSuppliers failed:", error.message);
-    return [];
-  }
-
-  const cards: SupplierCardData[] = (data ?? []).map((row) => {
-    const r = row as unknown as Record<string, unknown>;
-    const images = Array.isArray(r.images) ? (r.images as string[]) : [];
-    return {
-      slug: String(r.slug),
-      name: String(r.name),
-      categories: Array.isArray(r.categories) ? (r.categories as string[]) : [],
-      priceMin: (r.price_min as number) ?? null,
-      currency: (r.currency as string) ?? "PHP",
-      rating: (r.rating as number) ?? null,
-      verified: Boolean(r.verified),
-      image: images[0] ?? null,
-      location: (r.location as string) ?? "Cebu",
-    };
-  });
-
-  cards.sort((a, b) => {
-    if (!!a.image !== !!b.image) return a.image ? -1 : 1;
-    if (a.verified !== b.verified) return a.verified ? -1 : 1;
-    return (b.rating ?? 0) - (a.rating ?? 0);
-  });
-
-  return cards.slice(0, limit);
-}
-
 // All supplier slugs — for generateStaticParams / sitemap later.
 export async function listSupplierSlugs(): Promise<string[]> {
   const supabase = getSupabasePublic();

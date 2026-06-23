@@ -35,6 +35,10 @@ export function SupplierReviews({
   reviewCount: number;
 }) {
   if (!reviews.length) return null;
+
+  const [featured, ...rest] = reviews;
+  const featuredWhen = formatDate(featured.date);
+
   return (
     <section aria-labelledby="reviews-heading">
       <div className="flex flex-wrap items-baseline justify-between gap-2">
@@ -53,26 +57,38 @@ export function SupplierReviews({
         )}
       </div>
 
-      <div className="mt-5 grid gap-4 sm:grid-cols-2">
-        {reviews.map((r, i) => {
-          const when = formatDate(r.date);
-          return (
-            <figure
-              key={i}
-              className="rounded-2xl border border-line bg-surface-2 p-5"
-            >
-              <Stars rating={r.rating} />
-              <blockquote className="mt-3 text-sm leading-relaxed text-ink">
-                “{r.quote}”
-              </blockquote>
-              <figcaption className="mt-3 text-xs text-muted">
-                {r.author}
-                {when ? ` · ${when}` : ""}
-              </figcaption>
-            </figure>
-          );
-        })}
-      </div>
+      {/* Lead with one review as an editorial pull-quote; the rest sit in a
+          lighter borderless grid below a single hairline. */}
+      <figure className="mt-6">
+        <Stars rating={featured.rating} />
+        <blockquote className="mt-3 max-w-[34ch] font-serif text-2xl leading-snug text-ink sm:text-[1.75rem]">
+          “{featured.quote}”
+        </blockquote>
+        <figcaption className="mt-4 text-sm text-muted">
+          {featured.author}
+          {featuredWhen ? ` · ${featuredWhen}` : ""}
+        </figcaption>
+      </figure>
+
+      {rest.length > 0 && (
+        <div className="mt-8 grid gap-x-10 gap-y-7 border-t border-line pt-8 sm:grid-cols-2">
+          {rest.map((r, i) => {
+            const when = formatDate(r.date);
+            return (
+              <figure key={i}>
+                <Stars rating={r.rating} />
+                <blockquote className="mt-2 text-sm leading-relaxed text-ink">
+                  “{r.quote}”
+                </blockquote>
+                <figcaption className="mt-2 text-xs text-muted">
+                  {r.author}
+                  {when ? ` · ${when}` : ""}
+                </figcaption>
+              </figure>
+            );
+          })}
+        </div>
+      )}
     </section>
   );
 }
