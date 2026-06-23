@@ -1,7 +1,9 @@
 import Image from "next/image";
+import { ChatCircle } from "@phosphor-icons/react/dist/ssr";
 
-// About + the people. Builds trust; the team photo + short bio give a face to
-// the listing.
+// "Meet the supplier" — the people behind the listing. Team photo + bio give a
+// face to it; a direct message link turns trust into an inquiry. (Response time
+// lives in the action rail and the "Good to know" list.)
 export function SupplierAbout({
   name,
   description,
@@ -36,7 +38,7 @@ export function SupplierAbout({
         id="about-heading"
         className="font-serif text-2xl font-medium text-ink sm:text-3xl"
       >
-        About {name}
+        Meet {name}
       </h2>
 
       {/* With a team photo: copy beside a portrait. Without: copy runs full
@@ -59,6 +61,16 @@ export function SupplierAbout({
       ) : (
         <div className="mt-5">{copy}</div>
       )}
+
+      <div className="mt-6">
+        <a
+          href="#contact"
+          className="inline-flex items-center gap-1.5 text-sm font-medium text-accent-fg underline underline-offset-2 transition-colors hover:text-ink"
+        >
+          <ChatCircle size={16} weight="fill" />
+          Message {name}
+        </a>
+      </div>
     </section>
   );
 }

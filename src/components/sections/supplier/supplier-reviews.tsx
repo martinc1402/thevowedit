@@ -1,4 +1,4 @@
-import { Star } from "@phosphor-icons/react/dist/ssr";
+import { Star, Heart } from "@phosphor-icons/react/dist/ssr";
 import type { SupplierReview } from "@/lib/suppliers";
 
 function Stars({ rating }: { rating: number }) {
@@ -38,6 +38,9 @@ export function SupplierReviews({
 
   const [featured, ...rest] = reviews;
   const featuredWhen = formatDate(featured.date);
+  // Quality signal akin to Airbnb's "Guest favourite": only the genuinely
+  // top-rated, well-reviewed suppliers earn it.
+  const loved = rating != null && rating >= 4.8 && reviewCount >= 25;
 
   return (
     <section aria-labelledby="reviews-heading">
@@ -48,13 +51,21 @@ export function SupplierReviews({
         >
           Reviews
         </h2>
-        {rating != null && rating > 0 && (
-          <span className="inline-flex items-center gap-2 text-sm text-muted">
-            <Stars rating={rating} />
-            <span className="font-medium text-ink">{rating.toFixed(1)}</span>
-            {reviewCount > 0 && <span>({reviewCount})</span>}
-          </span>
-        )}
+        <div className="flex flex-wrap items-center gap-3">
+          {loved && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-accent px-3 py-1 text-xs font-medium text-accent-ink">
+              <Heart size={13} weight="fill" />
+              Loved by couples
+            </span>
+          )}
+          {rating != null && rating > 0 && (
+            <span className="inline-flex items-center gap-2 text-sm text-muted">
+              <Stars rating={rating} />
+              <span className="font-medium text-ink">{rating.toFixed(1)}</span>
+              {reviewCount > 0 && <span>({reviewCount})</span>}
+            </span>
+          )}
+        </div>
       </div>
 
       {/* Lead with one review as an editorial pull-quote; the rest sit in a

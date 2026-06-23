@@ -22,6 +22,11 @@ create table if not exists public.suppliers (
   price_includes_sc_vat       boolean,                        -- caterer transparency (rate already includes SC + VAT?)
   response_time_note          text,                           -- e.g. "usually replies within a day"
   booking_terms               text,                           -- downpayment %, payment methods
+  availability_note           text,                           -- e.g. "Now booking 2026-2027" (inquiry driver)
+  established_year            int,                            -- first year of business; UI derives "X years"
+  weddings_count              int,                            -- approx. weddings worked (credibility stat)
+  faq                         jsonb,                          -- [{ q, a }] supplier-authored Q&A
+  specs                       jsonb,                          -- [{ label, value }] scannable facts (coverage, deliverables...)
   short_description           text,                           -- card blurb
   description                 text,                           -- long "About" copy
   verified                    boolean not null default false,
@@ -56,6 +61,11 @@ alter table public.suppliers add column if not exists pricing_notes text;
 alter table public.suppliers add column if not exists price_includes_sc_vat boolean;
 alter table public.suppliers add column if not exists response_time_note text;
 alter table public.suppliers add column if not exists booking_terms text;
+alter table public.suppliers add column if not exists availability_note text;
+alter table public.suppliers add column if not exists established_year int;
+alter table public.suppliers add column if not exists weddings_count int;
+alter table public.suppliers add column if not exists faq jsonb;
+alter table public.suppliers add column if not exists specs jsonb;
 
 -- Contains-query indexes (GIN) for categories / serves_areas array lookups.
 create index if not exists suppliers_categories_gin   on public.suppliers using gin (categories);

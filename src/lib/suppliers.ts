@@ -24,6 +24,16 @@ export type SupplierReview = {
   quote: string;
 };
 
+export type SupplierFaq = {
+  q: string;
+  a: string;
+};
+
+export type SupplierSpec = {
+  label: string;
+  value: string;
+};
+
 export type PerServicePricing = Record<
   string,
   { min?: number; max?: number } | undefined
@@ -55,6 +65,11 @@ export type Supplier = {
   travelFeeNote: string | null;
   responseTimeNote: string | null;
   bookingTerms: string | null;
+  availabilityNote: string | null;
+  establishedYear: number | null;
+  weddingsCount: number | null;
+  faq: SupplierFaq[];
+  specs: SupplierSpec[];
   instagram: string | null;
   website: string | null;
   facebook: string | null;
@@ -96,6 +111,11 @@ const COLUMNS = [
   "travel_fee_note",
   "response_time_note",
   "booking_terms",
+  "availability_note",
+  "established_year",
+  "weddings_count",
+  "faq",
+  "specs",
   "instagram",
   "website",
   "facebook",
@@ -140,6 +160,11 @@ function mapRow(r: Record<string, unknown>): Supplier {
     travelFeeNote: (r.travel_fee_note as string) ?? null,
     responseTimeNote: (r.response_time_note as string) ?? null,
     bookingTerms: (r.booking_terms as string) ?? null,
+    availabilityNote: (r.availability_note as string) ?? null,
+    establishedYear: (r.established_year as number) ?? null,
+    weddingsCount: (r.weddings_count as number) ?? null,
+    faq: Array.isArray(r.faq) ? (r.faq as SupplierFaq[]) : [],
+    specs: Array.isArray(r.specs) ? (r.specs as SupplierSpec[]) : [],
     instagram: (r.instagram as string) ?? null,
     website: (r.website as string) ?? null,
     facebook: (r.facebook as string) ?? null,

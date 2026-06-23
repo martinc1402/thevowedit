@@ -147,3 +147,32 @@ values
    null, null)
 
 on conflict (slug) do nothing;
+
+-- =====================================================================
+-- Example of the newer profile fields (availability, experience, FAQ,
+-- portfolio link, per-service pricing). Shown as an UPDATE so it documents
+-- the shape without bloating the INSERT column lists above. Paste this into
+-- the Supabase SQL editor to see the new sections render on the live site.
+-- =====================================================================
+update public.suppliers set
+  availability_note = 'Now booking 2026-2027, a few early dates left',
+  established_year  = 2016,
+  weddings_count    = 200,
+  portfolio_link    = 'https://emmtancinco.com/portfolio',
+  specs = '[
+    {"label":"Coverage","value":"Up to 12 hours"},
+    {"label":"Team","value":"Lead + second shooter"},
+    {"label":"Edited photos","value":"400-600 images"},
+    {"label":"Delivery","value":"Online gallery in 4 weeks"},
+    {"label":"Prenup","value":"Included on full-day"},
+    {"label":"Travel","value":"Across the Visayas"}
+  ]'::jsonb,
+  faq = '[
+    {"q":"Will you personally shoot our wedding?",
+     "a":"Yes, plus a second shooter on full-day packages."},
+    {"q":"How long until we get our photos?",
+     "a":"Online gallery in 4 weeks, sneak peek within 48 hours."},
+    {"q":"Do you travel outside Cebu City?",
+     "a":"Often, across the Visayas. Travel fee may apply."}
+  ]'::jsonb
+where slug = 'emm-tancinco-photography';

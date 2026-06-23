@@ -22,6 +22,7 @@ export function SupplierMeta({
   servesAreas,
   rating,
   reviewCount,
+  styleTags = [],
 }: {
   categories: string[];
   verified: boolean;
@@ -29,6 +30,7 @@ export function SupplierMeta({
   servesAreas: string[];
   rating: number | null;
   reviewCount: number;
+  styleTags?: string[];
 }) {
   const areas = servesAreas.length ? servesAreas.join(", ") : basedIn;
   return (
@@ -67,6 +69,21 @@ export function SupplierMeta({
           </span>
         )}
       </div>
+
+      {/* Style tags: a quieter, ghost chip row distinct from the filled
+          category chips — how couples self-select on aesthetic. */}
+      {styleTags.length > 0 && (
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          {styleTags.map((tag) => (
+            <span
+              key={tag}
+              className="inline-flex items-center rounded-full border border-line px-3 py-1 text-xs text-muted"
+            >
+              {tag}
+            </span>
+          ))}
+        </div>
+      )}
     </div>
   );
 }
