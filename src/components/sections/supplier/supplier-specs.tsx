@@ -17,7 +17,8 @@ export function SpecStrip({ specs }: { specs: SupplierSpec[] }) {
         <li key={s.label} className="flex items-center gap-3">
           {i > 0 && <span aria-hidden className="text-line">·</span>}
           <span>
-            <span className="font-medium text-ink">{s.value}</span> {s.label.toLowerCase()}
+            <span className="text-muted">{s.label}</span>{" "}
+            <span className="font-medium text-ink">{s.value}</span>
           </span>
         </li>
       ))}
