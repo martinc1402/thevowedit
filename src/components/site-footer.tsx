@@ -31,12 +31,20 @@ export function SiteFooter() {
           <p className="text-sm text-muted">
             Wedding suppliers in Cebu, Philippines. © 2026 The Vow Edit.
           </p>
-          <Link
-            href="/privacy"
-            className="text-sm text-muted transition-colors hover:text-ink"
-          >
-            Privacy
-          </Link>
+          <div className="flex items-center gap-5">
+            <Link
+              href="/login"
+              className="text-sm text-muted transition-colors hover:text-ink"
+            >
+              Supplier login
+            </Link>
+            <Link
+              href="/privacy"
+              className="text-sm text-muted transition-colors hover:text-ink"
+            >
+              Privacy
+            </Link>
+          </div>
         </div>
       </div>
     </footer>

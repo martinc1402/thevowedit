@@ -82,10 +82,13 @@ export type Supplier = {
   videoUrl: string | null;
   teamPhoto: string | null;
   location: string;
+  published: boolean;
 };
 
-// The columns we select — keep in sync with the row mapper below.
-const COLUMNS = [
+// The columns we select — keep in sync with the row mapper below. Exported so
+// the authenticated dashboard (service-role reads in actions/profile.ts) reuses
+// the exact same projection + mapper.
+export const SUPPLIER_COLUMNS = [
   "id",
   "slug",
   "name",
@@ -128,11 +131,12 @@ const COLUMNS = [
   "video_url",
   "team_photo",
   "location",
+  "published",
 ].join(", ");
 
 // Postgres rows come back snake_cased and jsonb columns as parsed JSON; map to
 // our camelCase type with defensive defaults (arrays/jsonb may be null).
-function mapRow(r: Record<string, unknown>): Supplier {
+export function mapSupplierRow(r: Record<string, unknown>): Supplier {
   const arr = (v: unknown): string[] => (Array.isArray(v) ? (v as string[]) : []);
   return {
     id: String(r.id),
@@ -177,6 +181,7 @@ function mapRow(r: Record<string, unknown>): Supplier {
     videoUrl: (r.video_url as string) ?? null,
     teamPhoto: (r.team_photo as string) ?? null,
     location: (r.location as string) ?? "Cebu",
+    published: Boolean(r.published),
   };
 }
 
@@ -185,8 +190,9 @@ export async function getSupplierBySlug(slug: string): Promise<Supplier | null> 
   const supabase = getSupabasePublic();
   const { data, error } = await supabase
     .from("suppliers")
-    .select(COLUMNS)
+    .select(SUPPLIER_COLUMNS)
     .eq("slug", slug)
+    .eq("published", true)
     .maybeSingle();
 
   if (error) {
@@ -194,13 +200,16 @@ export async function getSupplierBySlug(slug: string): Promise<Supplier | null> 
     return null;
   }
   if (!data) return null;
-  return mapRow(data as unknown as Record<string, unknown>);
+  return mapSupplierRow(data as unknown as Record<string, unknown>);
 }
 
 // All supplier slugs — for generateStaticParams / sitemap later.
 export async function listSupplierSlugs(): Promise<string[]> {
   const supabase = getSupabasePublic();
-  const { data, error } = await supabase.from("suppliers").select("slug");
+  const { data, error } = await supabase
+    .from("suppliers")
+    .select("slug")
+    .eq("published", true);
   if (error) {
     console.error("[suppliers] listSupplierSlugs failed:", error.message);
     return [];
