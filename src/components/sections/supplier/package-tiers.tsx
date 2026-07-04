@@ -34,7 +34,7 @@ export function PackageTiers({ packages }: { packages: SupplierPackage[] }) {
               {pkg.name}
             </h3>
             {pkg.priceLabel && (
-              <p className="mt-1.5 text-2xl font-semibold text-ink">
+              <p className="mt-1.5 whitespace-nowrap text-xl font-semibold tabular-nums text-ink">
                 {pkg.priceLabel}
               </p>
             )}
