@@ -9,14 +9,14 @@
 -- committed file. Idempotent: `on conflict do nothing`.
 -- =====================================================================
 
--- 1) MakeupX Matthew — Hair & Makeup
+-- 1) MakeupX Matthew — Makeup
 insert into public.suppliers
   (slug, name, based_in, serves_areas, categories, location, instagram,
    short_description, published)
 values
   ('makeupx-matthew', 'MakeupX Matthew', 'Cebu', array['All of Cebu'],
-   array['hmua'], 'Cebu', 'makeupxmatthew',
-   'Bridal and entourage hair & makeup, serving weddings across Cebu.', false)
+   array['makeup'], 'Cebu', 'makeupxmatthew',
+   'Bridal and entourage makeup, serving weddings across Cebu.', false)
 on conflict (slug) do nothing;
 
 -- 2) Camcorder Stories by RR Films — Videographers
