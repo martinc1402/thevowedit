@@ -15,20 +15,24 @@
 -- listing does not un-apply someone — so if they come back, add them here again
 -- and re-issue a claim code.
 --
--- NOTE: `based_in` and `serves_areas` are deliberately NOT seeded.
---   * based_in duplicated `location` (the one the profile renders) and the two
---     could silently drift; it is no longer editable.
---   * serves_areas is now DERIVED from essentials.coverage.areas on save and holds
---     taxonomy KEYS ('cebu-city'), because it is the GIN-indexed array the browse
---     filter queries. Seeding free text like 'All of Cebu' here would reintroduce
---     exactly the drift that fix removed.
+-- NOTE: `serves_areas` is deliberately NOT seeded. It is now DERIVED from
+-- essentials.coverage.areas on save and holds taxonomy KEYS ('cebu-city'), because
+-- it is the GIN-indexed array the browse filter queries. Seeding free text like
+-- 'All of Cebu' here would reintroduce exactly the drift that fix removed.
+--
+-- `based_in` IS still set, only because the column is NOT NULL in the schema. The
+-- app no longer reads or writes it (it duplicated `location`, which is what the
+-- profile actually renders, and the two could silently drift). Mirror `location` so
+-- they cannot disagree. To retire it properly the column needs its NOT NULL
+-- dropped — see supabase/retire-based-in.sql.
 -- =====================================================================
 
 -- 1) MakeupX Matthew — Makeup
 insert into public.suppliers
-  (slug, name, categories, location, instagram, short_description, published)
+  (slug, name, based_in, categories, location, instagram, short_description,
+   published)
 values
-  ('makeupx-matthew', 'MakeupX Matthew', array['makeup'], 'Cebu',
+  ('makeupx-matthew', 'MakeupX Matthew', 'Cebu', array['makeup'], 'Cebu',
    'makeupxmatthew',
    'Bridal and entourage makeup, serving weddings across Cebu.', false)
 on conflict (slug) do nothing;
