@@ -19,8 +19,9 @@ import {
 } from "@phosphor-icons/react";
 import type { Supplier } from "@/lib/suppliers";
 import { categories as CATEGORY_LIST } from "@/lib/content";
-import { PACKAGE_INCLUSIONS } from "@/lib/package-inclusions";
+import { inclusionsFor } from "@/lib/package-inclusions";
 import { styleTagsFor } from "@/lib/style-tags-vocab";
+import { hasEntourageRate } from "@/lib/category-fields";
 import {
   essentialsToDraft,
   draftToEssentials,
@@ -149,7 +150,10 @@ function seed(s: Supplier): FormState {
   // Approval-required fields seed from the vendor's PENDING draft when present
   // (so they keep editing what's under review), else from the live value.
   const p = s.pendingChanges;
-  const essentialsSeed = essentialsToDraft(s.essentials);
+  const essentialsSeed = essentialsToDraft(
+    s.essentials,
+    s.categories[0] ?? null,
+  );
   if (p?.essentials_custom) {
     essentialsSeed.customEssentials = p.essentials_custom.map((c) => ({
       label: c.label,
@@ -243,7 +247,10 @@ function buildPatch(form: FormState, keys: (keyof FormState)[]): ProfilePatch {
         }));
         break;
       case "essentials":
-        patch.essentials = draftToEssentials(form.essentials);
+        patch.essentials = draftToEssentials(
+          form.essentials,
+          form.categories[0] ?? null,
+        );
         break;
       case "faq":
         patch.faq = form.faq.map((x) => ({ q: x.a, a: x.b }));
@@ -678,9 +685,10 @@ export function ProfileWizard({
               {/* The entourage rate, the number couples actually budget on. The
                   bride rate alone hides most of the bill: charged per face, and a
                   Filipino entourage (ninang, mothers, bridesmaids) can add more
-                  than the bride's own fee. Without this, the only honest thing a
-                  vendor could put on a bridal-party package was "Price on enquiry"
-                  — exactly what every rival directory does. */}
+                  than the bride's own fee.
+                  Gated: it is a PER-FACE makeup rate, so a photographer must not be
+                  asked for it (this block used to render for every category). */}
+              {hasEntourageRate(form.categories[0] ?? null) && (
               <div className="border-t border-line pt-8">
                 <span className={labelClass}>
                   Entourage rate{" "}
@@ -707,6 +715,7 @@ export function ProfileWizard({
                   the entourage case by case.
                 </p>
               </div>
+              )}
             </div>
 
             <div className="border-t border-line pt-8">
@@ -847,6 +856,7 @@ export function ProfileWizard({
                         <PackageIncludes
                           selected={p.includes}
                           onChange={(inc) => updatePkg({ includes: inc })}
+                          category={form.categories[0] ?? null}
                         />
                       </div>
                       <button
@@ -1556,17 +1566,21 @@ function PhoneField({
 // ---------------------------------------------------------------------
 // Package inclusions — checkbox chips over the locked vocabulary (keys stored).
 // ---------------------------------------------------------------------
-const INCLUSION_OPTS = Object.entries(PACKAGE_INCLUSIONS).map(
-  ([value, label]) => ({ value, label }),
-);
-
 function PackageIncludes({
   selected,
   onChange,
+  category,
 }: {
   selected: string[];
   onChange: (next: string[]) => void;
+  category: string | null;
 }) {
+  // Category-scoped: this list used to be one flat makeup vocabulary shown to
+  // everyone, so a photographer's package builder offered "Lashes included".
+  const options = inclusionsFor(category).map((i) => ({
+    value: i.key,
+    label: i.label,
+  }));
   const toggle = (value: string) =>
     onChange(
       selected.includes(value)
@@ -1576,7 +1590,7 @@ function PackageIncludes({
   return (
     <div>
       <span className={labelClass}>What&apos;s included</span>
-      <ChipGroup options={INCLUSION_OPTS} selected={selected} onToggle={toggle} />
+      <ChipGroup options={options} selected={selected} onToggle={toggle} />
     </div>
   );
 }

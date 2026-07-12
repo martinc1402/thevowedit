@@ -143,6 +143,7 @@ function body(
       <div className="mx-auto max-w-sm">
         <SupplierContactCard
           {...price}
+          category={d.categories[0] ?? null}
           verified={editor.verified}
           channels={channels}
           primary={primary}
@@ -162,7 +163,10 @@ function body(
           {...price}
           priceUnit={d.priceUnit || null}
           category={d.categories[0] ?? null}
-          essentials={draftToEssentials(d.essentials)}
+          essentials={draftToEssentials(
+            d.essentials,
+            d.categories[0] ?? null,
+          )}
         />
         <StyleTags tags={d.styleTags} category={d.categories[0] ?? null} />
       </>

@@ -24,9 +24,35 @@ export const MAKEUP_SERVICES: readonly ServiceOption[] = [
   { key: "touch_up", label: "Touch-up service" },
 ] as const;
 
+export const PHOTO_SERVICES: readonly ServiceOption[] = [
+  { key: "wedding_coverage", label: "Wedding day coverage" },
+  { key: "prenup_shoot", label: "Prenup shoot" },
+  { key: "engagement_shoot", label: "Engagement shoot" },
+  { key: "civil_wedding", label: "Civil wedding" },
+  { key: "album_design", label: "Album design" },
+  { key: "photo_booth", label: "Photo booth" },
+  { key: "onsite_printing", label: "On-site printing" },
+  { key: "drone", label: "Drone / aerial" },
+  { key: "second_shooter", label: "Second shooter" },
+] as const;
+
+export const VIDEO_SERVICES: readonly ServiceOption[] = [
+  { key: "wedding_film", label: "Wedding film" },
+  // The Filipino headline deliverable: cut on the day, played at the reception.
+  { key: "same_day_edit", label: "Same-day edit (SDE)" },
+  { key: "prenup_video", label: "Prenup video" },
+  { key: "save_the_date", label: "Save-the-date video" },
+  { key: "civil_wedding", label: "Civil wedding" },
+  { key: "live_streaming", label: "Live streaming" },
+  { key: "drone", label: "Drone / aerial" },
+  { key: "social_cuts", label: "Social cuts / reels" },
+] as const;
+
 // Add a category by adding an entry here.
 export const CATEGORY_SERVICES: Record<string, readonly ServiceOption[]> = {
   makeup: MAKEUP_SERVICES,
+  photographers: PHOTO_SERVICES,
+  videographers: VIDEO_SERVICES,
 };
 
 // Every valid service key across all categories (for server-side validation).

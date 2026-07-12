@@ -12,6 +12,7 @@ import {
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon } from "@phosphor-icons/react";
 import { formatPrice } from "@/lib/suppliers";
+import { hasEntourageRate } from "@/lib/category-fields";
 import type {
   ChannelKey,
   ContactChannel,
@@ -64,6 +65,7 @@ export function SupplierContactCard({
   entourageRateMin = null,
   entourageRateMax = null,
   currency,
+  category = null,
   verified,
   responseTimeNote = null,
   channels,
@@ -76,6 +78,7 @@ export function SupplierContactCard({
   entourageRateMin?: number | null;
   entourageRateMax?: number | null;
   currency: string;
+  category?: string | null;
   verified: boolean;
   responseTimeNote?: string | null;
   channels: ContactChannel[];
@@ -88,10 +91,13 @@ export function SupplierContactCard({
   // The bride rate alone hides most of a Filipino wedding bill: the entourage is
   // charged per face, and 8-10 faces can exceed the bride's fee. Say it here, next
   // to the headline, not buried in a package list.
+  // Per-FACE: a makeup concept. Ungated, a photographer's card would have read
+  // "+ ₱X per face".
+  const showEntourage = hasEntourageRate(category);
   const entourage =
-    entourageRateMin != null
+    showEntourage && entourageRateMin != null
       ? `+ from ${formatPrice(entourageRateMin, currency)} per face`
-      : entourageRateMax != null
+      : showEntourage && entourageRateMax != null
         ? `+ up to ${formatPrice(entourageRateMax, currency)} per face`
         : null;
 

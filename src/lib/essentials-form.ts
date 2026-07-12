@@ -1,12 +1,21 @@
 // Form-side mapping for the structured essentials taxonomy. The dashboard editor
-// works on a FLAT, string-friendly draft (enums as ""-able strings, numbers as
-// strings, arrays of keys); these two pure functions convert between that draft
-// and the nested `EssentialsData` stored in the jsonb column.
+// works on a string-friendly draft (enums as ""-able strings, numbers as strings,
+// arrays of keys); these two pure functions convert between that draft and the
+// `EssentialsData` stored in the jsonb column.
+//
+// The UNIVERSAL fields are still written out by hand — there are only a few, they
+// have bespoke nesting, and every category has them.
+//
+// The CATEGORY fields are driven entirely by the field specs (src/lib/category-fields.ts):
+// one flat key per input, converted by the spec's `kind`. Adding a category adds no
+// code here. This is what makes "add a category = add an entry" true rather than
+// aspirational — the previous version hardcoded 16 makeup keys and blind-cast every
+// vendor's categoryFields to MakeupFields regardless of their actual category.
 //
 // draftToEssentials is deliberately permissive-but-tidy: it omits empty values so
 // the object mirrors what the server's coerceEssentials would keep. The server
 // STILL re-validates every value against the locked vocab — this is convenience,
-// not trust. Keeping the mapping here (not in the component) makes it unit-testable.
+// not trust.
 
 import type {
   EssentialsData,
@@ -14,18 +23,15 @@ import type {
   BookingStatusKey,
   LanguageKey,
   TeamSizeKey,
-  HairServiceKey,
-  RetouchTierKey,
-  TrialStatusKey,
-  FinishStyleKey,
-  TechniqueKey,
-  SkinInclusivityKey,
-  MakeupFields,
 } from "@/lib/essentials-taxonomy";
+import { fieldsFor, specVisible, type FieldSpec } from "@/lib/category-fields";
 
 export type CustomEssentialDraft = { label: string; value: string };
 
-// Flat, form-friendly shape. Enums are "" when unset; numbers are strings.
+// A category field's draft value: text/select/number/time are strings, chips are
+// string[], bools are boolean.
+export type FieldValue = string | string[] | boolean;
+
 export type EssentialsDraft = {
   // universal
   coverageAreas: string[]; // AreaKey[]
@@ -39,28 +45,36 @@ export type EssentialsDraft = {
   languages: string[]; // LanguageKey[]
   teamSize: string; // "" | TeamSizeKey
   teamNote: string;
-  // makeup categoryFields
-  hairServices: string; // "" | HairServiceKey
-  groupMaxFaces: string; // numeric string
-  groupIncludesBride: boolean;
-  retouchTier: string; // "" | RetouchTierKey
-  retouchHours: string; // numeric string
-  retouchNote: string;
-  earlyFrom: string; // "HH:MM"
-  earlyFee: string;
-  trialStatus: string; // "" | TrialStatusKey
-  trialNote: string;
-  finishStyles: string[];
-  techniques: string[];
-  skinInclusivity: string[];
-  backupPlan: string;
-  onLocation: boolean;
-  homeService: boolean;
+  // category-specific, keyed by FieldSpec.key
+  categoryFields: Record<string, FieldValue>;
   // escape hatch (≤ 3 kept on save)
   customEssentials: CustomEssentialDraft[];
 };
 
-export const emptyEssentialsDraft = (): EssentialsDraft => ({
+// The empty draft value for a spec — what an untouched input renders as.
+export function emptyValue(spec: FieldSpec): FieldValue {
+  switch (spec.kind) {
+    case "chips":
+      return [];
+    case "bool":
+      return false;
+    default:
+      return "";
+  }
+}
+
+export function emptyCategoryFields(category: string | null) {
+  const out: Record<string, FieldValue> = {};
+  for (const spec of fieldsFor(category)) out[spec.key] = emptyValue(spec);
+  return out;
+}
+
+// `category` is REQUIRED on all three of these, deliberately. With a default of
+// null they would compile fine at every call site and silently return zero category
+// fields — the exact class of silent-drop bug this refactor exists to remove.
+export const emptyEssentialsDraft = (
+  category: string | null,
+): EssentialsDraft => ({
   coverageAreas: [],
   travelsBeyond: false,
   travelNote: "",
@@ -72,30 +86,42 @@ export const emptyEssentialsDraft = (): EssentialsDraft => ({
   languages: [],
   teamSize: "",
   teamNote: "",
-  hairServices: "",
-  groupMaxFaces: "",
-  groupIncludesBride: true,
-  retouchTier: "",
-  retouchHours: "",
-  retouchNote: "",
-  earlyFrom: "",
-  earlyFee: "",
-  trialStatus: "",
-  trialNote: "",
-  finishStyles: [],
-  techniques: [],
-  skinInclusivity: [],
-  backupPlan: "",
-  onLocation: false,
-  homeService: false,
+  categoryFields: emptyCategoryFields(category),
   customEssentials: [],
 });
 
 // Seed the form from the stored structured value.
-export function essentialsToDraft(e: EssentialsData | null): EssentialsDraft {
-  const d = emptyEssentialsDraft();
+export function essentialsToDraft(
+  e: EssentialsData | null,
+  category: string | null,
+): EssentialsDraft {
+  const d = emptyEssentialsDraft(category);
   if (!e) return d;
-  const cf = (e.categoryFields ?? {}) as MakeupFields;
+
+  // Category fields: read each spec's key out of the stored flat map, converting
+  // to the draft's string-friendly form. Unknown stored keys are ignored, so a
+  // vendor whose category changed does not carry the old category's answers.
+  const stored = (e.categoryFields ?? {}) as Record<string, unknown>;
+  const cf: Record<string, FieldValue> = {};
+  for (const spec of fieldsFor(category)) {
+    const v = stored[spec.key];
+    switch (spec.kind) {
+      case "chips":
+        cf[spec.key] = Array.isArray(v) ? (v as string[]).map(String) : [];
+        break;
+      case "bool":
+        // groupIncludesBride defaults TRUE (a bride is a face); every other bool
+        // defaults false. Preserve that.
+        cf[spec.key] =
+          typeof v === "boolean" ? v : (emptyValue(spec) as boolean);
+        break;
+      case "number":
+        cf[spec.key] = v == null || v === "" ? "" : String(v);
+        break;
+      default:
+        cf[spec.key] = typeof v === "string" ? v : "";
+    }
+  }
 
   return {
     ...d,
@@ -110,23 +136,7 @@ export function essentialsToDraft(e: EssentialsData | null): EssentialsDraft {
     languages: [...(e.languages ?? [])],
     teamSize: e.team?.size ?? "",
     teamNote: e.team?.note ?? "",
-    hairServices: cf.hairServices ?? "",
-    groupMaxFaces:
-      cf.groupCapacity?.maxFaces != null ? String(cf.groupCapacity.maxFaces) : "",
-    groupIncludesBride: cf.groupCapacity?.includesBride ?? true,
-    retouchTier: cf.retouch?.tier ?? "",
-    retouchHours: cf.retouch?.hours != null ? String(cf.retouch.hours) : "",
-    retouchNote: cf.retouch?.note ?? "",
-    earlyFrom: cf.earlyCall?.availableFrom ?? "",
-    earlyFee: cf.earlyCall?.feeNote ?? "",
-    trialStatus: cf.trial?.status ?? "",
-    trialNote: cf.trial?.note ?? "",
-    finishStyles: [...(cf.finishStyles ?? [])],
-    techniques: [...(cf.techniques ?? [])],
-    skinInclusivity: [...(cf.skinInclusivity ?? [])],
-    backupPlan: cf.backupPlan ?? "",
-    onLocation: cf.onLocation ?? false,
-    homeService: cf.homeService ?? false,
+    categoryFields: { ...d.categoryFields, ...cf },
     customEssentials: (e.customEssentials ?? []).map((c) => ({
       label: c.label,
       value: c.value,
@@ -141,9 +151,12 @@ const intOrU = (x: string): number | undefined => {
   return Number.isFinite(n) ? n : undefined;
 };
 
-// Assemble the nested structured object for save. Empty values are omitted so the
-// result matches what the server keeps; returns null when nothing was filled in.
-export function draftToEssentials(d: EssentialsDraft): EssentialsData | null {
+// Assemble the structured object for save. Empty values are omitted so the result
+// matches what the server keeps; returns null when nothing was filled in.
+export function draftToEssentials(
+  d: EssentialsDraft,
+  category: string | null,
+): EssentialsData | null {
   const out: Record<string, unknown> = {};
 
   if (d.coverageAreas.length) {
@@ -184,50 +197,44 @@ export function draftToEssentials(d: EssentialsDraft): EssentialsData | null {
     out.team = { size: d.teamSize as TeamSizeKey, ...(note ? { note } : {}) };
   }
 
+  // Category fields, straight off the specs. A hidden dependent field (e.g. retouch
+  // hours when the tier is not "unlimited") is dropped, so the renderer and the
+  // stored value can never disagree about what is being edited.
   const cf: Record<string, unknown> = {};
-  if (d.hairServices) cf.hairServices = d.hairServices as HairServiceKey;
-
-  const maxFaces = intOrU(d.groupMaxFaces);
-  if (maxFaces != null) {
-    cf.groupCapacity = { maxFaces, includesBride: d.groupIncludesBride };
+  const values = d.categoryFields;
+  for (const spec of fieldsFor(category)) {
+    if (!specVisible(spec, values)) continue;
+    const v = values[spec.key];
+    switch (spec.kind) {
+      case "chips":
+        if (Array.isArray(v) && v.length) cf[spec.key] = [...v];
+        break;
+      case "bool":
+        // Booleans stored only when true (false = "not offered", never rendered).
+        if (v === true) cf[spec.key] = true;
+        break;
+      case "number": {
+        const n = intOrU(String(v ?? ""));
+        if (n != null) cf[spec.key] = n;
+        break;
+      }
+      case "time": {
+        const t = s(String(v ?? ""));
+        if (/^\d{1,2}:\d{2}$/.test(t)) cf[spec.key] = t;
+        break;
+      }
+      default: {
+        const t = s(String(v ?? ""));
+        if (t) cf[spec.key] = t;
+      }
+    }
   }
 
-  if (d.retouchTier) {
-    const hours = intOrU(d.retouchHours);
-    const note = s(d.retouchNote);
-    cf.retouch = {
-      tier: d.retouchTier as RetouchTierKey,
-      ...(hours != null ? { hours } : {}),
-      ...(note ? { note } : {}),
-    };
+  // groupIncludesBride is only meaningful alongside a face count; on its own it
+  // would render "Bride + up to 0 faces".
+  if (cf.groupIncludesBride != null && cf.groupMaxFaces == null) {
+    delete cf.groupIncludesBride;
   }
-
-  if (/^\d{1,2}:\d{2}$/.test(d.earlyFrom.trim())) {
-    const fee = s(d.earlyFee);
-    cf.earlyCall = {
-      availableFrom: d.earlyFrom.trim(),
-      ...(fee ? { feeNote: fee } : {}),
-    };
-  }
-
-  if (d.trialStatus) {
-    const note = s(d.trialNote);
-    cf.trial = {
-      status: d.trialStatus as TrialStatusKey,
-      ...(note ? { note } : {}),
-    };
-  }
-
-  if (d.finishStyles.length) cf.finishStyles = [...d.finishStyles] as FinishStyleKey[];
-  if (d.techniques.length) cf.techniques = [...d.techniques] as TechniqueKey[];
-  if (d.skinInclusivity.length)
-    cf.skinInclusivity = [...d.skinInclusivity] as SkinInclusivityKey[];
-
-  const backup = s(d.backupPlan);
-  if (backup) cf.backupPlan = backup;
-  // Booleans stored only when true (false = default "not offered", never rendered).
-  if (d.onLocation) cf.onLocation = true;
-  if (d.homeService) cf.homeService = true;
 
   if (Object.keys(cf).length) out.categoryFields = cf;
 

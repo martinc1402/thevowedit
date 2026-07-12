@@ -5,14 +5,14 @@ import {
   CEBU_AREAS,
   LANGUAGES,
   BOOKING_STATUSES,
-  TRIAL_STATUSES,
-  HAIR_SERVICES,
-  FINISH_STYLES,
-  TECHNIQUES,
-  SKIN_INCLUSIVITY,
   PAYMENT_METHODS,
 } from "@/lib/essentials-taxonomy";
-import type { EssentialsDraft } from "@/lib/essentials-form";
+import {
+  fieldSetFor,
+  specVisible,
+  type FieldSpec,
+} from "@/lib/category-fields";
+import type { EssentialsDraft, FieldValue } from "@/lib/essentials-form";
 import {
   Field,
   Select,
@@ -33,14 +33,12 @@ const optCap = <T extends { key: string; label: string }>(
   v: readonly T[],
 ): Option[] => v.map((x) => ({ value: x.key, label: cap1(x.label) }));
 
+// Universal option lists. The CATEGORY vocab lists used to live here too
+// (TRIAL_OPTS, HAIR_OPTS, FINISH_OPTS…); they now travel with their field spec, so
+// a new category adds no constants to this file.
 const AREA_OPTS = opt(CEBU_AREAS);
 const LANG_OPTS = opt(LANGUAGES);
 const BOOKING_OPTS = opt(BOOKING_STATUSES);
-const TRIAL_OPTS = opt(TRIAL_STATUSES);
-const HAIR_OPTS = opt(HAIR_SERVICES);
-const FINISH_OPTS = optCap(FINISH_STYLES);
-const TECH_OPTS = optCap(TECHNIQUES);
-const SKIN_OPTS = optCap(SKIN_INCLUSIVITY);
 const PAYMENT_OPTS = opt(PAYMENT_METHODS); // labels are already proper-cased
 
 // Select-friendly labels where the vocab label (tuned for row rendering) reads
@@ -49,12 +47,6 @@ const TEAM_OPTS: Option[] = [
   { value: "solo", label: "Solo artist" },
   { value: "small_team", label: "Small team" },
   { value: "studio", label: "Studio team" },
-];
-const RETOUCH_OPTS: Option[] = [
-  { value: "none", label: "None" },
-  { value: "until_ceremony", label: "Until you leave for the ceremony" },
-  { value: "until_reception", label: "Retouch before the reception" },
-  { value: "unlimited", label: "Unlimited retouch" },
 ];
 
 // ---- layout helpers -----------------------------------------------------
@@ -78,6 +70,87 @@ function Group({
   );
 }
 
+// One input, chosen by the spec's `kind`. This is the whole reason a new category
+// now costs nothing: describe the field, get the control.
+function SpecField({
+  spec,
+  value,
+  onChange,
+}: {
+  spec: FieldSpec;
+  value: FieldValue;
+  onChange: (v: FieldValue) => void;
+}) {
+  const help = spec.help && (
+    <p className="mt-1.5 text-xs text-muted">{spec.help}</p>
+  );
+
+  if (spec.kind === "bool") {
+    return (
+      <>
+        <CheckboxRow checked={value === true} onChange={onChange}>
+          {spec.label}
+        </CheckboxRow>
+        {help}
+      </>
+    );
+  }
+
+  if (spec.kind === "chips") {
+    const selected = Array.isArray(value) ? value : [];
+    return (
+      <div>
+        <span className={labelClass}>
+          {spec.label}{" "}
+          {spec.hint && (
+            <span className="font-normal text-muted">{spec.hint}</span>
+          )}
+        </span>
+        <ChipGroup
+          options={optCap(spec.vocab)}
+          selected={selected}
+          onToggle={(v) =>
+            onChange(
+              selected.includes(v)
+                ? selected.filter((x) => x !== v)
+                : [...selected, v],
+            )
+          }
+        />
+        {help}
+      </div>
+    );
+  }
+
+  const text = typeof value === "string" ? value : "";
+
+  return (
+    <div>
+      <Field label={spec.label} hint={spec.hint}>
+        {spec.kind === "select" ? (
+          <Select
+            value={text}
+            onChange={onChange}
+            options={optCap(spec.vocab)}
+            placeholder="— Not set —"
+          />
+        ) : (
+          <input
+            className={inputClass}
+            type={spec.kind === "time" ? "time" : "text"}
+            inputMode={spec.kind === "number" ? "numeric" : undefined}
+            maxLength={spec.kind === "text" ? spec.maxLength : undefined}
+            placeholder={spec.placeholder}
+            value={text}
+            onChange={(e) => onChange(e.target.value)}
+          />
+        )}
+      </Field>
+      {help}
+    </div>
+  );
+}
+
 // ---- the step ------------------------------------------------------------
 export function EssentialsStep({
   draft,
@@ -88,16 +161,10 @@ export function EssentialsStep({
   onPatch: (patch: Partial<EssentialsDraft>) => void;
   category: string | null;
 }) {
-  const isMakeup = category === "makeup";
+  const fieldSet = fieldSetFor(category);
 
   const toggle = (
-    key:
-      | "coverageAreas"
-      | "languages"
-      | "paymentMethods"
-      | "finishStyles"
-      | "techniques"
-      | "skinInclusivity",
+    key: "coverageAreas" | "languages" | "paymentMethods",
     value: string,
   ) => {
     const cur = draft[key];
@@ -107,6 +174,10 @@ export function EssentialsStep({
         : [...cur, value],
     } as Partial<EssentialsDraft>);
   };
+
+  // Every category field lives in one bag, so a new category needs no new setter.
+  const setField = (key: string, v: FieldValue) =>
+    onPatch({ categoryFields: { ...draft.categoryFields, [key]: v } });
 
   const setCustom = (rows: EssentialsDraft["customEssentials"]) =>
     onPatch({ customEssentials: rows });
@@ -225,167 +296,28 @@ export function EssentialsStep({
         </div>
       </Group>
 
-      {isMakeup && (
-        <Group
-          title="Makeup details"
-          hint="Specifics couples ask about — hair, group size, retouch, early calls, trials."
-        >
+      {/* Category-specific fields, rendered from the specs in category-fields.ts.
+          This replaced ~160 lines of makeup-only JSX behind `category === "makeup"`
+          — the reason a second category could not be added without a rewrite. Every
+          category now gets its inputs, its validation and its draft mapping from
+          the same one entry. */}
+      {fieldSet && (
+        <Group title={fieldSet.title} hint={fieldSet.blurb}>
           <div className="grid gap-4 sm:grid-cols-2">
-            <Field label="Hair services">
-              <Select
-                value={draft.hairServices}
-                onChange={(v) => onPatch({ hairServices: v })}
-                options={HAIR_OPTS}
-                placeholder="— Not set —"
-              />
-            </Field>
-            <Field label="Trial makeup">
-              <Select
-                value={draft.trialStatus}
-                onChange={(v) => onPatch({ trialStatus: v })}
-                options={TRIAL_OPTS}
-                placeholder="— Not set —"
-              />
-            </Field>
-          </div>
-          {draft.trialStatus && (
-            <Field label="Trial note" hint="(optional)">
-              <input
-                className={inputClass}
-                value={draft.trialNote}
-                maxLength={120}
-                onChange={(e) => onPatch({ trialNote: e.target.value })}
-              />
-            </Field>
-          )}
-
-          <div>
-            <span className={labelClass}>Group capacity</span>
-            <div className="grid gap-4 sm:grid-cols-[10rem_1fr] sm:items-center">
-              <input
-                className={inputClass}
-                inputMode="numeric"
-                value={draft.groupMaxFaces}
-                placeholder="Max faces"
-                onChange={(e) => onPatch({ groupMaxFaces: e.target.value })}
-              />
-              <CheckboxRow
-                checked={draft.groupIncludesBride}
-                onChange={(v) => onPatch({ groupIncludesBride: v })}
-              >
-                Count includes the bride
-              </CheckboxRow>
-            </div>
-            <p className="mt-1 text-xs text-muted">
-              Whether you work solo or with a team is set by the Team field above.
-            </p>
-          </div>
-
-          <div>
-            <span className={labelClass}>Retouch</span>
-            <div className="grid gap-4 sm:grid-cols-[1fr_10rem]">
-              <Select
-                value={draft.retouchTier}
-                onChange={(v) => onPatch({ retouchTier: v })}
-                options={RETOUCH_OPTS}
-                placeholder="— Not set —"
-              />
-              {draft.retouchTier === "unlimited" && (
-                <input
-                  className={inputClass}
-                  inputMode="numeric"
-                  value={draft.retouchHours}
-                  placeholder="Hours"
-                  onChange={(e) => onPatch({ retouchHours: e.target.value })}
-                />
-              )}
-            </div>
-            {draft.retouchTier && draft.retouchTier !== "none" && (
-              <input
-                className={`${inputClass} mt-3`}
-                value={draft.retouchNote}
-                maxLength={120}
-                placeholder="Retouch note (optional)"
-                onChange={(e) => onPatch({ retouchNote: e.target.value })}
-              />
+            {fieldSet.fields.map((spec) =>
+              specVisible(spec, draft.categoryFields) ? (
+                <div
+                  key={spec.key}
+                  className={spec.half ? "" : "sm:col-span-2"}
+                >
+                  <SpecField
+                    spec={spec}
+                    value={draft.categoryFields[spec.key]}
+                    onChange={(v) => setField(spec.key, v)}
+                  />
+                </div>
+              ) : null,
             )}
-          </div>
-
-          <div>
-            <span className={labelClass}>Early call time</span>
-            <div className="grid gap-4 sm:grid-cols-[10rem_1fr]">
-              <input
-                type="time"
-                className={inputClass}
-                value={draft.earlyFrom}
-                onChange={(e) => onPatch({ earlyFrom: e.target.value })}
-              />
-              <input
-                className={inputClass}
-                value={draft.earlyFee}
-                maxLength={120}
-                placeholder="Early-call fee note (optional)"
-                onChange={(e) => onPatch({ earlyFee: e.target.value })}
-              />
-            </div>
-            <p className="mt-1 text-xs text-muted">
-              If early calls cost extra, say so here — couples prefer knowing
-              upfront.
-            </p>
-          </div>
-
-          <div>
-            <span className={labelClass}>Finish styles</span>
-            <ChipGroup
-              options={FINISH_OPTS}
-              selected={draft.finishStyles}
-              onToggle={(v) => toggle("finishStyles", v)}
-            />
-          </div>
-          <div>
-            <span className={labelClass}>Techniques</span>
-            <ChipGroup
-              options={TECH_OPTS}
-              selected={draft.techniques}
-              onToggle={(v) => toggle("techniques", v)}
-            />
-          </div>
-          <div>
-            <span className={labelClass}>Skin specialties</span>
-            <ChipGroup
-              options={SKIN_OPTS}
-              selected={draft.skinInclusivity}
-              onToggle={(v) => toggle("skinInclusivity", v)}
-            />
-          </div>
-
-          <Field
-            label="If the unexpected happens"
-            hint="(your backup plan)"
-            help="What happens if you're unavailable on the day — a partner artist on standby, for example."
-          >
-            <input
-              className={inputClass}
-              value={draft.backupPlan}
-              maxLength={160}
-              placeholder="e.g. trusted partner artist on standby"
-              onChange={(e) => onPatch({ backupPlan: e.target.value })}
-            />
-          </Field>
-
-          <div className="grid gap-3">
-            <CheckboxRow
-              checked={draft.onLocation}
-              onChange={(v) => onPatch({ onLocation: v })}
-            >
-              Comes to your venue / on-location
-            </CheckboxRow>
-            <CheckboxRow
-              checked={draft.homeService}
-              onChange={(v) => onPatch({ homeService: v })}
-            >
-              Offers home service
-            </CheckboxRow>
           </div>
         </Group>
       )}

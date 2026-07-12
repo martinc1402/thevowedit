@@ -321,12 +321,18 @@ export async function getSupplierBySlug(slug: string): Promise<Supplier | null> 
 // The filters the browse page understands. Ordered by how couples actually search:
 // where → what it costs → how it's done → can they do my entourage → are they free.
 export type VendorFilters = {
+  category?: string; // content.ts slug
   area?: string; // AreaKey
-  budgetMax?: number; // bride rate ceiling
-  technique?: string; // TechniqueKey
-  finish?: string; // FinishStyleKey
-  minFaces?: number; // entourage capacity
+  budgetMax?: number; // starting-rate ceiling
   bookingStatus?: string; // BookingStatusKey
+  // Category-specific. Applied ONLY when the matching category is selected — these
+  // read keys out of `essentials.categoryFields`, and a photographer has no
+  // `techniques` and no `groupMaxFaces`, so applying them directory-wide silently
+  // excluded every non-makeup vendor.
+  technique?: string; // makeup
+  minFaces?: number; // makeup
+  minHours?: number; // photo / video
+  sameDayEdit?: boolean; // video
 };
 
 // Published vendors matching the filters.
@@ -347,6 +353,7 @@ export async function listPublishedSuppliers(
 
   const { data, error } = await withProjectionFallback((columns) => {
     let q = supabase.from("suppliers").select(columns).eq("published", true);
+    if (f.category) q = q.contains("categories", [f.category]);
     if (f.area) q = q.contains("serves_areas", [f.area]);
     if (f.budgetMax != null) q = q.lte("price_min", f.budgetMax);
     return q;
@@ -362,22 +369,20 @@ export async function listPublishedSuppliers(
   );
 
   return rows.filter((s) => {
-    const cf = (s.essentials?.categoryFields ?? {}) as {
-      techniques?: string[];
-      finishStyles?: string[];
-      groupCapacity?: { maxFaces?: number };
-    };
-    if (f.technique && !(cf.techniques ?? []).includes(f.technique)) return false;
-    if (f.finish && !(cf.finishStyles ?? []).includes(f.finish)) return false;
-    if (f.minFaces != null && (cf.groupCapacity?.maxFaces ?? 0) < f.minFaces) {
-      return false;
-    }
+    const cf = (s.essentials?.categoryFields ?? {}) as Record<string, unknown>;
+    const nums = (v: unknown) => (typeof v === "number" ? v : 0);
+    const list = (v: unknown) => (Array.isArray(v) ? (v as string[]) : []);
+
     if (
       f.bookingStatus &&
       s.essentials?.bookingStatus?.status !== f.bookingStatus
     ) {
       return false;
     }
+    if (f.technique && !list(cf.techniques).includes(f.technique)) return false;
+    if (f.minFaces != null && nums(cf.groupMaxFaces) < f.minFaces) return false;
+    if (f.minHours != null && nums(cf.coverageHours) < f.minHours) return false;
+    if (f.sameDayEdit && cf.sameDayEdit !== true) return false;
     return true;
   });
 }

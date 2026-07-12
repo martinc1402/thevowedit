@@ -120,6 +120,45 @@ export const HAIR_SERVICES = [
 ] as const;
 export type HairServiceKey = (typeof HAIR_SERVICES)[number]["key"];
 
+// ---- photographers / videographers ------------------------------------------
+// Grounded in the Philippine market, not invented: SDE (a highlights film cut on
+// the day and played at the reception) is a distinctly Filipino deliverable, and
+// prenup shoots are near-standard.
+
+// How the work looks. Deliberately DISJOINT from the makeup finish styles — the
+// same anti-duplication rule the style-tag vocab documents.
+export const SHOOT_STYLES = [
+  { key: "documentary", label: "documentary" },
+  { key: "fine_art", label: "fine art" },
+  { key: "editorial", label: "editorial" },
+  { key: "candid", label: "candid" },
+  { key: "light_airy", label: "light & airy" },
+  { key: "moody", label: "moody" },
+  { key: "cinematic", label: "cinematic" },
+] as const;
+export type ShootStyleKey = (typeof SHOOT_STYLES)[number]["key"];
+
+// What the couple actually receives.
+export const PHOTO_DELIVERABLES = [
+  { key: "edited_gallery", label: "edited online gallery" },
+  { key: "printed_album", label: "printed album" },
+  { key: "magnetic_album", label: "magnetic album" },
+  { key: "usb_drive", label: "USB / drive" },
+  { key: "raw_files", label: "raw files" },
+  { key: "prints", label: "prints" },
+] as const;
+export type PhotoDeliverableKey = (typeof PHOTO_DELIVERABLES)[number]["key"];
+
+export const VIDEO_DELIVERABLES = [
+  { key: "same_day_edit", label: "same-day edit (SDE)" },
+  { key: "highlights", label: "highlights film" },
+  { key: "full_ceremony", label: "full ceremony film" },
+  { key: "teaser", label: "teaser" },
+  { key: "social_cut", label: "social cut (reels)" },
+  { key: "raw_footage", label: "raw footage" },
+] as const;
+export type VideoDeliverableKey = (typeof VIDEO_DELIVERABLES)[number]["key"];
+
 // Retouch coverage tiers (PH-market standard). "none" renders no row; the
 // unlimited tier composes with `hours` in the formatter.
 export const RETOUCH_TIERS = [
@@ -144,6 +183,9 @@ export const VOCAB_KEYS = {
   hairService: keySet(HAIR_SERVICES as unknown as Vocab<HairServiceKey>),
   retouchTier: keySet(RETOUCH_TIERS as unknown as Vocab<RetouchTierKey>),
   paymentMethod: keySet(PAYMENT_METHODS as unknown as Vocab<PaymentMethodKey>),
+  shootStyle: keySet(SHOOT_STYLES as unknown as Vocab<ShootStyleKey>),
+  photoDeliverable: keySet(PHOTO_DELIVERABLES as unknown as Vocab<PhotoDeliverableKey>),
+  videoDeliverable: keySet(VIDEO_DELIVERABLES as unknown as Vocab<VideoDeliverableKey>),
 } as const;
 
 const AREA_LABEL = labelMap(CEBU_AREAS as unknown as Vocab<AreaKey>);
@@ -158,6 +200,13 @@ const SPECIALTY_LABEL = labelMap([
   ...FINISH_STYLES,
   ...TECHNIQUES,
   ...SKIN_INCLUSIVITY,
+] as unknown as Vocab<string>);
+const SHOOT_STYLE_LABEL = labelMap(SHOOT_STYLES as unknown as Vocab<string>);
+// Photo and video deliverables share one row ("What you get"), and their keys are
+// disjoint, so one merged label map serves both.
+const DELIVERABLE_LABEL = labelMap([
+  ...PHOTO_DELIVERABLES,
+  ...VIDEO_DELIVERABLES,
 ] as unknown as Vocab<string>);
 
 // Coverage key -> display label, for the browse filter chips.
@@ -234,8 +283,18 @@ const to12h = (hhmm: string): string | null => {
   return `${h}:${min} ${period}`;
 };
 
-const mk = (i: EssentialsInput) =>
-  (i.essentials?.categoryFields ?? {}) as MakeupFields;
+// The vendor's category fields, as a flat bag. Untyped on purpose: this used to
+// blind-cast to MakeupFields regardless of the vendor's ACTUAL category, which was
+// a lie the moment a second category existed. Each row reads only the keys its own
+// category's field set defines, through the accessors below.
+const mk = (i: EssentialsInput): Record<string, unknown> =>
+  (i.essentials?.categoryFields ?? {}) as Record<string, unknown>;
+
+const str = (v: unknown): string => (typeof v === "string" ? v : "");
+const num = (v: unknown): number | null =>
+  typeof v === "number" && Number.isFinite(v) ? v : null;
+const arr = (v: unknown): string[] =>
+  Array.isArray(v) ? (v as unknown[]).map(String) : [];
 
 type RowDef = { label: string; format: (i: EssentialsInput) => string | null };
 
@@ -336,17 +395,21 @@ const languagesRow: RowDef = {
 };
 
 // -- makeup-artist rows --
+// These read FLAT keys out of categoryFields (retouchTier, not retouch.tier). The
+// old nested shape was flattened so one spec = one input = one stored key; see
+// src/lib/category-fields.ts and supabase/flatten-category-fields.sql.
 const groupCapacityRow: RowDef = {
   label: "Group capacity",
   format: (i) => {
-    const gc = mk(i).groupCapacity;
+    const cf = mk(i);
+    const maxFaces = num(cf.groupMaxFaces);
     const size = i.essentials?.team?.size;
     const mode = size && size in TEAM_LABEL ? TEAM_LABEL[size] : null;
-    if (gc?.maxFaces != null) {
+    if (maxFaces != null) {
       const base =
-        gc.includesBride === false
-          ? `Up to ${gc.maxFaces} faces`
-          : `Bride + up to ${gc.maxFaces} faces`;
+        cf.groupIncludesBride === false
+          ? `Up to ${maxFaces} faces`
+          : `Bride + up to ${maxFaces} faces`;
       return mode ? `${base} (${mode})` : base;
     }
     return mode ? upperFirst(mode) : null;
@@ -356,27 +419,30 @@ const groupCapacityRow: RowDef = {
 const hairServicesRow: RowDef = {
   label: "Hair services",
   format: (i) => {
-    const key = mk(i).hairServices;
-    return key && key in HAIR_SERVICE_LABEL ? HAIR_SERVICE_LABEL[key] : null;
+    const key = str(mk(i).hairServices);
+    return key && key in HAIR_SERVICE_LABEL
+      ? HAIR_SERVICE_LABEL[key as HairServiceKey]
+      : null;
   },
 };
 
 const retouchRow: RowDef = {
   label: "Retouch",
   format: (i) => {
-    const r = mk(i).retouch;
-    const tier = r?.tier;
+    const cf = mk(i);
+    const tier = str(cf.retouchTier);
     if (!tier || tier === "none") return null;
     let base: string;
     if (tier === "unlimited") {
       base = "Unlimited retouch";
-      if (r.hours != null) base += ` · up to ${r.hours} hours`;
+      const hours = num(cf.retouchHours);
+      if (hours != null) base += ` · up to ${hours} hours`;
     } else if (tier === "until_ceremony") {
       base = "Stays until you leave for the ceremony";
     } else {
       base = "Includes retouch before the reception"; // until_reception
     }
-    const note = r.note?.trim();
+    const note = str(cf.retouchNote).trim();
     return note ? `${base} · ${note}` : base;
   },
 };
@@ -384,27 +450,23 @@ const retouchRow: RowDef = {
 const earlyCallRow: RowDef = {
   label: "Early call times",
   format: (i) => {
-    const ec = mk(i).earlyCall;
-    const at = ec?.availableFrom ? to12h(ec.availableFrom) : null;
+    const cf = mk(i);
+    const at = str(cf.earlyFrom) ? to12h(str(cf.earlyFrom)) : null;
     if (!at) return null;
-    const fee = ec?.feeNote?.trim();
+    const fee = str(cf.earlyFee).trim();
     // feeNote appended quietly when present; its absence never implies "free".
     return fee ? `Available from ${at} · ${fee}` : `Available from ${at}`;
   },
 };
 
-const backupPlanRow: RowDef = {
-  label: "If the unexpected happens",
-  format: (i) => mk(i).backupPlan?.trim() || null,
-};
-
 const trialRow: RowDef = {
   label: "Trial makeup",
   format: (i) => {
-    const t = mk(i).trial;
-    if (!t?.status || !(t.status in TRIAL_LABEL)) return null;
-    const label = TRIAL_LABEL[t.status];
-    const note = t.note?.trim();
+    const cf = mk(i);
+    const status = str(cf.trialStatus);
+    if (!status || !(status in TRIAL_LABEL)) return null;
+    const label = TRIAL_LABEL[status as TrialStatusKey];
+    const note = str(cf.trialNote).trim();
     return note ? `${label} · ${note}` : label;
   },
 };
@@ -414,15 +476,89 @@ const specialtiesRow: RowDef = {
   format: (i) => {
     const cf = mk(i);
     const parts = [
-      ...(cf.finishStyles ?? []),
-      ...(cf.techniques ?? []),
-      ...(cf.skinInclusivity ?? []),
+      ...arr(cf.finishStyles),
+      ...arr(cf.techniques),
+      ...arr(cf.skinInclusivity),
     ]
       .map((k) => SPECIALTY_LABEL[k])
       .filter(Boolean);
     const unique = [...new Set(parts)];
     return unique.length ? upperFirst(unique.join(", ")) : null;
   },
+};
+
+// -- shared: any category can have a backup plan (the date is irreplaceable) --
+const backupPlanRow: RowDef = {
+  label: "If the unexpected happens",
+  format: (i) => str(mk(i).backupPlan).trim() || null,
+};
+
+// -- photographer / videographer rows --
+const coverageHoursRow: RowDef = {
+  label: "Hours of coverage",
+  format: (i) => {
+    const h = num(mk(i).coverageHours);
+    return h != null ? `${h} hours` : null;
+  },
+};
+
+const crewRow: RowDef = {
+  label: "On the day",
+  format: (i) => {
+    const cf = mk(i);
+    const parts: string[] = [];
+    const crew = num(cf.crewSize);
+    if (crew != null) parts.push(`${crew}-person crew`);
+    if (cf.secondShooter === true) parts.push("second shooter included");
+    if (cf.drone === true) parts.push("drone coverage");
+    return parts.length ? upperFirst(parts.join(" · ")) : null;
+  },
+};
+
+const turnaroundRow: RowDef = {
+  label: "Delivery",
+  format: (i) => {
+    const cf = mk(i);
+    const weeks = num(cf.turnaroundWeeks);
+    const photos = num(cf.editedPhotos);
+    const parts: string[] = [];
+    if (photos != null) parts.push(`~${photos} edited photos`);
+    if (weeks != null) parts.push(`in about ${weeks} weeks`);
+    return parts.length ? upperFirst(parts.join(" ")) : null;
+  },
+};
+
+const deliverablesRow: RowDef = {
+  label: "What you get",
+  format: (i) => {
+    const items = arr(mk(i).deliverables)
+      .map((k) => DELIVERABLE_LABEL[k])
+      .filter(Boolean);
+    return items.length ? upperFirst(items.join(", ")) : null;
+  },
+};
+
+// SDE is the headline question for a Filipino videographer: a highlights film cut
+// on the day and played at the reception. It earns its own row.
+const sdeRow: RowDef = {
+  label: "Same-day edit",
+  format: (i) =>
+    mk(i).sameDayEdit === true ? "Yes — played at your reception" : null,
+};
+
+const shootStyleRow: RowDef = {
+  label: "Style",
+  format: (i) => {
+    const items = arr(mk(i).shootStyles)
+      .map((k) => SHOOT_STYLE_LABEL[k])
+      .filter(Boolean);
+    return items.length ? upperFirst(items.join(", ")) : null;
+  },
+};
+
+const prenupRow: RowDef = {
+  label: "Prenup",
+  format: (i) => (mk(i).prenupOffered === true ? "Prenup shoots offered" : null),
 };
 
 // ------------------------------------------------- category field sets --------
@@ -472,9 +608,53 @@ const MAKEUP_FIELD_SET: FieldSet = {
   maxRows: 14,
 };
 
+// Photographers: hours, who turns up, what lands and when. Entourage is absent —
+// it is a per-FACE makeup rate and means nothing here.
+const PHOTO_FIELD_SET: FieldSet = {
+  rows: [
+    priceRow,
+    coverageHoursRow,
+    crewRow,
+    shootStyleRow,
+    turnaroundRow,
+    deliverablesRow,
+    prenupRow,
+    coverageRow,
+    backupPlanRow,
+    bookingTermsRow,
+    paymentRow,
+    bookingStatusRow,
+    languagesRow,
+  ],
+  maxRows: 13,
+};
+
+// Videographers: SDE leads, because it is the first thing a Filipino couple asks.
+const VIDEO_FIELD_SET: FieldSet = {
+  rows: [
+    priceRow,
+    sdeRow,
+    coverageHoursRow,
+    crewRow,
+    shootStyleRow,
+    turnaroundRow,
+    deliverablesRow,
+    prenupRow,
+    coverageRow,
+    backupPlanRow,
+    bookingTermsRow,
+    paymentRow,
+    bookingStatusRow,
+    languagesRow,
+  ],
+  maxRows: 14,
+};
+
 // Add a category by adding an entry here — no other code changes.
 export const CATEGORY_FIELD_SETS: Record<string, FieldSet> = {
   makeup: MAKEUP_FIELD_SET,
+  photographers: PHOTO_FIELD_SET,
+  videographers: VIDEO_FIELD_SET,
 };
 
 // ------------------------------------------------------------ public API ------

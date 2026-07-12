@@ -80,6 +80,7 @@ export default async function SupplierPage({ params }: Params) {
       entourageRateMin={s.entourageRateMin}
       entourageRateMax={s.entourageRateMax}
       currency={s.currency}
+      category={s.categories[0] ?? null}
       verified={s.verified}
       responseTimeNote={s.responseTimeNote}
       channels={channels}

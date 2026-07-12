@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SealCheck } from "@phosphor-icons/react/dist/ssr";
 import { formatPrice, type Supplier } from "@/lib/suppliers";
 import { categories } from "@/lib/content";
+import { hasEntourageRate } from "@/lib/category-fields";
 
 const ROLE: Record<string, string> = {
   makeup: "Makeup Artist",
@@ -26,8 +27,9 @@ export function VendorCard({ s }: { s: Supplier }) {
   const subtitle = [role, s.location].filter(Boolean).join(" · ");
   const price =
     s.priceMin != null ? `From ${formatPrice(s.priceMin, s.currency)}` : null;
+  // Per-FACE is a makeup rate; a photographer must never get "+ ₱X per face".
   const entourage =
-    s.entourageRateMin != null
+    hasEntourageRate(s.categories[0] ?? null) && s.entourageRateMin != null
       ? `+ ${formatPrice(s.entourageRateMin, s.currency)} per face`
       : null;
 

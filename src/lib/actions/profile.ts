@@ -13,11 +13,16 @@ import {
   type Supplier,
 } from "@/lib/suppliers";
 import { VOCAB_KEYS, type EssentialsData } from "@/lib/essentials-taxonomy";
+import {
+  fieldsFor,
+  specVisible,
+  hasEntourageRate,
+} from "@/lib/category-fields";
 import { isAdmin } from "@/lib/auth";
 import { normalizeHandle, normalizePhonePH } from "@/lib/contact-normalize";
 import { SERVICE_KEYS } from "@/lib/services-vocab";
 import { STYLE_TAG_KEYS, styleTagsFor } from "@/lib/style-tags-vocab";
-import { PACKAGE_INCLUSIONS } from "@/lib/package-inclusions";
+import { INCLUSION_KEYS } from "@/lib/package-inclusions";
 
 // Full column projection for the authenticated dashboard reads — mirrors
 // getSupplierBySlug so the wizard loads the newer contact-channel + essentials
@@ -161,7 +166,6 @@ const strArray = (v: unknown, itemLen: number, max: number) =>
   ).slice(0, max);
 
 // jsonb coercers -------------------------------------------------------
-const INCLUSION_KEYS = new Set(Object.keys(PACKAGE_INCLUSIONS));
 function coercePackages(v: unknown) {
   if (!Array.isArray(v)) return [];
   return v
@@ -255,7 +259,10 @@ const coercePriceUnit = (v: unknown) => inSet(v, VOCAB_KEYS.priceUnit);
 // Deep-validate the essentials jsonb: enums against vocab, numbers/bools coerced,
 // unknown keys dropped, custom facts capped at 3. Built as a plain object then
 // cast (every value has been validated).
-function coerceEssentials(v: unknown): EssentialsData | null {
+function coerceEssentials(
+  v: unknown,
+  category: string | null,
+): EssentialsData | null {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
   const o = v as Record<string, unknown>;
   const out: Record<string, unknown> = {};
@@ -304,52 +311,56 @@ function coerceEssentials(v: unknown): EssentialsData | null {
     out.team = { size, ...(note ? { note } : {}) };
   }
 
+  // Category fields, validated FROM THE SPECS for this vendor's actual category.
+  //
+  // This used to be a hardcoded allowlist of the 11 makeup keys that never looked
+  // at the category — so a photographer posting `coverageHours` had it SILENTLY
+  // DROPPED, and no category but makeup could persist a single field. The specs are
+  // the same ones the wizard renders from, so the form and the validator cannot
+  // disagree about what exists.
   const cf = obj(o.categoryFields);
   if (cf) {
     const fields: Record<string, unknown> = {};
-    const hair = inSet(cf.hairServices, VOCAB_KEYS.hairService);
-    if (hair) fields.hairServices = hair;
-    const gc = obj(cf.groupCapacity);
-    if (gc) {
-      const g: Record<string, unknown> = {};
-      const maxFaces = intOrNull(gc.maxFaces);
-      if (maxFaces != null) g.maxFaces = maxFaces;
-      if ("includesBride" in gc) g.includesBride = boolVal(gc.includesBride);
-      if (Object.keys(g).length) fields.groupCapacity = g;
+    for (const spec of fieldsFor(category)) {
+      // A hidden dependent field (retouch hours when the tier isn't "unlimited")
+      // is not being edited, so it is not stored.
+      if (!specVisible(spec, cf)) continue;
+      const v = cf[spec.key];
+
+      switch (spec.kind) {
+        case "select": {
+          const keys = new Set(spec.vocab.map((x) => x.key));
+          const picked = inSet(v, keys);
+          if (picked) fields[spec.key] = picked;
+          break;
+        }
+        case "chips": {
+          const keys = new Set(spec.vocab.map((x) => x.key));
+          const picked = enumArray(v, keys, spec.max);
+          if (picked.length) fields[spec.key] = picked;
+          break;
+        }
+        case "number": {
+          const n = intOrNull(v);
+          // Bound it: a negative or absurd number is a typo, not an answer.
+          if (n != null && n > 0 && n <= spec.max) fields[spec.key] = n;
+          break;
+        }
+        case "time": {
+          const t = cap(v, 5);
+          if (/^\d{1,2}:\d{2}$/.test(t)) fields[spec.key] = t;
+          break;
+        }
+        case "bool": {
+          if (v === true || v === "true") fields[spec.key] = true;
+          break;
+        }
+        default: {
+          const t = capOrNull(v, spec.maxLength);
+          if (t) fields[spec.key] = t;
+        }
+      }
     }
-    const re = obj(cf.retouch);
-    const tier = re ? inSet(re.tier, VOCAB_KEYS.retouchTier) : null;
-    if (tier) {
-      const hours = re ? intOrNull(re.hours) : null;
-      const note = re ? capOrNull(re.note, 120) : null;
-      fields.retouch = {
-        tier,
-        ...(hours != null ? { hours } : {}),
-        ...(note ? { note } : {}),
-      };
-    }
-    const ec = obj(cf.earlyCall);
-    const at = ec ? cap(ec.availableFrom, 5) : "";
-    if (/^\d{1,2}:\d{2}$/.test(at)) {
-      const feeNote = ec ? capOrNull(ec.feeNote, 120) : null;
-      fields.earlyCall = { availableFrom: at, ...(feeNote ? { feeNote } : {}) };
-    }
-    const tr = obj(cf.trial);
-    const tstatus = tr ? inSet(tr.status, VOCAB_KEYS.trialStatus) : null;
-    if (tstatus) {
-      const note = tr ? capOrNull(tr.note, 120) : null;
-      fields.trial = { status: tstatus, ...(note ? { note } : {}) };
-    }
-    const fin = enumArray(cf.finishStyles, VOCAB_KEYS.finishStyle, 8);
-    if (fin.length) fields.finishStyles = fin;
-    const tech = enumArray(cf.techniques, VOCAB_KEYS.technique, 8);
-    if (tech.length) fields.techniques = tech;
-    const skin = enumArray(cf.skinInclusivity, VOCAB_KEYS.skinInclusivity, 8);
-    if (skin.length) fields.skinInclusivity = skin;
-    const backup = capOrNull(cf.backupPlan, 160);
-    if (backup) fields.backupPlan = backup;
-    if ("onLocation" in cf) fields.onLocation = boolVal(cf.onLocation);
-    if ("homeService" in cf) fields.homeService = boolVal(cf.homeService);
     if (Object.keys(fields).length) out.categoryFields = fields;
   }
 
@@ -431,7 +442,11 @@ const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   worksWith: ["works_with", coerceWorksWith],
   groupCapacity: ["group_capacity", intOrNull],
   priceUnit: ["price_unit", coercePriceUnit],
-  essentials: ["essentials", coerceEssentials],
+  // NOTE: `essentials` is intercepted in updateMyProfile before this coercer is
+  // reached — its category fields can only be validated against the vendor's own
+  // category, which a (v) => any coercer cannot see. This entry exists so the key
+  // stays on the allowlist; the null category makes it fail closed if ever called.
+  essentials: ["essentials", (v) => coerceEssentials(v, null)],
   specs: ["specs", coerceSpecs],
   faq: ["faq", coerceFaq],
   // Editorial / trust fields — admin-only (see ADMIN_ONLY_FIELDS). Given write
@@ -556,16 +571,32 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
         if (!styleTagsFor(cats[0] ?? null).length) continue;
       }
 
-      if (callerIsAdmin) {
-        live[col] = coerce(patch[key]); // admin writes straight to live
-        continue;
+      // The entourage rate is charged PER FACE — a makeup concept. Skip it for any
+      // other category so a stray value can never be stored, and therefore never
+      // printed on their card as "+ ₱X per face".
+      if (key === "entourageRateMin" || key === "entourageRateMax") {
+        const cats = await currentCategories(admin, own.supplierId);
+        if (!hasEntourageRate(cats[0] ?? null)) continue;
       }
-      if (ADMIN_ONLY_FIELDS.has(key)) continue; // silently dropped for vendors
 
+      // Essentials is handled BEFORE the admin branch, because its category fields
+      // can only be validated against the vendor's own category (the generic
+      // `coerce` below has no way to know it). Routing an admin through that would
+      // drop every category field they touched.
       if (key === "essentials") {
-        // Split: enum/structured parts go live now; customEssentials drafts go
-        // to pending, preserving the custom facts already approved on the live row.
-        const coerced = coerce(patch[key]) as EssentialsData | null;
+        const cats = await currentCategories(admin, own.supplierId);
+        const coerced = coerceEssentials(
+          patch[key],
+          cats[0] ?? null,
+        ) as EssentialsData | null;
+
+        if (callerIsAdmin) {
+          live.essentials = coerced; // admin writes everything live, custom facts included
+          continue;
+        }
+
+        // Vendor: enum/structured parts go live now; customEssentials drafts go to
+        // pending, preserving the custom facts already approved on the live row.
         const cur = await currentEssentials(admin, own.supplierId);
         const liveEssentials = coerced ? { ...coerced } : null;
         if (liveEssentials) {
@@ -592,6 +623,12 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
         }
         continue;
       }
+
+      if (callerIsAdmin) {
+        live[col] = coerce(patch[key]); // admin writes straight to live
+        continue;
+      }
+      if (ADMIN_ONLY_FIELDS.has(key)) continue; // silently dropped for vendors
 
       if (VENDOR_APPROVAL_FIELDS.has(key)) {
         pending[col] = coerce(patch[key]); // buffered for review
