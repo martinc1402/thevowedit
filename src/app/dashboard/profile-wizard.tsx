@@ -171,7 +171,10 @@ function seed(s: Supplier): FormState {
     priceMax: num(s.priceMax),
     priceTypical: num(s.priceTypical),
     currency: s.currency ?? "PHP",
-    priceUnit: s.priceUnit ?? "",
+    // `||` not `??`: an empty string must fall back too. The select has no empty
+    // option, so an unset unit would otherwise DISPLAY "Per event / package" while
+    // the form state stayed "" — showing one thing and storing another.
+    priceUnit: s.priceUnit || "per_event",
     perServicePricing: psp,
     pricingNotes: s.pricingNotes ?? "",
     priceIncludesScVat: Boolean(s.priceIncludesScVat),
@@ -652,11 +655,13 @@ export function ProfileWizard({
               </div>
               <div className="sm:max-w-xs">
                 <Field label="Price unit" hint="(how the price reads)">
+                  {/* No placeholder: an empty option would read "Per event /
+                      package" too (per_event renders with no suffix), so it
+                      duplicated the first real option and meant the same thing. */}
                   <Select
                     value={form.priceUnit}
                     onChange={(v) => set("priceUnit", v)}
                     options={PRICE_UNIT_OPTS}
-                    placeholder="Per event / package"
                   />
                 </Field>
               </div>
