@@ -5,10 +5,12 @@ import Link from "next/link";
 import { List, X, SealCheck } from "@phosphor-icons/react";
 import { Wordmark } from "@/components/wordmark";
 
-// Pre-launch: nothing is browsable yet, so no nav links for MVP. The primary
-// action is applying to list. Restore entries here (e.g. Browse) once the
-// directory is live and the .map() below renders them automatically.
-const navLinks: { label: string; href: string }[] = [];
+// The directory is browsable now, so Browse is back (the .map() below renders these
+// automatically). Kept to a single link: the primary action for a vendor is still
+// applying to list, and the inventory is deliberately small.
+const navLinks: { label: string; href: string }[] = [
+  { label: "Browse vendors", href: "/vendors" },
+];
 
 function StatusPill({ className = "" }: { className?: string }) {
   return (
