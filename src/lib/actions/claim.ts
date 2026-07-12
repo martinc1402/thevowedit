@@ -13,7 +13,7 @@ import {
 // =====================================================================
 // Vendor claim-code flow. Public: submit a code, then set up an account.
 // Admin: generate/regenerate a code, unclaim a profile. All DB access is
-// service-role; identity for admin actions is the env allowlist (isAdmin()).
+// service-role; identity for admin actions is the user_roles table (isAdmin()).
 // Errors to the public are deliberately GENERIC — we never reveal whether a
 // code exists, is expired, or is close.
 // =====================================================================

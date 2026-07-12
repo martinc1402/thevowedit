@@ -12,8 +12,10 @@ import {
 import type { EssentialsData } from "@/lib/essentials-taxonomy";
 
 // =====================================================================
-// Admin console + moderation actions. All admin-gated (isAdmin()). Reads use the
-// service role; writes copy vendor drafts (pending_changes) into the live row.
+// Admin console + moderation actions. All admin-gated (isAdmin() -> a user_roles
+// lookup). Reads use the service role; writes copy vendor drafts (pending_changes)
+// into the live row. Re-checked in every action: these are POST endpoints, so the
+// page-level check is not enough on its own.
 // =====================================================================
 
 export type ModResult = { ok: true } | { ok: false; error: string };

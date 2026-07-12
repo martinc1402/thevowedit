@@ -48,7 +48,7 @@ export async function proxy(request: NextRequest) {
     redirect.searchParams.set("next", pathname);
     return NextResponse.redirect(redirect);
   }
-  // The admin ROLE check (email allowlist) happens at the page level via
+  // The admin ROLE check (a user_roles lookup) happens at the page level via
   // isAdmin() -> notFound(); the proxy only ensures a session exists.
 
   return response;
