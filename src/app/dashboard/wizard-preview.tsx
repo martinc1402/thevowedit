@@ -41,7 +41,7 @@ type PreviewData = {
   description: string;
   teamPhoto: string;
   categories: string[];
-  styleTags: string;
+  styleTags: string[];
   priceMin: string;
   priceMax: string;
   priceTypical: string;
@@ -61,14 +61,6 @@ type PreviewData = {
   preferredChannel: string;
   faq: { a: string; b: string }[];
 };
-
-// Style tags are held as one comma-separated string in the form (same split the
-// save path uses in buildPatch).
-const tagList = (s: string) =>
-  s
-    .split(",")
-    .map((t) => t.trim())
-    .filter(Boolean);
 
 const numOrNull = (s: string): number | null => {
   const v = Number(s);
@@ -168,7 +160,7 @@ function body(
           category={d.categories[0] ?? null}
           essentials={draftToEssentials(d.essentials)}
         />
-        <StyleTags tags={tagList(d.styleTags)} />
+        <StyleTags tags={d.styleTags} category={d.categories[0] ?? null} />
       </>
     );
   }
@@ -220,7 +212,8 @@ function body(
           description={orNull(d.description)}
           bio={orNull(d.bio)}
           teamPhoto={orNull(d.teamPhoto)}
-          styleTags={tagList(d.styleTags)}
+          styleTags={d.styleTags}
+          category={d.categories[0] ?? null}
         />
       </div>
     );

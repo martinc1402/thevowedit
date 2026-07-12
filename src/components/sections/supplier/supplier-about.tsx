@@ -1,11 +1,26 @@
 import Image from "next/image";
+import { resolveStyleTag, styleTagsFor } from "@/lib/style-tags-vocab";
 
-// The vendor's own aesthetic vocabulary. Deliberately NOT in the hero (kept
-// quiet, the gallery is the focal point) and NOT in "the essentials" (that grid
-// is practical logistics a couple weighs, and it's row-capped). It belongs with
-// the vendor's own words. Exported so the dashboard preview can show it on the
-// step where it's actually edited.
-export function StyleTags({ tags }: { tags: string[] }) {
+// The vendor's aesthetic, picked from a locked vocabulary. Deliberately NOT in the
+// hero (kept quiet, the gallery is the focal point) and NOT in "the essentials"
+// (that grid is practical logistics, and it's row-capped). It belongs with the
+// vendor's own words. Exported so the dashboard preview can show it on the step
+// where it's actually edited.
+//
+// The vocabulary is disjoint from the finish/technique/skin chips by construction,
+// so nothing here repeats what the Specialties row already says.
+//
+// CATEGORY-GATED: style tags exist only for categories that have a vocabulary
+// (today, makeup). A photographer's legacy free-text tags stay in the column but
+// render nowhere — the concept doesn't apply to them yet.
+export function StyleTags({
+  tags,
+  category,
+}: {
+  tags: string[];
+  category: string | null;
+}) {
+  if (!styleTagsFor(category).length) return null;
   if (!tags.length) return null;
   return (
     <div className="mt-8 border-t border-line pt-5">
@@ -16,7 +31,8 @@ export function StyleTags({ tags }: { tags: string[] }) {
             key={tag}
             className="rounded-full border border-line px-3 py-1 text-sm text-ink"
           >
-            {tag}
+            {/* Stored value is a key; unknown legacy free text passes through. */}
+            {resolveStyleTag(tag)}
           </li>
         ))}
       </ul>
@@ -33,14 +49,19 @@ export function SupplierAbout({
   bio,
   teamPhoto,
   styleTags = [],
+  category = null,
 }: {
   name: string;
   description: string | null;
   bio: string | null;
   teamPhoto: string | null;
   styleTags?: string[];
+  category?: string | null;
 }) {
-  if (!description && !bio && !teamPhoto && !styleTags.length) return null;
+  // Tags that won't render (no vocab for this category) must not keep the section
+  // alive on their own.
+  const showTags = styleTagsFor(category).length > 0 && styleTags.length > 0;
+  if (!description && !bio && !teamPhoto && !showTags) return null;
 
   const copy = (
     <div>
@@ -54,7 +75,7 @@ export function SupplierAbout({
           {bio}
         </p>
       )}
-      <StyleTags tags={styleTags} />
+      <StyleTags tags={styleTags} category={category} />
     </div>
   );
 

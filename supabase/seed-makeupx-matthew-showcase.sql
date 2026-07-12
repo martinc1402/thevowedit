@@ -25,7 +25,10 @@ update public.suppliers set
 
   -- Positioning
   editorial_tagline = 'Clean, timeless bridal beauty with a modern Cebu touch.',
-  style_tags        = array['Clean','Timeless','Eye-focused','Soft Glam','Bridal'],
+  -- Locked vocabulary keys (src/lib/style-tags-vocab.ts), not free text. "Soft Glam"
+  -- and "Bridal" are deliberately absent: the first is already his finish-style chip
+  -- (it renders in the Specialties row), the second just restates the category.
+  style_tags        = array['timeless','eye_focused'],
   serves_areas      = array['Cebu City','Mandaue','Lapu-Lapu','Mactan','Talisay'],
 
   -- Pricing (placeholder — handled as "from" + custom quote, never definite).

@@ -161,6 +161,7 @@ export default async function SupplierPage({ params }: Params) {
                   bio={s.bio}
                   teamPhoto={s.teamPhoto}
                   styleTags={s.styleTags}
+                  category={s.categories[0] ?? null}
                 />
               </Reveal>
               <Reveal>

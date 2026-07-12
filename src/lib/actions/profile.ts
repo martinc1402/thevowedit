@@ -15,6 +15,7 @@ import { VOCAB_KEYS, type EssentialsData } from "@/lib/essentials-taxonomy";
 import { isAdmin } from "@/lib/auth";
 import { normalizeHandle, normalizePhonePH } from "@/lib/contact-normalize";
 import { SERVICE_KEYS } from "@/lib/services-vocab";
+import { STYLE_TAG_KEYS, styleTagsFor } from "@/lib/style-tags-vocab";
 import { PACKAGE_INCLUSIONS } from "@/lib/package-inclusions";
 
 // Full column projection for the authenticated dashboard reads — mirrors
@@ -364,7 +365,10 @@ const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   location: ["location", (v) => cap(v, 120) || "Cebu"],
   servesAreas: ["serves_areas", (v) => strArray(v, 120, 40)],
   categories: ["categories", (v) => strArray(v, 60, 12)],
-  styleTags: ["style_tags", (v) => strArray(v, 60, 24)],
+  // Locked vocabulary (src/lib/style-tags-vocab.ts): anything outside it is dropped.
+  // No DB check constraint — legacy free-text tags must survive in the column and
+  // keep rendering via resolveStyleTag()'s passthrough until the vendor re-picks.
+  styleTags: ["style_tags", (v) => enumArray(v, STYLE_TAG_KEYS, 6)],
   services: ["services", (v) => enumArray(v, SERVICE_KEYS, 30)],
   shortDescription: ["short_description", (v) => capOrNull(v, 280)],
   description: ["description", (v) => capOrNull(v, 6000)],
@@ -461,6 +465,22 @@ async function currentEssentials(
   return (data as { essentials?: EssentialsData } | null)?.essentials ?? null;
 }
 
+// The supplier's live categories — the vocabulary a field like styleTags is keyed
+// on. Read from the row, never from the patch: `categories` is admin-only, so a
+// vendor cannot widen their own vocabulary by sending one.
+async function currentCategories(
+  admin: Admin,
+  supplierId: string,
+): Promise<string[]> {
+  const { data } = await admin
+    .from("suppliers")
+    .select("categories")
+    .eq("id", supplierId)
+    .maybeSingle();
+  const cats = (data as { categories?: unknown } | null)?.categories;
+  return Array.isArray(cats) ? (cats as string[]) : [];
+}
+
 async function currentPending(
   admin: Admin,
   supplierId: string,
@@ -490,11 +510,21 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
 
   const live: Record<string, unknown> = {}; // written to the live row now
   const pending: Record<string, unknown> = {}; // vendor drafts -> pending_changes
+  const clearPendingKeys: string[] = []; // drafts that match live again -> drop them
 
   if (patch && typeof patch === "object") {
     for (const [key, spec] of Object.entries(FIELDS)) {
       if (!(key in patch)) continue;
       const [col, coerce] = spec;
+
+      // Style tags exist only for categories that have a vocabulary (today: makeup).
+      // Checked BEFORE the admin branch, because this is a categorical rule, not a
+      // permission one. Skipping the key leaves the column untouched, so a
+      // photographer's legacy free-text tags survive rather than being coerced away.
+      if (key === "styleTags") {
+        const cats = await currentCategories(admin, own.supplierId);
+        if (!styleTagsFor(cats[0] ?? null).length) continue;
+      }
 
       if (callerIsAdmin) {
         live[col] = coerce(patch[key]); // admin writes straight to live
@@ -516,10 +546,20 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
           }
         }
         live.essentials = liveEssentials;
-        // Always buffer the draft, even when it's empty: [] is the vendor asking
-        // to REMOVE their custom facts. Writing it only when non-empty made a
-        // deletion unexpressible — the old facts survived and the UI said "Saved".
-        pending.essentials_custom = coerced?.customEssentials ?? [];
+
+        // Buffer the custom facts only when they actually DIFFER from live.
+        //   * [] when live has facts  -> a real deletion, must be buffered (writing
+        //     this key only when non-empty used to make deletion unexpressible).
+        //   * [] when live is already empty -> a no-op. Buffering it anyway queued a
+        //     phantom "Custom essentials" change for review on EVERY essentials save.
+        //   * back to the live value -> the vendor reverted, so drop any stale draft.
+        const draftCustom = coerced?.customEssentials ?? [];
+        const liveCustom = cur?.customEssentials ?? [];
+        if (JSON.stringify(draftCustom) !== JSON.stringify(liveCustom)) {
+          pending.essentials_custom = draftCustom;
+        } else {
+          clearPendingKeys.push("essentials_custom");
+        }
         continue;
       }
 
@@ -532,9 +572,13 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
     }
   }
 
-  if (Object.keys(pending).length > 0) {
+  if (Object.keys(pending).length > 0 || clearPendingKeys.length > 0) {
     const cur = await currentPending(admin, own.supplierId);
-    live.pending_changes = { ...cur, ...pending };
+    const merged = { ...cur, ...pending };
+    for (const k of clearPendingKeys) delete merged[k];
+    // An empty buffer is null, not {} — otherwise the vendor keeps showing up in the
+    // moderation queue with nothing actually pending.
+    live.pending_changes = Object.keys(merged).length > 0 ? merged : null;
   }
 
   if (Object.keys(live).length === 0) {

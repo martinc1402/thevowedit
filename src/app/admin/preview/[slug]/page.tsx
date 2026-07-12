@@ -91,6 +91,8 @@ export default async function PreviewPage({ params }: Params) {
             description={applied.description}
             bio={applied.bio}
             teamPhoto={applied.teamPhoto}
+            styleTags={applied.styleTags}
+            category={applied.categories[0] ?? null}
           />
           <SupplierFaq faq={applied.faq} />
         </div>

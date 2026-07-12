@@ -20,6 +20,7 @@ import {
 import type { Supplier } from "@/lib/suppliers";
 import { categories as CATEGORY_LIST } from "@/lib/content";
 import { PACKAGE_INCLUSIONS } from "@/lib/package-inclusions";
+import { styleTagsFor } from "@/lib/style-tags-vocab";
 import {
   essentialsToDraft,
   draftToEssentials,
@@ -77,7 +78,7 @@ type KVDraft = { a: string; b: string };
 type FormState = {
   name: string;
   categories: string[];
-  styleTags: string;
+  styleTags: string[]; // locked vocab keys (style-tags-vocab.ts), not free text
   shortDescription: string;
   description: string;
   bio: string;
@@ -109,6 +110,9 @@ type FormState = {
 
 // Select options for pricing unit + preferred contact channel (labels tuned for
 // a dropdown; the row/display labels live in the taxonomy).
+// Keep in sync with the server cap in actions/profile.ts (enumArray(..., 6)).
+const MAX_STYLE_TAGS = 6;
+
 const PRICE_UNIT_OPTS = [
   { value: "per_event", label: "Per event / package" },
   { value: "per_head", label: "Per head" },
@@ -159,7 +163,7 @@ function seed(s: Supplier): FormState {
   return {
     name: p?.name ?? s.name ?? "",
     categories: s.categories ?? [],
-    styleTags: (s.styleTags ?? []).join(", "),
+    styleTags: s.styleTags ?? [],
     shortDescription: p?.short_description ?? s.shortDescription ?? "",
     description: p?.description ?? s.description ?? "",
     bio: p?.bio ?? s.bio ?? "",
@@ -227,10 +231,13 @@ function buildPatch(form: FormState, keys: (keyof FormState)[]): ProfilePatch {
   for (const k of keys) {
     switch (k) {
       case "styleTags":
-        patch.styleTags = form.styleTags
-          .split(",")
-          .map((t) => t.trim())
-          .filter(Boolean);
+        // Already an array of vocab keys — no conversion needed. But OMIT it
+        // entirely for a category with no vocabulary: such a vendor's form still
+        // holds their legacy free-text tags, and sending them would have the enum
+        // coercer drop every one, silently wiping a field they never even saw.
+        if (styleTagsFor(form.categories[0] ?? null).length > 0) {
+          patch.styleTags = form.styleTags;
+        }
         break;
       case "packages":
         patch.packages = form.packages.map((p) => ({
@@ -469,6 +476,24 @@ export function ProfileWizard({
         ? cur.filter((v) => v !== value)
         : [...cur, value];
       return { ...f, categories: next };
+    });
+    setSavedStep(null);
+  }
+
+  // Signature-style chips, from the locked vocab for this vendor's category.
+  const styleTagOptions = styleTagsFor(form.categories[0] ?? null);
+
+  // Toggling past the cap is a no-op rather than a silent truncation: the server
+  // would slice the tail off, so the vendor must see which ones actually stuck.
+  function toggleStyleTag(value: string) {
+    setDirty(true);
+    setForm((f) => {
+      const cur = f.styleTags;
+      if (cur.includes(value)) {
+        return { ...f, styleTags: cur.filter((v) => v !== value) };
+      }
+      if (cur.length >= MAX_STYLE_TAGS) return f;
+      return { ...f, styleTags: [...cur, value] };
     });
     setSavedStep(null);
   }
@@ -736,20 +761,35 @@ export function ProfileWizard({
               />
             </div>
 
-            <div className="grid gap-4 border-t border-line pt-8 sm:grid-cols-2">
-              {/* "Based in" removed: it duplicated `location` (which is what the
-                  profile actually renders) and the two could silently drift. */}
-              <Field
-                label="Style tags"
-                hint="(comma separated, shown under your story)"
-              >
-                <input
-                  className={inputClass}
-                  value={form.styleTags}
-                  placeholder="e.g. clean, timeless, soft glam"
-                  onChange={(e) => set("styleTags", e.target.value)}
+            {/* "Based in" removed: it duplicated `location` (which is what the
+                profile actually renders) and the two could silently drift. */}
+            {/* Style tags apply only to categories with a vocabulary (today: makeup).
+                For anyone else the section is absent, not empty — the concept does
+                not exist for them yet. */}
+            {styleTagOptions.length > 0 && (
+              <div className="border-t border-line pt-8">
+                <span className={labelClass}>
+                  Signature style{" "}
+                  <span className="font-normal text-muted">
+                    (up to {MAX_STYLE_TAGS}, shown under your story)
+                  </span>
+                </span>
+                <ChipGroup
+                  options={styleTagOptions.map((t) => ({
+                    value: t.key,
+                    label: t.label,
+                  }))}
+                  selected={form.styleTags}
+                  onToggle={toggleStyleTag}
                 />
-              </Field>
+                <p className="mt-2 text-xs text-muted">
+                  Your finish, technique and skin specialties are set above. These
+                  are the words for your aesthetic.
+                </p>
+              </div>
+            )}
+
+            <div className="grid gap-4 border-t border-line pt-8 sm:grid-cols-2">
               <Field label="Established year" hint="(optional)">
                 <input
                   className={inputClass}
