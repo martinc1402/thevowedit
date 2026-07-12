@@ -1,36 +1,40 @@
 -- =====================================================================
--- The Vow Edit — founding-supplier skeleton rows (run AFTER supplier-auth.sql)
--- Turns the two real supplier_applications into claimable, unpublished supplier
--- rows plus their private ownership link. The vendors log in (magic link) and
--- complete the rows via /dashboard.
+-- The Vow Edit — founding-supplier skeleton row (run AFTER supplier-auth.sql)
+-- Turns the real supplier_application into a claimable, unpublished supplier row
+-- plus its private ownership link. The vendor logs in (magic link) and completes
+-- the row via /dashboard.
 --
 -- claim_email is pulled from supplier_applications by business_name, so the
 -- applicant's email (PII) stays in the DB and is never written into this
 -- committed file. Idempotent: `on conflict do nothing`.
+--
+-- MAKEUPX MATTHEW ONLY. This file used to also create Camcorder Stories by RR
+-- Films; that vendor was removed from the directory (see prune-to-pilot.sql), so
+-- re-seeding it here would resurrect a listing we deliberately took down. Their
+-- supplier_application row is untouched and still says they applied — deleting a
+-- listing does not un-apply someone — so if they come back, add them here again
+-- and re-issue a claim code.
+--
+-- NOTE: `based_in` and `serves_areas` are deliberately NOT seeded.
+--   * based_in duplicated `location` (the one the profile renders) and the two
+--     could silently drift; it is no longer editable.
+--   * serves_areas is now DERIVED from essentials.coverage.areas on save and holds
+--     taxonomy KEYS ('cebu-city'), because it is the GIN-indexed array the browse
+--     filter queries. Seeding free text like 'All of Cebu' here would reintroduce
+--     exactly the drift that fix removed.
 -- =====================================================================
 
 -- 1) MakeupX Matthew — Makeup
 insert into public.suppliers
-  (slug, name, based_in, serves_areas, categories, location, instagram,
-   short_description, published)
+  (slug, name, categories, location, instagram, short_description, published)
 values
-  ('makeupx-matthew', 'MakeupX Matthew', 'Cebu', array['All of Cebu'],
-   array['makeup'], 'Cebu', 'makeupxmatthew',
+  ('makeupx-matthew', 'MakeupX Matthew', array['makeup'], 'Cebu',
+   'makeupxmatthew',
    'Bridal and entourage makeup, serving weddings across Cebu.', false)
 on conflict (slug) do nothing;
 
--- 2) Camcorder Stories by RR Films — Videographers
-insert into public.suppliers
-  (slug, name, based_in, serves_areas, categories, location, instagram,
-   short_description, published)
-values
-  ('camcorder-stories-rr-films', 'Camcorder Stories by RR Films', 'Cebu',
-   array['All of Cebu'], array['videographers'], 'Cebu', 'camcorderstories.rr',
-   'Wedding films and same-day edits, covering weddings across Cebu.', false)
-on conflict (slug) do nothing;
-
--- 3) Private ownership links: map each supplier row to the applicant's login
--- email so first login auto-claims it. user_id stays null until they sign in.
+-- 2) Private ownership link: map the supplier row to the applicant's login email
+-- so first login auto-claims it. user_id stays null until they sign in.
 insert into public.supplier_owners (supplier_id, claim_email)
 select s.id, a.email
   from public.suppliers s
@@ -39,10 +43,10 @@ select s.id, a.email
      where business_name = s.name
      order by created_at asc limit 1
   ) a on true
- where s.slug in ('makeupx-matthew', 'camcorder-stories-rr-films')
+ where s.slug = 'makeupx-matthew'
 on conflict (supplier_id) do nothing;
 
--- 4) Mark the two applications as accepted now that their rows exist.
+-- 3) Mark the application as accepted now that the row exists.
 update public.supplier_applications
    set status = 'accepted'
- where business_name in ('MakeupX Matthew', 'Camcorder Stories by RR Films');
+ where business_name = 'MakeupX Matthew';

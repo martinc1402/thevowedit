@@ -17,7 +17,6 @@
 update public.suppliers set
   -- Identity / status
   name              = 'Makeup X Matthew',          -- display-name fix (was 'MakeupX Matthew')
-  based_in          = 'Cebu City',
   location          = 'Cebu City',
   verified          = true,
   featured          = true,                          -- drives the "Editor's Pick" badge
@@ -29,15 +28,23 @@ update public.suppliers set
   -- and "Bridal" are deliberately absent: the first is already his finish-style chip
   -- (it renders in the Specialties row), the second just restates the category.
   style_tags        = array['timeless','eye_focused'],
-  serves_areas      = array['Cebu City','Mandaue','Lapu-Lapu','Mactan','Talisay'],
+
+  -- NOTE: `serves_areas` and `based_in` are NOT set here any more.
+  --   * serves_areas is DERIVED from essentials.coverage.areas on save and holds
+  --     taxonomy KEYS ('cebu-city') — it is the GIN-indexed array the browse filter
+  --     queries. This file used to seed free-text labels including 'Mactan', which
+  --     the taxonomy rejects (Mactan is inside Lapu-Lapu). Re-running it would have
+  --     put the drift straight back. seed-makeupx-matthew-essentials.sql sets the
+  --     coverage chips; the derivation does the rest.
+  --   * based_in duplicated `location` and is no longer editable.
 
   -- Pricing (placeholder — handled as "from" + custom quote, never definite).
-  -- Clear the range/typical/SC-VAT fields so the card shows a single "from"
-  -- price + "Custom quote available" rather than a fabricated exact range.
+  -- The per-face ENTOURAGE rate (entourage_rate_min/max) is deliberately left unset:
+  -- it is a real price and only the artist can give it. Until he does, his bridal
+  -- party package still reads "Price on enquiry".
   price_min             = 8000,
   price_max             = null,
   price_typical         = null,
-  price_includes_sc_vat = null,
   pricing_notes         = 'Starting from ₱8,000. Custom quote available. Final pricing depends on location, bridal party size, schedule and inclusions. A 50% deposit reserves your date.',
 
   -- Clear fabricated credibility stats (no real numbers yet) so the experience
@@ -45,13 +52,9 @@ update public.suppliers set
   established_year = null,
   weddings_count   = null,
 
-  -- Engagement (response time shows in the action card; availability is an
-  -- inquiry driver). Logistics/"Good to know" fields left null so that section
-  -- stays hidden rather than repeating facts shown elsewhere.
+  -- Editor-written trust line, shown on the contact card. Admin-only on purpose:
+  -- a vendor self-asserting "replies in 1 hour" is unverifiable.
   response_time_note = 'Usually replies within 24 hours',
-  availability_note  = 'Now booking 2026 and 2027 weddings',   -- PLACEHOLDER
-  travel_fee_note    = null,
-  booking_terms      = null,
 
   -- The Vow Edit editorial voice ("Why we picked")
   editor_note = 'Matthew stood out for a clean, timeless approach to bridal beauty. The work feels polished without being heavy, with a strong focus on enhancing the eyes and keeping the overall look elegant, fresh and camera-ready. For anyone planning a Cebu wedding who wants modern glam that still feels personal, Makeup X Matthew is a strong fit.',
