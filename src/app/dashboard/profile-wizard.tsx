@@ -43,7 +43,9 @@ import {
 } from "./form-ui";
 import { normalizePhonePH } from "@/lib/contact-normalize";
 import { servicesFor } from "@/lib/services-vocab";
+import { completeness } from "@/lib/profile-completeness";
 import { EssentialsStep } from "./essentials-step";
+import { ProfileStrength } from "./profile-strength";
 import { StepPreview } from "./wizard-preview";
 
 // ---------------------------------------------------------------------
@@ -475,6 +477,33 @@ export function ProfileWizard({
   // Signature-style chips, from the locked vocab for this vendor's category.
   const styleTagOptions = styleTagsFor(form.categories[0] ?? null);
 
+  // Scored off the live form, not the saved row, so the bar moves as they type and
+  // an item ticks off the moment it's filled in — the whole point is the feedback.
+  // Images count the pending draft: the work is done, review is our problem, not theirs.
+  const strength = completeness({
+    category: form.categories[0] ?? null,
+    images,
+    shortDescription: form.shortDescription,
+    description: form.description,
+    priceMin: form.priceMin,
+    entourageRateMin: form.entourageRateMin,
+    services: form.services,
+    packages: form.packages.map((p) => ({
+      name: p.name,
+      priced: priceLabelFrom(p) !== "Price on enquiry",
+    })),
+    faq: form.faq.map((x) => ({ q: x.a, a: x.b })),
+    essentials: form.essentials,
+    contacts: [
+      form.instagram,
+      form.facebook,
+      form.whatsapp,
+      form.viber,
+      form.phone,
+      form.email,
+    ],
+  });
+
   // Toggling past the cap is a no-op rather than a silent truncation: the server
   // would slice the tail off, so the vendor must see which ones actually stuck.
   function toggleStyleTag(value: string) {
@@ -508,6 +537,8 @@ export function ProfileWizard({
           )}
         </p>
       </div>
+
+      <ProfileStrength result={strength} onJump={goToStep} />
 
       {/* Step nav — current (maroon fill) · visited (outline + check) · unvisited */}
       <nav className="mb-8 flex flex-wrap gap-2">
