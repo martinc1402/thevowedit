@@ -1,11 +1,24 @@
-import { Plus } from "@phosphor-icons/react/dist/ssr";
 import type { SupplierFaq } from "@/lib/suppliers";
 
-// Supplier-authored FAQ — the vetting questions couples ask (turnaround, travel,
-// who shoots, deposits). Native <details>/<summary> so it works without JS and
-// stays accessible. Hairline-divided rows to match the "Good to know" list.
-export function SupplierFaq({ faq }: { faq: SupplierFaq[] }) {
-  const items = faq.filter((f) => f.q && f.a);
+// Supplier Q&A. These answers carry the vendor's personality, so they're shown
+// open (not hidden behind an accordion): question in serif, answer directly
+// below in readable body text, generous spacing, light hairline dividers. Reads
+// as a warm editorial interview rather than a support FAQ.
+//
+// Kept to a few personality questions. Style-descriptor questions ("describe
+// your style in three words") are dropped because that answer now lives in the
+// verdict's style tags — we don't repeat it here.
+export function SupplierFaq({
+  faq,
+  limit = 3,
+}: {
+  faq: SupplierFaq[];
+  limit?: number;
+}) {
+  const items = faq
+    .filter((f) => f.q && f.a)
+    .filter((f) => !/\b(three|3)\s+words\b/i.test(f.q))
+    .slice(0, limit);
   if (!items.length) return null;
 
   return (
@@ -14,23 +27,18 @@ export function SupplierFaq({ faq }: { faq: SupplierFaq[] }) {
         id="faq-heading"
         className="font-serif text-2xl font-medium text-ink sm:text-3xl"
       >
-        Questions
+        In their words
       </h2>
-      <div className="mt-5 divide-y divide-line border-t border-line">
+      <div className="mt-6 divide-y divide-line border-t border-line">
         {items.map((f, i) => (
-          <details key={i} className="group py-4">
-            <summary className="flex cursor-pointer list-none items-start justify-between gap-4 text-base font-medium text-ink [&::-webkit-details-marker]:hidden">
+          <div key={i} className="py-7">
+            <h3 className="font-serif text-xl leading-snug text-ink sm:text-2xl">
               {f.q}
-              <Plus
-                size={18}
-                weight="bold"
-                className="mt-1 shrink-0 text-accent-fg transition-transform duration-200 group-open:rotate-45"
-              />
-            </summary>
-            <p className="mt-3 max-w-[65ch] whitespace-pre-line text-sm leading-relaxed text-muted">
+            </h3>
+            <p className="mt-3 max-w-[65ch] whitespace-pre-line text-base leading-relaxed text-muted">
               {f.a}
             </p>
-          </details>
+          </div>
         ))}
       </div>
     </section>

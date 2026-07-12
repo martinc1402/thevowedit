@@ -16,6 +16,16 @@ const nextConfig: NextConfig = {
       },
     ],
   },
+  async redirects() {
+    return [
+      // Public profiles moved from /suppliers/<slug> to /vendors/<slug>.
+      {
+        source: "/suppliers/:slug",
+        destination: "/vendors/:slug",
+        permanent: true,
+      },
+    ];
+  },
 };
 
 export default nextConfig;

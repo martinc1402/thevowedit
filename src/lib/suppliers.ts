@@ -1,4 +1,5 @@
 import { getSupabasePublic } from "@/lib/supabase-public";
+import type { EssentialsData } from "@/lib/essentials-taxonomy";
 
 // Display a peso amount as e.g. "₱48,000". Currency symbol kept simple (PHP only
 // for now); falls back to the raw number for other currencies.
@@ -34,6 +35,28 @@ export type SupplierSpec = {
   value: string;
 };
 
+// Curator-authored highlight chip on the "Why we picked" editorial block.
+export type EditorHighlight = {
+  label: string;
+  value: string;
+};
+
+// Draft values for approval-required vendor edits, awaiting admin review. Keyed
+// by DB column (so approval is a direct copy to the live row), plus
+// `essentials_custom` (custom-essentials drafts merged into live essentials on
+// approval). Populated only via the service role — never in the public projection.
+export type PendingChanges = {
+  name?: string;
+  short_description?: string | null;
+  description?: string | null;
+  bio?: string | null;
+  team_photo?: string | null;
+  video_url?: string | null;
+  faq?: SupplierFaq[];
+  images?: string[];
+  essentials_custom?: { label: string; value: string }[];
+};
+
 export type PerServicePricing = Record<
   string,
   { min?: number; max?: number } | undefined
@@ -54,6 +77,11 @@ export type Supplier = {
   perServicePricing: PerServicePricing | null;
   shortDescription: string | null;
   description: string | null;
+  // Curator-authored editorial fields (The Vow Edit voice), all nullable.
+  editorialTagline: string | null;
+  editorNote: string | null;
+  editorHighlights: EditorHighlight[];
+  services: string[];
   pricingNotes: string | null;
   priceIncludesScVat: boolean | null;
   bio: string | null;
@@ -73,9 +101,20 @@ export type Supplier = {
   instagram: string | null;
   website: string | null;
   facebook: string | null;
-  portfolioLink: string | null;
   email: string | null;
   phone: string | null;
+  // Direct-contact channels + the vendor's preferred primary channel key.
+  viber: string | null;
+  whatsapp: string | null;
+  preferredChannel: string | null;
+  // Structured capacity for "The essentials" (solo vs team). DEPRECATED — the
+  // structured essentials taxonomy below supersedes these for the essentials
+  // block. Kept for now (still writable); no longer read by SupplierEssentials.
+  worksWith: string | null; // 'solo' | 'team'
+  groupCapacity: number | null;
+  // Structured "essentials" taxonomy (see lib/essentials-taxonomy.ts) + price unit.
+  essentials: EssentialsData | null;
+  priceUnit: string | null; // 'per_event' | 'per_head' | 'per_hour'
   images: string[]; // full public URLs; [0] is the hero
   packages: SupplierPackage[];
   reviews: SupplierReview[];
@@ -83,6 +122,8 @@ export type Supplier = {
   teamPhoto: string | null;
   location: string;
   published: boolean;
+  // Service-role only (never in the public projection): approval-required drafts.
+  pendingChanges: PendingChanges | null;
 };
 
 // The columns we select — keep in sync with the row mapper below. Exported so
@@ -103,6 +144,10 @@ export const SUPPLIER_COLUMNS = [
   "per_service_pricing",
   "short_description",
   "description",
+  "editorial_tagline",
+  "editor_note",
+  "editor_highlights",
+  "services",
   "pricing_notes",
   "price_includes_sc_vat",
   "bio",
@@ -122,7 +167,6 @@ export const SUPPLIER_COLUMNS = [
   "instagram",
   "website",
   "facebook",
-  "portfolio_link",
   "email",
   "phone",
   "images",
@@ -133,6 +177,19 @@ export const SUPPLIER_COLUMNS = [
   "location",
   "published",
 ].join(", ");
+
+// Newer contact columns kept separate from SUPPLIER_COLUMNS so a public read can
+// gracefully fall back to the base projection if the migration
+// (supabase/add-contact-channels.sql) has not been applied yet.
+export const CONTACT_CHANNEL_COLUMNS = "viber, whatsapp, preferred_channel";
+
+// Structured makeup-artist essentials columns, also fetched via the resilient
+// fallback so the page keeps working before supabase/add-mua-essentials.sql runs.
+export const MUA_ESSENTIALS_COLUMNS = "works_with, group_capacity";
+
+// Structured essentials taxonomy columns (see supabase/add-essentials-taxonomy.sql),
+// also fetched via the resilient fallback.
+export const TAXONOMY_COLUMNS = "essentials, price_unit";
 
 // Postgres rows come back snake_cased and jsonb columns as parsed JSON; map to
 // our camelCase type with defensive defaults (arrays/jsonb may be null).
@@ -153,6 +210,12 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
     perServicePricing: (r.per_service_pricing as PerServicePricing) ?? null,
     shortDescription: (r.short_description as string) ?? null,
     description: (r.description as string) ?? null,
+    editorialTagline: (r.editorial_tagline as string) ?? null,
+    editorNote: (r.editor_note as string) ?? null,
+    editorHighlights: Array.isArray(r.editor_highlights)
+      ? (r.editor_highlights as EditorHighlight[])
+      : [],
+    services: arr(r.services),
     pricingNotes: (r.pricing_notes as string) ?? null,
     priceIncludesScVat: (r.price_includes_sc_vat as boolean) ?? null,
     bio: (r.bio as string) ?? null,
@@ -172,9 +235,15 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
     instagram: (r.instagram as string) ?? null,
     website: (r.website as string) ?? null,
     facebook: (r.facebook as string) ?? null,
-    portfolioLink: (r.portfolio_link as string) ?? null,
     email: (r.email as string) ?? null,
     phone: (r.phone as string) ?? null,
+    viber: (r.viber as string) ?? null,
+    whatsapp: (r.whatsapp as string) ?? null,
+    preferredChannel: (r.preferred_channel as string) ?? null,
+    worksWith: (r.works_with as string) ?? null,
+    groupCapacity: (r.group_capacity as number) ?? null,
+    essentials: (r.essentials as EssentialsData) ?? null,
+    priceUnit: (r.price_unit as string) ?? null,
     images: arr(r.images),
     packages: Array.isArray(r.packages) ? (r.packages as SupplierPackage[]) : [],
     reviews: Array.isArray(r.reviews) ? (r.reviews as SupplierReview[]) : [],
@@ -182,18 +251,32 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
     teamPhoto: (r.team_photo as string) ?? null,
     location: (r.location as string) ?? "Cebu",
     published: Boolean(r.published),
+    // Only present when a service-role query explicitly selects pending_changes;
+    // the public projection omits it, so anon reads map this to null.
+    pendingChanges: (r.pending_changes as PendingChanges) ?? null,
   };
 }
 
 // Fetch a single supplier by its public slug. Returns null when not found.
 export async function getSupplierBySlug(slug: string): Promise<Supplier | null> {
   const supabase = getSupabasePublic();
-  const { data, error } = await supabase
-    .from("suppliers")
-    .select(SUPPLIER_COLUMNS)
-    .eq("slug", slug)
-    .eq("published", true)
-    .maybeSingle();
+  const query = (columns: string) =>
+    supabase
+      .from("suppliers")
+      .select(columns)
+      .eq("slug", slug)
+      .eq("published", true)
+      .maybeSingle();
+
+  // Prefer the full projection (incl. the newer contact + essentials columns).
+  // If those columns don't exist yet (migration not applied), retry with the
+  // base projection so the page keeps working; the new fields then map to null.
+  let { data, error } = await query(
+    `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}`,
+  );
+  if (error) {
+    ({ data, error } = await query(SUPPLIER_COLUMNS));
+  }
 
   if (error) {
     console.error("[suppliers] getSupplierBySlug failed:", error.message);

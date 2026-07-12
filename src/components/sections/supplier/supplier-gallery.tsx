@@ -3,11 +3,12 @@
 import { useEffect, useState } from "react";
 import Image from "next/image";
 import { CaretLeft, CaretRight, X, Images } from "@phosphor-icons/react";
+import { GalleryCarousel } from "@/components/sections/supplier/gallery-carousel";
 
 // Supplier photo gallery. Photos are a co-equal must-have alongside price, so
-// this leads the page. Mobile keeps a single featured image + swappable thumbnail
-// strip; desktop (>= 3 photos) gets an asymmetric editorial collage (one large
-// hero + two stacked) that opens a full-screen lightbox (arrow keys / Esc).
+// this leads the page. Mobile is a single-photo swipe carousel with dots;
+// desktop (>= 3 photos) gets an asymmetric editorial collage (one large hero +
+// two stacked). Both open a full-screen lightbox (arrow keys / Esc).
 export function SupplierGallery({
   images,
   name,
@@ -54,48 +55,13 @@ export function SupplierGallery({
 
   return (
     <div>
-      {/* Mobile featured image (+ desktop fallback when fewer than 3 photos) */}
-      <div className={collage ? "md:hidden" : ""}>
-        <button
-          type="button"
-          onClick={() => open(active)}
-          className="group relative block aspect-[3/2] w-full overflow-hidden rounded-2xl bg-surface-2"
-          aria-label={`View ${name} photos`}
-        >
-          <Image
-            src={images[active]}
-            alt={`${name} - photo ${active + 1} of ${count}`}
-            fill
-            priority
-            sizes="(max-width: 1024px) 100vw, 1100px"
-            className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
-          />
-        </button>
-
-        {count > 1 && (
-          <div className="mt-3 flex gap-2 overflow-x-auto pb-1">
-            {images.map((src, i) => (
-              <button
-                key={src + i}
-                type="button"
-                onClick={() => setActive(i)}
-                aria-label={`Show photo ${i + 1}`}
-                aria-current={i === active}
-                className={`relative h-16 w-20 shrink-0 overflow-hidden rounded-lg bg-surface-2 transition ${
-                  i === active
-                    ? "ring-2 ring-accent ring-offset-2 ring-offset-bg"
-                    : "opacity-70 hover:opacity-100"
-                }`}
-              >
-                <Image src={src} alt="" fill sizes="80px" className="object-cover" />
-              </button>
-            ))}
-          </div>
-        )}
+      {/* Mobile: single-photo swipe carousel with dots (tap opens the lightbox). */}
+      <div className="md:hidden">
+        <GalleryCarousel images={images} name={name} onOpen={open} />
       </div>
 
       {/* Desktop collage: one large hero + two stacked, outer corners clipped. */}
-      {collage && (
+      {collage ? (
         <div className="hidden aspect-[3/2] w-full grid-cols-3 grid-rows-2 gap-2 overflow-hidden rounded-2xl md:grid">
           <Tile
             src={images[0]}
@@ -103,7 +69,6 @@ export function SupplierGallery({
             onClick={() => open(0)}
             className="col-span-2 row-span-2"
             sizes="(max-width: 768px) 0px, 640px"
-            priority
           />
           <Tile
             src={images[1]}
@@ -125,6 +90,22 @@ export function SupplierGallery({
             )}
           </Tile>
         </div>
+      ) : (
+        /* Fewer than 3 photos: a single featured frame on desktop. */
+        <button
+          type="button"
+          onClick={() => open(0)}
+          className="group relative hidden aspect-[3/2] w-full overflow-hidden rounded-2xl bg-surface-2 md:block"
+          aria-label={`View ${name} photos`}
+        >
+          <Image
+            src={images[0]}
+            alt={`${name} - photo 1 of ${count}`}
+            fill
+            sizes="(max-width: 768px) 0px, 1100px"
+            className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
+          />
+        </button>
       )}
 
       {/* Lightbox */}

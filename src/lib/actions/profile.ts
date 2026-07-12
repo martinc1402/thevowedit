@@ -5,9 +5,22 @@ import { getSupabaseServer } from "@/lib/supabase/server";
 import { getSupabaseAdmin } from "@/lib/supabase-admin";
 import {
   SUPPLIER_COLUMNS,
+  CONTACT_CHANNEL_COLUMNS,
+  MUA_ESSENTIALS_COLUMNS,
+  TAXONOMY_COLUMNS,
   mapSupplierRow,
   type Supplier,
 } from "@/lib/suppliers";
+import { VOCAB_KEYS, type EssentialsData } from "@/lib/essentials-taxonomy";
+import { isAdmin } from "@/lib/auth";
+import { normalizeHandle, normalizePhonePH } from "@/lib/contact-normalize";
+import { SERVICE_KEYS } from "@/lib/services-vocab";
+import { PACKAGE_INCLUSIONS } from "@/lib/package-inclusions";
+
+// Full column projection for the authenticated dashboard reads — mirrors
+// getSupplierBySlug so the wizard loads the newer contact-channel + essentials
+// columns (which live outside the base SUPPLIER_COLUMNS list), plus drafts.
+const DASHBOARD_COLUMNS = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, pending_changes`;
 
 // =====================================================================
 // Supplier self-service profile actions.
@@ -94,7 +107,7 @@ export async function getMySupplier(): Promise<Supplier | null> {
   const admin = getSupabaseAdmin();
   const { data, error } = await admin
     .from("suppliers")
-    .select(SUPPLIER_COLUMNS)
+    .select(DASHBOARD_COLUMNS)
     .eq("id", own.supplierId)
     .maybeSingle();
 
@@ -125,6 +138,7 @@ const strArray = (v: unknown, itemLen: number, max: number) =>
   ).slice(0, max);
 
 // jsonb coercers -------------------------------------------------------
+const INCLUSION_KEYS = new Set(Object.keys(PACKAGE_INCLUSIONS));
 function coercePackages(v: unknown) {
   if (!Array.isArray(v)) return [];
   return v
@@ -133,11 +147,12 @@ function coercePackages(v: unknown) {
       return {
         name: cap(o.name, 120),
         priceLabel: capOrNull(o.priceLabel, 80) ?? undefined,
-        includes: strArray(o.includes, 200, 30),
+        // Inclusions are a locked vocabulary — drop anything off the list.
+        includes: enumArray(o.includes, INCLUSION_KEYS, 20),
       };
     })
     .filter((p) => p.name !== "")
-    .slice(0, 20);
+    .slice(0, 4); // max 4 packages
 }
 function coerceSpecs(v: unknown) {
   if (!Array.isArray(v)) return [];
@@ -149,6 +164,16 @@ function coerceSpecs(v: unknown) {
     .filter((s) => s.label !== "")
     .slice(0, 40);
 }
+function coerceHighlights(v: unknown) {
+  if (!Array.isArray(v)) return [];
+  return v
+    .map((s) => {
+      const o = (s ?? {}) as Record<string, unknown>;
+      return { label: cap(o.label, 60), value: cap(o.value, 200) };
+    })
+    .filter((s) => s.label !== "")
+    .slice(0, 12);
+}
 function coerceFaq(v: unknown) {
   if (!Array.isArray(v)) return [];
   return v
@@ -158,6 +183,158 @@ function coerceFaq(v: unknown) {
     })
     .filter((f) => f.q !== "")
     .slice(0, 40);
+}
+// The vendor's preferred primary contact channel — only a known key, else null.
+const CHANNEL_KEYS = new Set([
+  "instagram",
+  "messenger",
+  "viber",
+  "phone",
+  "whatsapp",
+  "email",
+]);
+const coerceChannel = (v: unknown) => {
+  const s = typeof v === "string" ? v.trim().toLowerCase() : "";
+  return CHANNEL_KEYS.has(s) ? s : null;
+};
+
+// Contact normalisers (shared with the wizard's inline validation) — store the
+// canonical forms the public deep-link builders expect.
+const coerceHandle = (v: unknown) => normalizeHandle(v)?.slice(0, 200) ?? null;
+const coercePhone = (v: unknown) => {
+  if (typeof v !== "string" || v.trim() === "") return null;
+  const r = normalizePhonePH(v);
+  return r.ok ? r.value : null;
+};
+
+// How the vendor works: solo or with a team (drives the capacity essentials row).
+const coerceWorksWith = (v: unknown) => {
+  const s = typeof v === "string" ? v.trim().toLowerCase() : "";
+  return s === "solo" || s === "team" ? s : null;
+};
+
+// ---- Structured essentials taxonomy (validated against the locked vocab) ----
+const inSet = (v: unknown, set: Set<string>) => {
+  const s = typeof v === "string" ? v.trim() : "";
+  return set.has(s) ? s : null;
+};
+const enumArray = (v: unknown, set: Set<string>, max: number) =>
+  Array.from(
+    new Set(
+      (Array.isArray(v) ? v : [])
+        .map((x) => inSet(x, set))
+        .filter((x): x is string => x !== null),
+    ),
+  ).slice(0, max);
+
+const coercePriceUnit = (v: unknown) => inSet(v, VOCAB_KEYS.priceUnit);
+
+// Deep-validate the essentials jsonb: enums against vocab, numbers/bools coerced,
+// unknown keys dropped, custom facts capped at 3. Built as a plain object then
+// cast (every value has been validated).
+function coerceEssentials(v: unknown): EssentialsData | null {
+  if (!v || typeof v !== "object" || Array.isArray(v)) return null;
+  const o = v as Record<string, unknown>;
+  const out: Record<string, unknown> = {};
+  const obj = (x: unknown) =>
+    x && typeof x === "object" && !Array.isArray(x)
+      ? (x as Record<string, unknown>)
+      : undefined;
+
+  const cov = obj(o.coverage);
+  if (cov) {
+    const areas = enumArray(cov.areas, VOCAB_KEYS.area, 20);
+    if (areas.length) {
+      const note = capOrNull(cov.travelNote, 120);
+      out.coverage = {
+        areas,
+        travelsBeyond: boolVal(cov.travelsBeyond),
+        ...(note ? { travelNote: note } : {}),
+      };
+    }
+  }
+
+  const bs = obj(o.bookingStatus);
+  const status = bs ? inSet(bs.status, VOCAB_KEYS.bookingStatus) : null;
+  if (status) {
+    const note = bs ? capOrNull(bs.note, 120) : null;
+    out.bookingStatus = { status, ...(note ? { note } : {}) };
+  }
+
+  const terms = capOrNull(o.bookingTerms, 300);
+  if (terms) out.bookingTerms = terms;
+
+  const langs = enumArray(o.languages, VOCAB_KEYS.language, 6);
+  if (langs.length) out.languages = langs;
+
+  const team = obj(o.team);
+  const size = team ? inSet(team.size, VOCAB_KEYS.teamSize) : null;
+  if (size) {
+    const note = team ? capOrNull(team.note, 120) : null;
+    out.team = { size, ...(note ? { note } : {}) };
+  }
+
+  const cf = obj(o.categoryFields);
+  if (cf) {
+    const fields: Record<string, unknown> = {};
+    const hair = inSet(cf.hairServices, VOCAB_KEYS.hairService);
+    if (hair) fields.hairServices = hair;
+    const gc = obj(cf.groupCapacity);
+    if (gc) {
+      const g: Record<string, unknown> = {};
+      const maxFaces = intOrNull(gc.maxFaces);
+      if (maxFaces != null) g.maxFaces = maxFaces;
+      if ("includesBride" in gc) g.includesBride = boolVal(gc.includesBride);
+      if (Object.keys(g).length) fields.groupCapacity = g;
+    }
+    const re = obj(cf.retouch);
+    const tier = re ? inSet(re.tier, VOCAB_KEYS.retouchTier) : null;
+    if (tier) {
+      const hours = re ? intOrNull(re.hours) : null;
+      const note = re ? capOrNull(re.note, 120) : null;
+      fields.retouch = {
+        tier,
+        ...(hours != null ? { hours } : {}),
+        ...(note ? { note } : {}),
+      };
+    }
+    const ec = obj(cf.earlyCall);
+    const at = ec ? cap(ec.availableFrom, 5) : "";
+    if (/^\d{1,2}:\d{2}$/.test(at)) {
+      const feeNote = ec ? capOrNull(ec.feeNote, 120) : null;
+      fields.earlyCall = { availableFrom: at, ...(feeNote ? { feeNote } : {}) };
+    }
+    const tr = obj(cf.trial);
+    const tstatus = tr ? inSet(tr.status, VOCAB_KEYS.trialStatus) : null;
+    if (tstatus) {
+      const note = tr ? capOrNull(tr.note, 120) : null;
+      fields.trial = { status: tstatus, ...(note ? { note } : {}) };
+    }
+    const fin = enumArray(cf.finishStyles, VOCAB_KEYS.finishStyle, 8);
+    if (fin.length) fields.finishStyles = fin;
+    const tech = enumArray(cf.techniques, VOCAB_KEYS.technique, 8);
+    if (tech.length) fields.techniques = tech;
+    const skin = enumArray(cf.skinInclusivity, VOCAB_KEYS.skinInclusivity, 8);
+    if (skin.length) fields.skinInclusivity = skin;
+    const backup = capOrNull(cf.backupPlan, 160);
+    if (backup) fields.backupPlan = backup;
+    if ("onLocation" in cf) fields.onLocation = boolVal(cf.onLocation);
+    if ("homeService" in cf) fields.homeService = boolVal(cf.homeService);
+    if (Object.keys(fields).length) out.categoryFields = fields;
+  }
+
+  if (Array.isArray(o.customEssentials)) {
+    const custom = o.customEssentials
+      .map((c) => {
+        const co = (c ?? {}) as Record<string, unknown>;
+        return { label: cap(co.label, 40), value: cap(co.value, 120) };
+      })
+      .filter((c) => c.label && c.value)
+      .slice(0, 3);
+    if (custom.length) out.customEssentials = custom;
+  }
+
+  return Object.keys(out).length ? (out as EssentialsData) : null;
 }
 function coercePerService(v: unknown) {
   if (!v || typeof v !== "object" || Array.isArray(v)) return null;
@@ -188,6 +365,7 @@ const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   servesAreas: ["serves_areas", (v) => strArray(v, 120, 40)],
   categories: ["categories", (v) => strArray(v, 60, 12)],
   styleTags: ["style_tags", (v) => strArray(v, 60, 24)],
+  services: ["services", (v) => enumArray(v, SERVICE_KEYS, 30)],
   shortDescription: ["short_description", (v) => capOrNull(v, 280)],
   description: ["description", (v) => capOrNull(v, 6000)],
   bio: ["bio", (v) => capOrNull(v, 2000)],
@@ -208,15 +386,59 @@ const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   worksWithOverseasCouples: ["works_with_overseas_couples", boolVal],
   establishedYear: ["established_year", intOrNull],
   weddingsCount: ["weddings_count", intOrNull],
-  instagram: ["instagram", (v) => capOrNull(v, 200)],
-  facebook: ["facebook", (v) => capOrNull(v, 200)],
+  instagram: ["instagram", coerceHandle],
+  facebook: ["facebook", coerceHandle],
   website: ["website", (v) => capOrNull(v, 300)],
-  portfolioLink: ["portfolio_link", (v) => capOrNull(v, 300)],
   email: ["email", (v) => capOrNull(v, 320)],
-  phone: ["phone", (v) => capOrNull(v, 40)],
+  phone: ["phone", coercePhone],
+  viber: ["viber", coercePhone],
+  whatsapp: ["whatsapp", coercePhone],
+  preferredChannel: ["preferred_channel", coerceChannel],
+  worksWith: ["works_with", coerceWorksWith],
+  groupCapacity: ["group_capacity", intOrNull],
+  priceUnit: ["price_unit", coercePriceUnit],
+  essentials: ["essentials", coerceEssentials],
   specs: ["specs", coerceSpecs],
   faq: ["faq", coerceFaq],
+  // Editorial / trust fields — admin-only (see ADMIN_ONLY_FIELDS). Given write
+  // paths so the admin console can set them; dropped for vendor callers.
+  editorialTagline: ["editorial_tagline", (v) => capOrNull(v, 200)],
+  editorNote: ["editor_note", (v) => capOrNull(v, 2000)],
+  editorHighlights: ["editor_highlights", coerceHighlights],
+  verified: ["verified", boolVal],
+  featured: ["featured", boolVal],
 };
+
+// ---- Permission tiers (enforced server-side; the UI mirror is advisory) ----
+// ADMIN-ONLY: dropped entirely for vendor callers (editorial voice, trust
+// badges, category, the "replies within…" trust line). slug is intentionally
+// absent from FIELDS so nobody can change it through this path.
+const ADMIN_ONLY_FIELDS = new Set([
+  "categories",
+  "editorialTagline",
+  "editorNote",
+  "editorHighlights",
+  "verified",
+  "featured",
+  "responseTimeNote",
+]);
+
+// VENDOR APPROVAL-REQUIRED: a vendor's writes here land in `pending_changes`
+// (draft), not the live row, until an admin approves. Keyed by camelCase patch
+// key; the pending buffer stores them under their DB column. `essentials`'s
+// customEssentials sub-field is handled specially (split from the enum parts).
+const VENDOR_APPROVAL_FIELDS = new Set([
+  "name",
+  "shortDescription",
+  "description",
+  "bio",
+  "faq",
+  "teamPhoto",
+  "videoUrl",
+]);
+
+// Gallery cap. Enforced in addProfileImageUrl as a refusal, not a truncation.
+const MAX_IMAGES = 24;
 
 export type ProfilePatch = Record<string, unknown>;
 export type SaveResult =
@@ -225,35 +447,106 @@ export type SaveResult =
 
 const GENERIC = "We could not save your changes. Please try again.";
 
-// Validate + write a partial profile update. Only allowlisted keys are applied;
-// images are managed by the dedicated image actions below, not here.
+type Admin = ReturnType<typeof getSupabaseAdmin>;
+
+async function currentEssentials(
+  admin: Admin,
+  supplierId: string,
+): Promise<EssentialsData | null> {
+  const { data } = await admin
+    .from("suppliers")
+    .select("essentials")
+    .eq("id", supplierId)
+    .maybeSingle();
+  return (data as { essentials?: EssentialsData } | null)?.essentials ?? null;
+}
+
+async function currentPending(
+  admin: Admin,
+  supplierId: string,
+): Promise<Record<string, unknown>> {
+  const { data } = await admin
+    .from("suppliers")
+    .select("pending_changes")
+    .eq("id", supplierId)
+    .maybeSingle();
+  const pc = (data as { pending_changes?: unknown } | null)?.pending_changes;
+  return pc && typeof pc === "object" && !Array.isArray(pc)
+    ? (pc as Record<string, unknown>)
+    : {};
+}
+
+// Validate + write a partial profile update, enforcing the permission tiers:
+//   admin caller  -> every allowlisted field writes live.
+//   vendor caller -> admin-only fields dropped; approval fields buffered into
+//                    `pending_changes`; everything else writes live immediately.
+// Images are handled by the dedicated image actions below (also tier-aware).
 export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> {
   const own = await getMyOwnership();
   if (!own) return { ok: false, error: "You do not have a linked profile." };
 
-  const update: Record<string, unknown> = {};
+  const callerIsAdmin = await isAdmin();
+  const admin = getSupabaseAdmin();
+
+  const live: Record<string, unknown> = {}; // written to the live row now
+  const pending: Record<string, unknown> = {}; // vendor drafts -> pending_changes
+
   if (patch && typeof patch === "object") {
     for (const [key, spec] of Object.entries(FIELDS)) {
-      if (key in patch) {
-        const [col, coerce] = spec;
-        update[col] = coerce(patch[key]);
+      if (!(key in patch)) continue;
+      const [col, coerce] = spec;
+
+      if (callerIsAdmin) {
+        live[col] = coerce(patch[key]); // admin writes straight to live
+        continue;
       }
+      if (ADMIN_ONLY_FIELDS.has(key)) continue; // silently dropped for vendors
+
+      if (key === "essentials") {
+        // Split: enum/structured parts go live now; customEssentials drafts go
+        // to pending, preserving the custom facts already approved on the live row.
+        const coerced = coerce(patch[key]) as EssentialsData | null;
+        const cur = await currentEssentials(admin, own.supplierId);
+        const liveEssentials = coerced ? { ...coerced } : null;
+        if (liveEssentials) {
+          if (cur?.customEssentials?.length) {
+            liveEssentials.customEssentials = cur.customEssentials;
+          } else {
+            delete liveEssentials.customEssentials;
+          }
+        }
+        live.essentials = liveEssentials;
+        // Always buffer the draft, even when it's empty: [] is the vendor asking
+        // to REMOVE their custom facts. Writing it only when non-empty made a
+        // deletion unexpressible — the old facts survived and the UI said "Saved".
+        pending.essentials_custom = coerced?.customEssentials ?? [];
+        continue;
+      }
+
+      if (VENDOR_APPROVAL_FIELDS.has(key)) {
+        pending[col] = coerce(patch[key]); // buffered for review
+        continue;
+      }
+
+      live[col] = coerce(patch[key]); // immediate
     }
   }
 
-  if (Object.keys(update).length === 0) {
-    const supplier = await getMySupplier();
-    return supplier
-      ? { ok: true, supplier }
-      : { ok: false, error: GENERIC };
+  if (Object.keys(pending).length > 0) {
+    const cur = await currentPending(admin, own.supplierId);
+    live.pending_changes = { ...cur, ...pending };
   }
 
-  const admin = getSupabaseAdmin();
+  if (Object.keys(live).length === 0) {
+    const supplier = await getMySupplier();
+    return supplier ? { ok: true, supplier } : { ok: false, error: GENERIC };
+  }
+
   const { data, error } = await admin
     .from("suppliers")
-    .update(update)
+    .update(live)
     .eq("id", own.supplierId)
-    .select(SUPPLIER_COLUMNS)
+    .select(DASHBOARD_COLUMNS)
     .single();
 
   if (error || !data) {
@@ -261,7 +554,7 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
     return { ok: false, error: GENERIC };
   }
 
-  revalidatePath(`/suppliers/${own.slug}`);
+  revalidatePath(`/vendors/${own.slug}`);
   revalidatePath("/dashboard");
   return {
     ok: true,
@@ -279,11 +572,11 @@ export async function setPublished(published: boolean): Promise<SaveResult> {
     .from("suppliers")
     .update({ published: Boolean(published) })
     .eq("id", own.supplierId)
-    .select(SUPPLIER_COLUMNS)
+    .select(DASHBOARD_COLUMNS)
     .single();
 
   if (error || !data) return { ok: false, error: GENERIC };
-  revalidatePath(`/suppliers/${own.slug}`);
+  revalidatePath(`/vendors/${own.slug}`);
   revalidatePath("/dashboard");
   return {
     ok: true,
@@ -291,100 +584,161 @@ export async function setPublished(published: boolean): Promise<SaveResult> {
   };
 }
 
-// Persist a new images[] array (used after upload / reorder / delete). Values
-// must be existing public URLs in this supplier's storage folder, or the
-// current images — we don't accept arbitrary external URLs here.
-async function writeImages(
-  own: Ownership,
-  images: string[],
-): Promise<SaveResult> {
-  const admin = getSupabaseAdmin();
-  const { data, error } = await admin
-    .from("suppliers")
-    .update({ images })
-    .eq("id", own.supplierId)
-    .select(SUPPLIER_COLUMNS)
-    .single();
-  if (error || !data) return { ok: false, error: GENERIC };
-  revalidatePath(`/suppliers/${own.slug}`);
-  revalidatePath("/dashboard");
-  return {
-    ok: true,
-    supplier: mapSupplierRow(data as unknown as Record<string, unknown>),
-  };
-}
-
-async function currentImages(supplierId: string): Promise<string[]> {
-  const admin = getSupabaseAdmin();
+// Gallery images are APPROVAL-REQUIRED for vendors: their edits accumulate in
+// `pending_changes.images` (a draft, seeded from the live gallery) and replace
+// the live gallery only when an admin approves. Admins edit the live gallery
+// directly. Read both sets so we can route writes and clean storage safely.
+async function readImageSets(
+  admin: Admin,
+  supplierId: string,
+): Promise<{ live: string[]; pending: string[] | null }> {
   const { data } = await admin
     .from("suppliers")
-    .select("images")
+    .select("images, pending_changes")
     .eq("id", supplierId)
     .maybeSingle();
-  const imgs = (data as { images?: unknown } | null)?.images;
-  return Array.isArray(imgs) ? (imgs as string[]) : [];
+  const live = Array.isArray((data as { images?: unknown } | null)?.images)
+    ? ((data as { images: string[] }).images)
+    : [];
+  const pc = (data as { pending_changes?: unknown } | null)?.pending_changes as
+    | { images?: unknown }
+    | null
+    | undefined;
+  const pending = pc && Array.isArray(pc.images) ? (pc.images as string[]) : null;
+  return { live, pending };
 }
 
-// Remove one gallery image: drop it from images[] and delete the storage object.
+// Persist a gallery array to the right place: live for admins, pending for vendors.
+async function saveImages(
+  own: Ownership,
+  images: string[],
+  callerIsAdmin: boolean,
+): Promise<SaveResult> {
+  const admin = getSupabaseAdmin();
+  let update: Record<string, unknown>;
+  if (callerIsAdmin) {
+    update = { images };
+  } else {
+    const cur = await currentPending(admin, own.supplierId);
+    update = { pending_changes: { ...cur, images } };
+  }
+  const { data, error } = await admin
+    .from("suppliers")
+    .update(update)
+    .eq("id", own.supplierId)
+    .select(DASHBOARD_COLUMNS)
+    .single();
+  if (error || !data) return { ok: false, error: GENERIC };
+  revalidatePath(`/vendors/${own.slug}`);
+  revalidatePath("/dashboard");
+  return {
+    ok: true,
+    supplier: mapSupplierRow(data as unknown as Record<string, unknown>),
+  };
+}
+
+// The gallery a caller is editing: the live set for admins; the draft (or a
+// seed-copy of live) for vendors.
+function draftSet(
+  live: string[],
+  pending: string[] | null,
+  callerIsAdmin: boolean,
+): string[] {
+  return callerIsAdmin ? live : (pending ?? live);
+}
+
+// Remove one gallery image from the caller's set; delete the storage object only
+// once nothing (live OR pending) references it anymore.
 export async function deleteProfileImage(url: string): Promise<SaveResult> {
   const own = await getMyOwnership();
   if (!own) return { ok: false, error: "You do not have a linked profile." };
-  const images = await currentImages(own.supplierId);
-  if (!images.includes(url)) {
+  const callerIsAdmin = await isAdmin();
+  const admin = getSupabaseAdmin();
+  const { live, pending } = await readImageSets(admin, own.supplierId);
+  const target = draftSet(live, pending, callerIsAdmin);
+  if (!target.includes(url)) {
     const supplier = await getMySupplier();
     return supplier ? { ok: true, supplier } : { ok: false, error: GENERIC };
   }
+  const next = target.filter((u) => u !== url);
+  const other = callerIsAdmin ? (pending ?? []) : live;
 
-  // Best-effort storage cleanup: parse the object path after the bucket segment.
-  const admin = getSupabaseAdmin();
-  const marker = "/supplier-images/";
-  const idx = url.indexOf(marker);
-  if (idx !== -1) {
-    const path = url.slice(idx + marker.length);
-    // Only delete within this supplier's own folder.
-    if (path.startsWith(`${own.slug}/`)) {
-      await admin.storage.from("supplier-images").remove([path]);
+  if (!other.includes(url) && !next.includes(url)) {
+    // Best-effort storage cleanup within this supplier's own folder only.
+    const marker = "/supplier-images/";
+    const idx = url.indexOf(marker);
+    if (idx !== -1) {
+      const path = url.slice(idx + marker.length);
+      if (path.startsWith(`${own.slug}/`)) {
+        await admin.storage.from("supplier-images").remove([path]);
+      }
     }
   }
-
-  return writeImages(
-    own,
-    images.filter((u) => u !== url),
-  );
+  return saveImages(own, next, callerIsAdmin);
 }
 
-// Reorder the gallery. The new order must be a permutation of the current URLs.
+// Reorder the gallery. The new order must be a permutation of the caller's set.
 export async function reorderProfileImages(urls: string[]): Promise<SaveResult> {
   const own = await getMyOwnership();
   if (!own) return { ok: false, error: "You do not have a linked profile." };
-  const images = await currentImages(own.supplierId);
+  const callerIsAdmin = await isAdmin();
+  const admin = getSupabaseAdmin();
+  const { live, pending } = await readImageSets(admin, own.supplierId);
+  const target = draftSet(live, pending, callerIsAdmin);
   const next = (Array.isArray(urls) ? urls : []).filter((u) =>
-    images.includes(u),
+    target.includes(u),
   );
-  // Keep any images the client didn't mention, appended at the end.
-  for (const u of images) if (!next.includes(u)) next.push(u);
-  return writeImages(own, next);
+  for (const u of target) if (!next.includes(u)) next.push(u);
+  return saveImages(own, next, callerIsAdmin);
 }
 
-// Append an already-uploaded public URL to the gallery. Ownership is derived
-// from the SESSION (never a caller argument — this is a client-invocable server
-// action), and the URL must point inside THIS supplier's own storage folder, so
-// a forged/external URL can't be injected. The upload route calls this after
-// pushing the object to storage.
+// A public storage URL is only acceptable if it points inside THIS supplier's own
+// folder, so a forged/external URL can't be injected through a client-invocable
+// server action. Ownership always comes from the SESSION, never from an argument.
+function ownsImageUrl(own: Ownership, url: unknown): url is string {
+  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
+  const prefix = `${base}/storage/v1/object/public/supplier-images/${own.slug}/`;
+  return typeof url === "string" && url.startsWith(prefix);
+}
+
+// Append an already-uploaded public URL to the gallery. The upload route calls
+// this after pushing the object to storage.
 export async function addProfileImageUrl(url: string): Promise<SaveResult> {
   const own = await getMyOwnership();
   if (!own) return { ok: false, error: "You do not have a linked profile." };
-
-  const base = process.env.NEXT_PUBLIC_SUPABASE_URL ?? "";
-  const prefix = `${base}/storage/v1/object/public/supplier-images/${own.slug}/`;
-  if (typeof url !== "string" || !url.startsWith(prefix)) {
+  if (!ownsImageUrl(own, url)) {
     return { ok: false, error: "Invalid image reference." };
   }
 
-  const images = await currentImages(own.supplierId);
-  if (images.includes(url)) {
+  const callerIsAdmin = await isAdmin();
+  const admin = getSupabaseAdmin();
+  const { live, pending } = await readImageSets(admin, own.supplierId);
+  const target = draftSet(live, pending, callerIsAdmin);
+  if (target.includes(url)) {
     const supplier = await getMySupplier();
     return supplier ? { ok: true, supplier } : { ok: false, error: GENERIC };
   }
-  return writeImages(own, [...images, url].slice(0, 24));
+  // Refuse at the cap rather than appending-then-truncating: a trailing slice()
+  // silently dropped the NEW url, reported success, and orphaned the object the
+  // upload route had just written. Failing here lets the route roll that back.
+  if (target.length >= MAX_IMAGES) {
+    return {
+      ok: false,
+      error: `You can have up to ${MAX_IMAGES} photos. Remove one to add another.`,
+    };
+  }
+  return saveImages(own, [...target, url], callerIsAdmin);
+}
+
+// Set the portrait from an already-uploaded public URL (the upload route calls
+// this for kind=portrait). Routes through updateMyProfile so `teamPhoto` keeps
+// its existing permission tier — a vendor's portrait lands in pending_changes for
+// review; an admin's writes live. No new permission surface.
+export async function setTeamPhotoUrl(url: string): Promise<SaveResult> {
+  const own = await getMyOwnership();
+  if (!own) return { ok: false, error: "You do not have a linked profile." };
+  if (!ownsImageUrl(own, url)) {
+    return { ok: false, error: "Invalid image reference." };
+  }
+  return updateMyProfile({ teamPhoto: url });
 }

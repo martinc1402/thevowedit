@@ -1,11 +1,11 @@
 import { ChatCircle, SealCheck, ClockCountdown } from "@phosphor-icons/react/dist/ssr";
 import { formatPrice, type PerServicePricing } from "@/lib/suppliers";
 import { ServicePricing } from "@/components/sections/supplier/service-pricing";
-import { SupplierAvailability } from "@/components/sections/supplier/supplier-availability";
 
-// The persistent action card: price + availability + the primary contact CTA,
-// always in view in the desktop sticky rail (and in-flow near the top on mobile).
-// Keeps the two things couples decide on — price and how to reach out — together.
+// The persistent action card: price + the primary contact CTA, always in view in
+// the desktop sticky rail (and in-flow near the top on mobile). Kept lean — the
+// two things a couple decides on (price and how to reach out) plus a small trust
+// line. Coverage, booking status and the rest now live in "The essentials".
 export function SupplierActionCard({
   priceMin,
   priceMax,
@@ -13,7 +13,6 @@ export function SupplierActionCard({
   currency,
   priceIncludesScVat,
   perServicePricing,
-  availabilityNote,
   responseTimeNote,
   verified,
 }: {
@@ -23,7 +22,6 @@ export function SupplierActionCard({
   currency: string;
   priceIncludesScVat: boolean | null;
   perServicePricing: PerServicePricing | null;
-  availabilityNote: string | null;
   responseTimeNote: string | null;
   verified: boolean;
 }) {
@@ -44,6 +42,10 @@ export function SupplierActionCard({
       <p className="font-serif text-3xl font-medium leading-none text-ink">
         {headline}
       </p>
+
+      {priceMin != null && priceMax == null && (
+        <p className="mt-2 text-sm text-muted">Custom quote available</p>
+      )}
 
       {priceTypical != null && hasPrice && (priceMin != null || priceMax != null) && (
         <p className="mt-2 text-sm text-muted">
@@ -67,18 +69,12 @@ export function SupplierActionCard({
         currency={currency}
       />
 
-      {availabilityNote && (
-        <div className="mt-5">
-          <SupplierAvailability note={availabilityNote} />
-        </div>
-      )}
-
       <a
         href="#contact"
-        className="mt-5 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]"
+        className="mt-6 flex w-full items-center justify-center gap-2 rounded-full bg-accent px-6 py-3.5 text-sm font-medium text-accent-ink transition-colors hover:bg-accent-hover active:scale-[0.98]"
       >
         <ChatCircle size={18} weight="fill" />
-        Get in touch
+        Send Enquiry
       </a>
 
       {(responseTimeNote || verified) && (

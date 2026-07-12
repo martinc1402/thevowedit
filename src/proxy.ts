@@ -39,18 +39,23 @@ export async function proxy(request: NextRequest) {
     data: { user },
   } = await supabase.auth.getUser();
 
-  if (!user && request.nextUrl.pathname.startsWith("/dashboard")) {
+  const pathname = request.nextUrl.pathname;
+  const guarded =
+    pathname.startsWith("/dashboard") || pathname.startsWith("/admin");
+  if (!user && guarded) {
     const redirect = request.nextUrl.clone();
     redirect.pathname = "/login";
-    redirect.searchParams.set("next", request.nextUrl.pathname);
+    redirect.searchParams.set("next", pathname);
     return NextResponse.redirect(redirect);
   }
+  // The admin ROLE check (email allowlist) happens at the page level via
+  // isAdmin() -> notFound(); the proxy only ensures a session exists.
 
   return response;
 }
 
 export const config = {
-  // Only run where a session matters: dashboard + auth routes. Static assets and
-  // the marketing site are untouched (no session cost on the public funnel).
-  matcher: ["/dashboard/:path*", "/login", "/auth/:path*"],
+  // Only run where a session matters: dashboard + admin + auth routes. Static
+  // assets and the marketing site are untouched (no session cost on the funnel).
+  matcher: ["/dashboard/:path*", "/admin/:path*", "/login", "/auth/:path*"],
 };

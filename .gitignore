@@ -48,3 +48,6 @@ next-env.d.ts
 
 # playwright-mcp scratch output (console logs + page snapshots)
 .playwright-mcp/
+
+# supabase cli scratch state
+supabase/.temp/

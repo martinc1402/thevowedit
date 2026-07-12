@@ -3,6 +3,7 @@ import Link from "next/link";
 import { SignOut, WarningCircle } from "@phosphor-icons/react/dist/ssr";
 import { Wordmark } from "@/components/wordmark";
 import { getMySupplier } from "@/lib/actions/profile";
+import { isAdmin } from "@/lib/auth";
 import { ProfileWizard } from "./profile-wizard";
 
 export const metadata: Metadata = {
@@ -16,17 +17,17 @@ export const metadata: Metadata = {
 // the logged-in account has no linked supplier row (should not happen for an
 // invited founding vendor, but we handle it gracefully).
 export default async function DashboardPage() {
-  const supplier = await getMySupplier();
+  const [supplier, admin] = await Promise.all([getMySupplier(), isAdmin()]);
 
   return (
-    <div className="min-h-[100dvh] bg-bg">
+    <div className="theme-light min-h-[100dvh] bg-bg">
       <header className="sticky top-0 z-50 border-b border-line/70 bg-bg/85 backdrop-blur-md">
         <div className="mx-auto flex h-16 max-w-[1100px] items-center justify-between gap-4 px-4 sm:px-6">
           <Wordmark />
           <div className="flex items-center gap-3">
             {supplier?.published && (
               <Link
-                href={`/suppliers/${supplier.slug}`}
+                href={`/vendors/${supplier.slug}`}
                 target="_blank"
                 className="hidden text-sm text-muted transition-colors hover:text-ink sm:inline"
               >
@@ -48,7 +49,7 @@ export default async function DashboardPage() {
 
       <main className="mx-auto max-w-[1100px] px-4 py-10 sm:px-6 sm:py-14">
         {supplier ? (
-          <ProfileWizard supplier={supplier} />
+          <ProfileWizard supplier={supplier} isAdmin={admin} />
         ) : (
           <div className="mx-auto max-w-md rounded-2xl border border-line bg-surface px-6 py-10 text-center">
             <span className="mx-auto inline-flex h-12 w-12 items-center justify-center rounded-full bg-accent/10 text-accent-fg">

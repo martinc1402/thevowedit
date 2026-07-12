@@ -158,7 +158,6 @@ update public.suppliers set
   availability_note = 'Now booking 2026-2027, a few early dates left',
   established_year  = 2016,
   weddings_count    = 200,
-  portfolio_link    = 'https://emmtancinco.com/portfolio',
   specs = '[
     {"label":"Coverage","value":"Up to 12 hours"},
     {"label":"Team","value":"Lead + second shooter"},
