@@ -541,6 +541,36 @@ async function currentPending(
     : {};
 }
 
+// The LIVE values of the approval-gated columns, so a save can tell what actually
+// changed. Read once per save, and only when the patch touches one of them.
+const APPROVAL_COLUMNS = [
+  "name",
+  "short_description",
+  "description",
+  "bio",
+  "faq",
+  "team_photo",
+  "video_url",
+] as const;
+
+async function currentApprovalValues(
+  admin: Admin,
+  supplierId: string,
+): Promise<Record<string, unknown>> {
+  const { data } = await admin
+    .from("suppliers")
+    .select(APPROVAL_COLUMNS.join(", "))
+    .eq("id", supplierId)
+    .maybeSingle();
+  return (data ?? {}) as Record<string, unknown>;
+}
+
+// Deep value equality for what lands in the buffer (scalars, null, and faq[]).
+// Ordering is stable on both sides — the live column and the coerced patch are both
+// produced by the same coercers — so a JSON compare is sound here.
+const sameValue = (a: unknown, b: unknown) =>
+  JSON.stringify(a ?? null) === JSON.stringify(b ?? null);
+
 // Validate + write a partial profile update, enforcing the permission tiers:
 //   admin caller  -> every allowlisted field writes live.
 //   vendor caller -> admin-only fields dropped; approval fields buffered into
@@ -556,6 +586,9 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
   const live: Record<string, unknown> = {}; // written to the live row now
   const pending: Record<string, unknown> = {}; // vendor drafts -> pending_changes
   const clearPendingKeys: string[] = []; // drafts that match live again -> drop them
+  // Live values of the approval columns, fetched lazily (once) the first time an
+  // approval field is seen, so a save that touches none pays nothing.
+  let approvalLive: Record<string, unknown> | undefined;
 
   if (patch && typeof patch === "object") {
     for (const [key, spec] of Object.entries(FIELDS)) {
@@ -631,7 +664,23 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
       if (ADMIN_ONLY_FIELDS.has(key)) continue; // silently dropped for vendors
 
       if (VENDOR_APPROVAL_FIELDS.has(key)) {
-        pending[col] = coerce(patch[key]); // buffered for review
+        // Buffer ONLY a real change.
+        //
+        // The wizard seeds every approval field on a step from the live value, so
+        // saving one edited field re-submits the other five unchanged. Buffering
+        // them all made the moderation queue read "6 changes pending" for a single
+        // edited sentence — an inflated count that hides what actually changed, and
+        // gives a moderator nothing to review but five no-ops.
+        //
+        // Reverting to the live value now also DROPS a stale draft, so a vendor who
+        // changes their mind clears the queue instead of leaving a phantom entry.
+        const value = coerce(patch[key]);
+        approvalLive ??= await currentApprovalValues(admin, own.supplierId);
+        if (sameValue(value, approvalLive[col])) {
+          clearPendingKeys.push(col);
+        } else {
+          pending[col] = value;
+        }
         continue;
       }
 
