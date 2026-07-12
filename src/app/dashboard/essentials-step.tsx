@@ -10,6 +10,7 @@ import {
   FINISH_STYLES,
   TECHNIQUES,
   SKIN_INCLUSIVITY,
+  PAYMENT_METHODS,
 } from "@/lib/essentials-taxonomy";
 import type { EssentialsDraft } from "@/lib/essentials-form";
 import {
@@ -40,6 +41,7 @@ const HAIR_OPTS = opt(HAIR_SERVICES);
 const FINISH_OPTS = optCap(FINISH_STYLES);
 const TECH_OPTS = optCap(TECHNIQUES);
 const SKIN_OPTS = optCap(SKIN_INCLUSIVITY);
+const PAYMENT_OPTS = opt(PAYMENT_METHODS); // labels are already proper-cased
 
 // Select-friendly labels where the vocab label (tuned for row rendering) reads
 // awkwardly in a dropdown.
@@ -89,7 +91,13 @@ export function EssentialsStep({
   const isMakeup = category === "makeup";
 
   const toggle = (
-    key: "coverageAreas" | "languages" | "finishStyles" | "techniques" | "skinInclusivity",
+    key:
+      | "coverageAreas"
+      | "languages"
+      | "paymentMethods"
+      | "finishStyles"
+      | "techniques"
+      | "skinInclusivity",
     value: string,
   ) => {
     const cur = draft[key];
@@ -154,15 +162,39 @@ export function EssentialsStep({
           </Field>
         </div>
 
-        <Field label="Booking terms" hint="(retainer, payment)">
-          <input
-            className={inputClass}
-            value={draft.bookingTerms}
-            maxLength={300}
-            placeholder="e.g. 50% retainer to reserve, balance on the day"
-            onChange={(e) => onPatch({ bookingTerms: e.target.value })}
+        <div className="grid gap-4 sm:grid-cols-[auto_1fr] sm:items-start">
+          <Field label="Deposit" hint="(% to reserve)">
+            <input
+              className={`${inputClass} sm:w-28`}
+              inputMode="numeric"
+              value={draft.depositPercent}
+              placeholder="50"
+              onChange={(e) => onPatch({ depositPercent: e.target.value })}
+            />
+          </Field>
+          <Field label="Booking terms" hint="(anything else about paying)">
+            <input
+              className={inputClass}
+              value={draft.bookingTerms}
+              maxLength={300}
+              placeholder="e.g. balance on the day"
+              onChange={(e) => onPatch({ bookingTerms: e.target.value })}
+            />
+          </Field>
+        </div>
+
+        {/* Couples ask this before they enquire and no local directory captures it. */}
+        <div>
+          <span className={labelClass}>
+            Payment accepted{" "}
+            <span className="font-normal text-muted">(how they pay you)</span>
+          </span>
+          <ChipGroup
+            options={PAYMENT_OPTS}
+            selected={draft.paymentMethods}
+            onToggle={(v) => toggle("paymentMethods", v)}
           />
-        </Field>
+        </div>
 
         <div>
           <span className={labelClass}>Languages</span>

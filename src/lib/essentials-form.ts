@@ -34,6 +34,8 @@ export type EssentialsDraft = {
   bookingStatus: string; // "" | BookingStatusKey
   bookingStatusNote: string;
   bookingTerms: string;
+  paymentMethods: string[]; // PaymentMethodKey[]
+  depositPercent: string; // "" | "50"
   languages: string[]; // LanguageKey[]
   teamSize: string; // "" | TeamSizeKey
   teamNote: string;
@@ -65,6 +67,8 @@ export const emptyEssentialsDraft = (): EssentialsDraft => ({
   bookingStatus: "",
   bookingStatusNote: "",
   bookingTerms: "",
+  paymentMethods: [],
+  depositPercent: "",
   languages: [],
   teamSize: "",
   teamNote: "",
@@ -101,6 +105,8 @@ export function essentialsToDraft(e: EssentialsData | null): EssentialsDraft {
     bookingStatus: e.bookingStatus?.status ?? "",
     bookingStatusNote: e.bookingStatus?.note ?? "",
     bookingTerms: e.bookingTerms ?? "",
+    paymentMethods: [...(e.paymentMethods ?? [])],
+    depositPercent: e.depositPercent != null ? String(e.depositPercent) : "",
     languages: [...(e.languages ?? [])],
     teamSize: e.team?.size ?? "",
     teamNote: e.team?.note ?? "",
@@ -159,6 +165,17 @@ export function draftToEssentials(d: EssentialsDraft): EssentialsData | null {
 
   const terms = s(d.bookingTerms);
   if (terms) out.bookingTerms = terms;
+
+  if (d.paymentMethods.length) {
+    out.paymentMethods = [
+      ...d.paymentMethods,
+    ] as EssentialsData["paymentMethods"];
+  }
+
+  const deposit = Number(d.depositPercent);
+  if (d.depositPercent.trim() !== "" && Number.isFinite(deposit) && deposit > 0) {
+    out.depositPercent = deposit;
+  }
 
   if (d.languages.length) out.languages = [...d.languages] as LanguageKey[];
 

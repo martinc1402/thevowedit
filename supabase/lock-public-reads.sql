@@ -60,6 +60,8 @@ grant select (
   price_min,
   price_max,
   price_typical,
+  entourage_rate_min,
+  entourage_rate_max,
   currency,
   per_service_pricing,
   short_description,

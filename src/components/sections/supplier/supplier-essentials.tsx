@@ -12,6 +12,8 @@ export function SupplierEssentials({
   priceMin,
   priceMax,
   priceTypical,
+  entourageRateMin = null,
+  entourageRateMax = null,
   currency,
   priceUnit,
   category,
@@ -20,6 +22,8 @@ export function SupplierEssentials({
   priceMin: number | null;
   priceMax: number | null;
   priceTypical: number | null;
+  entourageRateMin?: number | null;
+  entourageRateMax?: number | null;
   currency: string;
   priceUnit: string | null;
   category: string | null;
@@ -29,6 +33,8 @@ export function SupplierEssentials({
     priceMin,
     priceMax,
     priceTypical,
+    entourageRateMin,
+    entourageRateMax,
     currency,
     priceUnit,
     category,

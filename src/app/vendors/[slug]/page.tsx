@@ -16,6 +16,7 @@ import { GalleryPlaceholder } from "@/components/sections/supplier/gallery-place
 import { SupplierTitle } from "@/components/sections/supplier/supplier-header";
 import { SupplierExperience } from "@/components/sections/supplier/supplier-experience";
 import { SupplierContactCard } from "@/components/sections/supplier/supplier-contact-card";
+import { QuoteChecklist } from "@/components/sections/supplier/quote-checklist";
 import { SupplierEditorNote } from "@/components/sections/supplier/supplier-editor-note";
 import { SupplierEssentials } from "@/components/sections/supplier/supplier-essentials";
 import { SupplierOfferings } from "@/components/sections/supplier/supplier-offerings";
@@ -76,8 +77,11 @@ export default async function SupplierPage({ params }: Params) {
       priceMin={s.priceMin}
       priceMax={s.priceMax}
       priceTypical={s.priceTypical}
+      entourageRateMin={s.entourageRateMin}
+      entourageRateMax={s.entourageRateMax}
       currency={s.currency}
       verified={s.verified}
+      responseTimeNote={s.responseTimeNote}
       channels={channels}
       primary={primary}
       presence={presence}
@@ -122,6 +126,8 @@ export default async function SupplierPage({ params }: Params) {
                   priceMin={s.priceMin}
                   priceMax={s.priceMax}
                   priceTypical={s.priceTypical}
+                  entourageRateMin={s.entourageRateMin}
+                  entourageRateMax={s.entourageRateMax}
                   currency={s.currency}
                   priceUnit={s.priceUnit}
                   category={s.categories[0] ?? null}
@@ -132,7 +138,10 @@ export default async function SupplierPage({ params }: Params) {
               {/* Mobile: the contact card sits inline after the essentials
                   (the sticky rail is desktop-only). */}
               <div className="lg:hidden">
-                <Reveal>{contactCard}</Reveal>
+                <Reveal>
+                  {contactCard}
+                  <QuoteChecklist category={s.categories[0] ?? null} />
+                </Reveal>
               </div>
 
               {/* Trust stats — self-hides when absent. */}
@@ -188,6 +197,7 @@ export default async function SupplierPage({ params }: Params) {
                 (before the footer). */}
             <aside className="hidden self-start lg:sticky lg:top-24 lg:block">
               {contactCard}
+              <QuoteChecklist category={s.categories[0] ?? null} />
             </aside>
           </div>
         </div>

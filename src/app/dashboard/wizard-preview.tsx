@@ -45,6 +45,8 @@ type PreviewData = {
   priceMin: string;
   priceMax: string;
   priceTypical: string;
+  entourageRateMin: string;
+  entourageRateMax: string;
   currency: string;
   priceUnit: string;
   pricingNotes: string;
@@ -117,6 +119,8 @@ function body(
     priceMin: numOrNull(d.priceMin),
     priceMax: numOrNull(d.priceMax),
     priceTypical: numOrNull(d.priceTypical),
+    entourageRateMin: numOrNull(d.entourageRateMin),
+    entourageRateMax: numOrNull(d.entourageRateMax),
     currency: d.currency || "PHP",
   };
 

@@ -64,12 +64,26 @@ export const PRICE_UNITS = [
 ] as const;
 export type PriceUnitKey = (typeof PRICE_UNITS)[number]["key"];
 
+// How a couple actually pays in the Philippines. GCash / bank transfer / cash are
+// the three named in the market research; Maya is the other e-wallet worth listing.
+// Couples ask this before enquiring and no local directory captures it.
+export const PAYMENT_METHODS = [
+  { key: "gcash", label: "GCash" },
+  { key: "maya", label: "Maya" },
+  { key: "bank_transfer", label: "Bank transfer" },
+  { key: "cash", label: "Cash" },
+] as const;
+export type PaymentMethodKey = (typeof PAYMENT_METHODS)[number]["key"];
+
 // Makeup-artist vocab. Specialty labels are lower-case common nouns (the joined
 // value gets a single leading capital); languages/areas stay proper-cased.
 export const FINISH_STYLES = [
   { key: "soft_glam", label: "soft glam" },
   { key: "full_glam", label: "full glam" },
   { key: "natural", label: "natural" },
+  // Distinct from "natural": couples search this exact phrase, and artists say it
+  // is the hardest look to execute and make last in humidity.
+  { key: "no_makeup", label: "no-makeup makeup" },
   { key: "classic", label: "classic" },
   { key: "editorial", label: "editorial" },
 ] as const;
@@ -129,6 +143,7 @@ export const VOCAB_KEYS = {
   trialStatus: keySet(TRIAL_STATUSES as unknown as Vocab<TrialStatusKey>),
   hairService: keySet(HAIR_SERVICES as unknown as Vocab<HairServiceKey>),
   retouchTier: keySet(RETOUCH_TIERS as unknown as Vocab<RetouchTierKey>),
+  paymentMethod: keySet(PAYMENT_METHODS as unknown as Vocab<PaymentMethodKey>),
 } as const;
 
 const AREA_LABEL = labelMap(CEBU_AREAS as unknown as Vocab<AreaKey>);
@@ -138,11 +153,17 @@ const TEAM_LABEL = labelMap(TEAM_SIZES as unknown as Vocab<TeamSizeKey>);
 const PRICE_UNIT_LABEL = labelMap(PRICE_UNITS as unknown as Vocab<PriceUnitKey>);
 const TRIAL_LABEL = labelMap(TRIAL_STATUSES as unknown as Vocab<TrialStatusKey>);
 const HAIR_SERVICE_LABEL = labelMap(HAIR_SERVICES as unknown as Vocab<HairServiceKey>);
+const PAYMENT_LABEL = labelMap(PAYMENT_METHODS as unknown as Vocab<PaymentMethodKey>);
 const SPECIALTY_LABEL = labelMap([
   ...FINISH_STYLES,
   ...TECHNIQUES,
   ...SKIN_INCLUSIVITY,
 ] as unknown as Vocab<string>);
+
+// Coverage key -> display label, for the browse filter chips.
+export function areaLabel(key: string): string {
+  return AREA_LABEL[key as AreaKey] ?? key;
+}
 
 // ------------------------------------------------------------------ types -----
 // The shape stored in the `essentials` jsonb column.
@@ -150,6 +171,9 @@ export type EssentialsData = {
   coverage?: { areas: AreaKey[]; travelsBeyond: boolean; travelNote?: string };
   bookingStatus?: { status: BookingStatusKey; note?: string };
   bookingTerms?: string;
+  // Universal (every category): how a couple pays, and what holds the date.
+  paymentMethods?: PaymentMethodKey[];
+  depositPercent?: number;
   languages?: LanguageKey[];
   team?: { size: TeamSizeKey; note?: string };
   // Category-specific fields; validated per the category's field set.
@@ -178,6 +202,10 @@ export type EssentialsInput = {
   priceMin: number | null;
   priceMax: number | null;
   priceTypical: number | null;
+  // The per-FACE entourage rate, distinct from the bride rate above. In a Filipino
+  // wedding this is the real swing factor — 8-10 faces can exceed the bride's fee.
+  entourageRateMin: number | null;
+  entourageRateMax: number | null;
   currency: string;
   priceUnit: string | null;
   category: string | null;
@@ -229,6 +257,21 @@ const priceRow: RowDef = {
   },
 };
 
+// The number a couple actually needs to budget the day. Sits immediately after the
+// bride rate, because "from ₱8,000" alone hides most of the bill once the ninang,
+// the mothers and the bridesmaids are counted.
+const entourageRow: RowDef = {
+  label: "Entourage",
+  format: (i) => {
+    const { entourageRateMin: lo, entourageRateMax: hi, currency } = i;
+    if (lo != null && hi != null && hi > lo)
+      return `${money(lo, currency)} to ${money(hi, currency)} per face`;
+    if (lo != null) return `From ${money(lo, currency)} per face`;
+    if (hi != null) return `Up to ${money(hi, currency)} per face`;
+    return null;
+  },
+};
+
 const coverageRow: RowDef = {
   label: "Coverage & travel",
   format: (i) => {
@@ -244,9 +287,31 @@ const coverageRow: RowDef = {
   },
 };
 
+// Deposit folds in here rather than getting a competing row: "what holds my date"
+// is one question, and a structured percent reads better in front of the vendor's
+// own terms than beside them.
 const bookingTermsRow: RowDef = {
   label: "Booking terms",
-  format: (i) => i.essentials?.bookingTerms?.trim() || null,
+  format: (i) => {
+    const terms = i.essentials?.bookingTerms?.trim() || null;
+    const pct = i.essentials?.depositPercent;
+    const deposit =
+      typeof pct === "number" && pct > 0 ? `${pct}% deposit reserves your date` : null;
+    if (deposit && terms) return `${deposit} · ${terms}`;
+    return deposit ?? terms;
+  },
+};
+
+// How a couple actually pays. No local directory captures this, and couples ask
+// before they enquire.
+const paymentRow: RowDef = {
+  label: "Payment",
+  format: (i) => {
+    const methods = (i.essentials?.paymentMethods ?? [])
+      .map((m) => PAYMENT_LABEL[m])
+      .filter(Boolean);
+    return methods.length ? methods.join(", ") : null;
+  },
 };
 
 const bookingStatusRow: RowDef = {
@@ -365,16 +430,32 @@ type FieldSet = { rows: RowDef[]; maxRows: number };
 
 // Default = universal fields only (used for any category without a field set).
 const UNIVERSAL_FIELD_SET: FieldSet = {
-  rows: [priceRow, coverageRow, bookingTermsRow, bookingStatusRow, languagesRow],
+  rows: [
+    priceRow,
+    coverageRow,
+    bookingTermsRow,
+    paymentRow,
+    bookingStatusRow,
+    languagesRow,
+  ],
   maxRows: 9,
 };
 
-// Couple-priority order. buildEssentialsRows keeps the first `maxRows` present
-// rows and drops the rest from the END — so over-cap trims Languages first, then
-// Backup plan.
+// Couple-priority order. buildEssentialsRows keeps the first `maxRows` present rows
+// and drops the rest from the END.
+//
+// The cap used to be 10 against 12 rows, which silently trimmed the LAST two —
+// backup plan and languages. A backup-artist policy is one of the facts couples
+// weigh most (the date is irreplaceable), so it was being hidden by an accident of
+// ordering. The cap is now equal to the row count: every fact a vendor actually
+// filled in is shown, and rows still self-hide when empty.
+//
+// Entourage sits directly under Price: "from ₱8,000" hides most of the bill until
+// you know the per-face rate. Payment sits with the other commitment facts.
 const MAKEUP_FIELD_SET: FieldSet = {
   rows: [
     priceRow,
+    entourageRow,
     hairServicesRow,
     groupCapacityRow,
     coverageRow,
@@ -382,12 +463,13 @@ const MAKEUP_FIELD_SET: FieldSet = {
     earlyCallRow,
     trialRow,
     specialtiesRow,
-    bookingTermsRow,
-    bookingStatusRow,
     backupPlanRow,
+    bookingTermsRow,
+    paymentRow,
+    bookingStatusRow,
     languagesRow,
   ],
-  maxRows: 10,
+  maxRows: 14,
 };
 
 // Add a category by adding an entry here — no other code changes.

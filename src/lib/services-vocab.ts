@@ -8,9 +8,17 @@ export type ServiceOption = { key: string; label: string };
 export const MAKEUP_SERVICES: readonly ServiceOption[] = [
   { key: "bridal_makeup", label: "Bridal makeup" },
   { key: "bridal_hair", label: "Bridal hair" },
+  { key: "hair_only", label: "Hair only" },
   { key: "airbrush", label: "Airbrush makeup" },
   { key: "hd_makeup", label: "HD makeup" },
   { key: "entourage", label: "Entourage / group makeup" },
+  // Commonly booked alongside the wedding and often bundled — couples search for it
+  // by name, and some book the trial as their prenup makeup.
+  { key: "prenup", label: "Prenup / pictorial makeup" },
+  // Softer ceremony face, glammed reception. Charged separately because the artist
+  // (or a standby) stays longer.
+  { key: "second_look", label: "Second look / change look" },
+  { key: "grooming", label: "Grooming (men)" },
   { key: "trial", label: "Trial session" },
   { key: "on_location", label: "On-location service" },
   { key: "touch_up", label: "Touch-up service" },

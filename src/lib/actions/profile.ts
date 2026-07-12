@@ -8,6 +8,7 @@ import {
   CONTACT_CHANNEL_COLUMNS,
   MUA_ESSENTIALS_COLUMNS,
   TAXONOMY_COLUMNS,
+  ENTOURAGE_COLUMNS,
   mapSupplierRow,
   type Supplier,
 } from "@/lib/suppliers";
@@ -21,7 +22,30 @@ import { PACKAGE_INCLUSIONS } from "@/lib/package-inclusions";
 // Full column projection for the authenticated dashboard reads — mirrors
 // getSupplierBySlug so the wizard loads the newer contact-channel + essentials
 // columns (which live outside the base SUPPLIER_COLUMNS list), plus drafts.
-const DASHBOARD_COLUMNS = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, pending_changes`;
+const DASHBOARD_COLUMNS = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, pending_changes`;
+
+// The same projection minus the newest columns. Dashboard reads are resilient the
+// way the public read already is: if a migration has not been applied yet, selecting
+// a column that does not exist fails the WHOLE query, and getMySupplier would then
+// return null — telling a vendor they have no profile at all. Retry without the new
+// columns instead; they simply map to null until the migration runs.
+const DASHBOARD_COLUMNS_FALLBACK = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, pending_changes`;
+
+type RowResult = {
+  data: unknown;
+  error: { message: string } | null;
+};
+
+// Run a dashboard query with the full projection, falling back to the pre-migration
+// one. `run` must be re-runnable: the first attempt fails at the parse stage, so no
+// write is applied, and the values are identical on the retry anyway.
+async function withColumnFallback(
+  run: (columns: string) => PromiseLike<RowResult>,
+): Promise<RowResult> {
+  const first = await run(DASHBOARD_COLUMNS);
+  if (!first.error) return first;
+  return run(DASHBOARD_COLUMNS_FALLBACK);
+}
 
 // =====================================================================
 // Supplier self-service profile actions.
@@ -106,11 +130,9 @@ export async function getMySupplier(): Promise<Supplier | null> {
   if (!own) return null;
 
   const admin = getSupabaseAdmin();
-  const { data, error } = await admin
-    .from("suppliers")
-    .select(DASHBOARD_COLUMNS)
-    .eq("id", own.supplierId)
-    .maybeSingle();
+  const { data, error } = await withColumnFallback((columns) =>
+    admin.from("suppliers").select(columns).eq("id", own.supplierId).maybeSingle(),
+  );
 
   if (error || !data) return null;
   return mapSupplierRow(data as unknown as Record<string, unknown>);
@@ -265,6 +287,13 @@ function coerceEssentials(v: unknown): EssentialsData | null {
   const terms = capOrNull(o.bookingTerms, 300);
   if (terms) out.bookingTerms = terms;
 
+  const pay = enumArray(o.paymentMethods, VOCAB_KEYS.paymentMethod, 4);
+  if (pay.length) out.paymentMethods = pay as EssentialsData["paymentMethods"];
+
+  // A deposit is a percentage of the fee: anything outside 1-100 is a typo.
+  const dep = intOrNull(o.depositPercent);
+  if (dep != null && dep > 0 && dep <= 100) out.depositPercent = dep;
+
   const langs = enumArray(o.languages, VOCAB_KEYS.language, 6);
   if (langs.length) out.languages = langs;
 
@@ -361,10 +390,13 @@ function coercePerService(v: unknown) {
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
 const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   name: ["name", (v) => cap(v, 200)],
-  basedIn: ["based_in", (v) => cap(v, 120)],
   location: ["location", (v) => cap(v, 120) || "Cebu"],
-  servesAreas: ["serves_areas", (v) => strArray(v, 120, 40)],
   categories: ["categories", (v) => strArray(v, 60, 12)],
+  // NOTE: `serves_areas` is deliberately NOT writable here. It is DERIVED from
+  // essentials.coverage.areas on every save (see deriveServesAreas below) so the
+  // GIN-indexed array the browse filter queries can never drift from the coverage
+  // chips the vendor actually ticks. It used to be free text and had gone stale —
+  // it held "Mactan", which the taxonomy rejects (Mactan is inside Lapu-Lapu).
   // Locked vocabulary (src/lib/style-tags-vocab.ts): anything outside it is dropped.
   // No DB check constraint — legacy free-text tags must survive in the column and
   // keep rendering via resolveStyleTag()'s passthrough until the vendor re-picks.
@@ -378,16 +410,14 @@ const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   priceMin: ["price_min", intOrNull],
   priceMax: ["price_max", intOrNull],
   priceTypical: ["price_typical", intOrNull],
+  // The per-FACE entourage rate. Distinct from price_min (the bride rate) and the
+  // real swing factor in a Filipino wedding bill.
+  entourageRateMin: ["entourage_rate_min", intOrNull],
+  entourageRateMax: ["entourage_rate_max", intOrNull],
   currency: ["currency", (v) => cap(v, 8) || "PHP"],
-  perServicePricing: ["per_service_pricing", coercePerService],
   pricingNotes: ["pricing_notes", (v) => capOrNull(v, 2000)],
-  priceIncludesScVat: ["price_includes_sc_vat", boolVal],
   packages: ["packages", coercePackages],
-  availabilityNote: ["availability_note", (v) => capOrNull(v, 200)],
   responseTimeNote: ["response_time_note", (v) => capOrNull(v, 200)],
-  bookingTerms: ["booking_terms", (v) => capOrNull(v, 500)],
-  travelFeeNote: ["travel_fee_note", (v) => capOrNull(v, 300)],
-  worksWithOverseasCouples: ["works_with_overseas_couples", boolVal],
   establishedYear: ["established_year", intOrNull],
   weddingsCount: ["weddings_count", intOrNull],
   instagram: ["instagram", coerceHandle],
@@ -572,6 +602,20 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
     }
   }
 
+  // `serves_areas` is DERIVED, never entered. It is the GIN-indexed array the browse
+  // filter queries, and it must be exactly the coverage chips the vendor ticked —
+  // as free text it had already drifted (it held "Mactan", which the taxonomy
+  // rejects because Mactan sits inside Lapu-Lapu). Rewritten on any essentials save,
+  // for admin and vendor callers alike.
+  //
+  // Stores the taxonomy KEYS (`cebu-city`), not the display labels: the column is
+  // never rendered, and keys are what the browse URL carries (/vendors?area=cebu-city),
+  // so the filter is an exact match with nothing to translate.
+  if ("essentials" in live) {
+    const ess = live.essentials as EssentialsData | null;
+    live.serves_areas = ess?.coverage?.areas ?? [];
+  }
+
   if (Object.keys(pending).length > 0 || clearPendingKeys.length > 0) {
     const cur = await currentPending(admin, own.supplierId);
     const merged = { ...cur, ...pending };
@@ -586,12 +630,14 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
     return supplier ? { ok: true, supplier } : { ok: false, error: GENERIC };
   }
 
-  const { data, error } = await admin
-    .from("suppliers")
-    .update(live)
-    .eq("id", own.supplierId)
-    .select(DASHBOARD_COLUMNS)
-    .single();
+  const { data, error } = await withColumnFallback((columns) =>
+    admin
+      .from("suppliers")
+      .update(live)
+      .eq("id", own.supplierId)
+      .select(columns)
+      .single(),
+  );
 
   if (error || !data) {
     console.error("[profile] update failed:", error?.message);
@@ -612,12 +658,14 @@ export async function setPublished(published: boolean): Promise<SaveResult> {
   if (!own) return { ok: false, error: "You do not have a linked profile." };
 
   const admin = getSupabaseAdmin();
-  const { data, error } = await admin
-    .from("suppliers")
-    .update({ published: Boolean(published) })
-    .eq("id", own.supplierId)
-    .select(DASHBOARD_COLUMNS)
-    .single();
+  const { data, error } = await withColumnFallback((columns) =>
+    admin
+      .from("suppliers")
+      .update({ published: Boolean(published) })
+      .eq("id", own.supplierId)
+      .select(columns)
+      .single(),
+  );
 
   if (error || !data) return { ok: false, error: GENERIC };
   revalidatePath(`/vendors/${own.slug}`);
@@ -666,12 +714,14 @@ async function saveImages(
     const cur = await currentPending(admin, own.supplierId);
     update = { pending_changes: { ...cur, images } };
   }
-  const { data, error } = await admin
-    .from("suppliers")
-    .update(update)
-    .eq("id", own.supplierId)
-    .select(DASHBOARD_COLUMNS)
-    .single();
+  const { data, error } = await withColumnFallback((columns) =>
+    admin
+      .from("suppliers")
+      .update(update)
+      .eq("id", own.supplierId)
+      .select(columns)
+      .single(),
+  );
   if (error || !data) return { ok: false, error: GENERIC };
   revalidatePath(`/vendors/${own.slug}`);
   revalidatePath("/dashboard");

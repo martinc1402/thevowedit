@@ -89,11 +89,11 @@ type FormState = {
   priceMin: string;
   priceMax: string;
   priceTypical: string;
+  entourageRateMin: string;
+  entourageRateMax: string;
   currency: string;
   priceUnit: string;
-  perServicePricing: Record<string, { min: string; max: string }>;
   pricingNotes: string;
-  priceIncludesScVat: boolean;
   services: string[];
   packages: PackageDraft[];
   essentials: EssentialsDraft;
@@ -146,10 +146,6 @@ function availableChannels(form: FormState) {
 const num = (n: number | null) => (n == null ? "" : String(n));
 
 function seed(s: Supplier): FormState {
-  const psp: Record<string, { min: string; max: string }> = {};
-  for (const [k, v] of Object.entries(s.perServicePricing ?? {})) {
-    psp[k] = { min: num(v?.min ?? null), max: num(v?.max ?? null) };
-  }
   // Approval-required fields seed from the vendor's PENDING draft when present
   // (so they keep editing what's under review), else from the live value.
   const p = s.pendingChanges;
@@ -174,14 +170,14 @@ function seed(s: Supplier): FormState {
     priceMin: num(s.priceMin),
     priceMax: num(s.priceMax),
     priceTypical: num(s.priceTypical),
+    entourageRateMin: num(s.entourageRateMin),
+    entourageRateMax: num(s.entourageRateMax),
     currency: s.currency ?? "PHP",
     // `||` not `??`: an empty string must fall back too. The select has no empty
     // option, so an unset unit would otherwise DISPLAY "Per event / package" while
     // the form state stayed "" — showing one thing and storing another.
     priceUnit: s.priceUnit || "per_event",
-    perServicePricing: psp,
     pricingNotes: s.pricingNotes ?? "",
-    priceIncludesScVat: Boolean(s.priceIncludesScVat),
     services: s.services ?? [],
     packages: (s.packages ?? []).map((p) => ({
       name: p.name ?? "",
@@ -252,17 +248,6 @@ function buildPatch(form: FormState, keys: (keyof FormState)[]): ProfilePatch {
       case "faq":
         patch.faq = form.faq.map((x) => ({ q: x.a, a: x.b }));
         break;
-      case "perServicePricing": {
-        const out: Record<string, { min?: number; max?: number }> = {};
-        for (const [svc, v] of Object.entries(form.perServicePricing)) {
-          out[svc] = {
-            min: v.min === "" ? undefined : Number(v.min),
-            max: v.max === "" ? undefined : Number(v.max),
-          };
-        }
-        patch.perServicePricing = out;
-        break;
-      }
       default:
         patch[k] = form[k];
     }
@@ -313,10 +298,10 @@ const STEP_KEYS: Record<number, (keyof FormState)[]> = {
     "priceMin",
     "priceMax",
     "priceTypical",
+    "entourageRateMin",
+    "entourageRateMax",
     "currency",
     "priceUnit",
-    "perServicePricing",
-    "priceIncludesScVat",
     "essentials",
   ],
   2: ["services", "packages", "pricingNotes"],
@@ -690,65 +675,38 @@ export function ProfileWizard({
                   />
                 </Field>
               </div>
-              {form.categories.length > 1 && (
-                <div>
-                  <span className={labelClass}>Per-service pricing</span>
-                  <div className="grid gap-2">
-                    {form.categories.map((slug) => {
-                      const cat = CATEGORY_LIST.find((c) => c.slug === slug);
-                      const v = form.perServicePricing[slug] ?? {
-                        min: "",
-                        max: "",
-                      };
-                      return (
-                        <div
-                          key={slug}
-                          className="grid grid-cols-[1fr_auto_auto] items-center gap-2"
-                        >
-                          <span className="text-sm text-ink">
-                            {cat?.label ?? slug}
-                          </span>
-                          <input
-                            className={`${inputClass} w-28`}
-                            placeholder="min"
-                            inputMode="numeric"
-                            value={v.min}
-                            onChange={(e) =>
-                              set("perServicePricing", {
-                                ...form.perServicePricing,
-                                [slug]: { ...v, min: e.target.value },
-                              })
-                            }
-                          />
-                          <input
-                            className={`${inputClass} w-28`}
-                            placeholder="max"
-                            inputMode="numeric"
-                            value={v.max}
-                            onChange={(e) =>
-                              set("perServicePricing", {
-                                ...form.perServicePricing,
-                                [slug]: { ...v, max: e.target.value },
-                              })
-                            }
-                          />
-                        </div>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <label className="flex items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={form.priceIncludesScVat}
-                  onChange={(e) => set("priceIncludesScVat", e.target.checked)}
-                  className="h-5 w-5 rounded border-line accent-[#581824]"
-                />
-                <span className="text-sm text-ink">
-                  Rates already include service charge + VAT
+              {/* The entourage rate, the number couples actually budget on. The
+                  bride rate alone hides most of the bill: charged per face, and a
+                  Filipino entourage (ninang, mothers, bridesmaids) can add more
+                  than the bride's own fee. Without this, the only honest thing a
+                  vendor could put on a bridal-party package was "Price on enquiry"
+                  — exactly what every rival directory does. */}
+              <div className="border-t border-line pt-8">
+                <span className={labelClass}>
+                  Entourage rate{" "}
+                  <span className="font-normal text-muted">
+                    (per extra face: mothers, ninang, bridesmaids)
+                  </span>
                 </span>
-              </label>
+                <div className="mt-2 grid gap-4 sm:max-w-md sm:grid-cols-2">
+                  <Field label="From" hint="(per face)">
+                    <PesoInput
+                      value={form.entourageRateMin}
+                      onChange={(v) => set("entourageRateMin", v)}
+                    />
+                  </Field>
+                  <Field label="Up to" hint="(optional)">
+                    <PesoInput
+                      value={form.entourageRateMax}
+                      onChange={(v) => set("entourageRateMax", v)}
+                    />
+                  </Field>
+                </div>
+                <p className="mt-2 text-xs text-muted">
+                  Couples compare on this. Leave blank only if you genuinely quote
+                  the entourage case by case.
+                </p>
+              </div>
             </div>
 
             <div className="border-t border-line pt-8">
@@ -1128,6 +1086,8 @@ export function ProfileWizard({
             priceMin: form.priceMin,
             priceMax: form.priceMax,
             priceTypical: form.priceTypical,
+            entourageRateMin: form.entourageRateMin,
+            entourageRateMax: form.entourageRateMax,
             currency: form.currency,
             priceUnit: form.priceUnit,
             pricingNotes: form.pricingNotes,

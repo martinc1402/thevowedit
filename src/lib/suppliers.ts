@@ -73,6 +73,9 @@ export type Supplier = {
   priceMin: number | null;
   priceMax: number | null;
   priceTypical: number | null;
+  // Per-FACE entourage rate, distinct from priceMin (the bride rate).
+  entourageRateMin: number | null;
+  entourageRateMax: number | null;
   currency: string;
   perServicePricing: PerServicePricing | null;
   shortDescription: string | null;
@@ -191,6 +194,39 @@ export const MUA_ESSENTIALS_COLUMNS = "works_with, group_capacity";
 // also fetched via the resilient fallback.
 export const TAXONOMY_COLUMNS = "essentials, price_unit";
 
+// Per-face entourage rate (see supabase/add-entourage-rate.sql). Kept out of the
+// base projection ON PURPOSE: if it went there, every public read would fail until
+// that migration is applied.
+export const ENTOURAGE_COLUMNS = "entourage_rate_min, entourage_rate_max";
+
+// TIERED projections, newest first. A missing column fails the WHOLE query, so the
+// retry must drop ONE migration's columns at a time.
+//
+// This used to be a single "full -> base" fallback, which was fine while only one
+// optional group existed. With two, an unapplied entourage migration collapsed the
+// read all the way to the base projection and silently took `essentials` (and the
+// contact channels) with it — the profile rendered with no Specialties row and the
+// browse filters matched nothing. Degrade one step at a time instead.
+const PROJECTIONS = [
+  `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}`,
+  `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}`,
+  SUPPLIER_COLUMNS,
+];
+
+type QueryResult<T> = { data: T | null; error: { message: string } | null };
+
+// Run `q` against each projection until one succeeds.
+export async function withProjectionFallback<T>(
+  q: (columns: string) => PromiseLike<QueryResult<T>>,
+): Promise<QueryResult<T>> {
+  let last: QueryResult<T> = { data: null, error: { message: "no projection" } };
+  for (const columns of PROJECTIONS) {
+    last = await q(columns);
+    if (!last.error) return last;
+  }
+  return last;
+}
+
 // Postgres rows come back snake_cased and jsonb columns as parsed JSON; map to
 // our camelCase type with defensive defaults (arrays/jsonb may be null).
 export function mapSupplierRow(r: Record<string, unknown>): Supplier {
@@ -206,6 +242,8 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
     priceMin: (r.price_min as number) ?? null,
     priceMax: (r.price_max as number) ?? null,
     priceTypical: (r.price_typical as number) ?? null,
+    entourageRateMin: (r.entourage_rate_min as number) ?? null,
+    entourageRateMax: (r.entourage_rate_max as number) ?? null,
     currency: (r.currency as string) ?? "PHP",
     perServicePricing: (r.per_service_pricing as PerServicePricing) ?? null,
     shortDescription: (r.short_description as string) ?? null,
@@ -260,23 +298,17 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
 // Fetch a single supplier by its public slug. Returns null when not found.
 export async function getSupplierBySlug(slug: string): Promise<Supplier | null> {
   const supabase = getSupabasePublic();
-  const query = (columns: string) =>
+
+  // Degrades one migration at a time (see withProjectionFallback): an unapplied
+  // migration must not take `essentials` down with it.
+  const { data, error } = await withProjectionFallback((columns) =>
     supabase
       .from("suppliers")
       .select(columns)
       .eq("slug", slug)
       .eq("published", true)
-      .maybeSingle();
-
-  // Prefer the full projection (incl. the newer contact + essentials columns).
-  // If those columns don't exist yet (migration not applied), retry with the
-  // base projection so the page keeps working; the new fields then map to null.
-  let { data, error } = await query(
-    `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}`,
+      .maybeSingle(),
   );
-  if (error) {
-    ({ data, error } = await query(SUPPLIER_COLUMNS));
-  }
 
   if (error) {
     console.error("[suppliers] getSupplierBySlug failed:", error.message);
@@ -284,6 +316,70 @@ export async function getSupplierBySlug(slug: string): Promise<Supplier | null> 
   }
   if (!data) return null;
   return mapSupplierRow(data as unknown as Record<string, unknown>);
+}
+
+// The filters the browse page understands. Ordered by how couples actually search:
+// where → what it costs → how it's done → can they do my entourage → are they free.
+export type VendorFilters = {
+  area?: string; // AreaKey
+  budgetMax?: number; // bride rate ceiling
+  technique?: string; // TechniqueKey
+  finish?: string; // FinishStyleKey
+  minFaces?: number; // entourage capacity
+  bookingStatus?: string; // BookingStatusKey
+};
+
+// Published vendors matching the filters.
+//
+// Area and budget are pushed into Postgres: `serves_areas` is GIN-indexed
+// (suppliers_serves_areas_gin) and is now DERIVED from the coverage chips, so a
+// contains-query is both fast and truthful. Everything else lives inside the
+// `essentials` jsonb and is filtered in memory afterwards.
+//
+// In-memory is the right call at this size and avoids contorting jsonb predicates
+// through PostgREST. It stops being right in the low hundreds of vendors; the fix
+// then is a derived, GIN-indexed `facets text[]` column written on save (the same
+// trick serves_areas already uses), not a smarter query here.
+export async function listPublishedSuppliers(
+  f: VendorFilters = {},
+): Promise<Supplier[]> {
+  const supabase = getSupabasePublic();
+
+  const { data, error } = await withProjectionFallback((columns) => {
+    let q = supabase.from("suppliers").select(columns).eq("published", true);
+    if (f.area) q = q.contains("serves_areas", [f.area]);
+    if (f.budgetMax != null) q = q.lte("price_min", f.budgetMax);
+    return q;
+  });
+
+  if (error) {
+    console.error("[suppliers] listPublishedSuppliers failed:", error.message);
+    return [];
+  }
+
+  const rows = (data ?? []).map((r) =>
+    mapSupplierRow(r as unknown as Record<string, unknown>),
+  );
+
+  return rows.filter((s) => {
+    const cf = (s.essentials?.categoryFields ?? {}) as {
+      techniques?: string[];
+      finishStyles?: string[];
+      groupCapacity?: { maxFaces?: number };
+    };
+    if (f.technique && !(cf.techniques ?? []).includes(f.technique)) return false;
+    if (f.finish && !(cf.finishStyles ?? []).includes(f.finish)) return false;
+    if (f.minFaces != null && (cf.groupCapacity?.maxFaces ?? 0) < f.minFaces) {
+      return false;
+    }
+    if (
+      f.bookingStatus &&
+      s.essentials?.bookingStatus?.status !== f.bookingStatus
+    ) {
+      return false;
+    }
+    return true;
+  });
 }
 
 // All supplier slugs — for generateStaticParams / sitemap later.

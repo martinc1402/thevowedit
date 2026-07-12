@@ -8,6 +8,7 @@ import {
   FacebookLogo,
   Globe,
   SealCheck,
+  ClockClockwise,
 } from "@phosphor-icons/react/dist/ssr";
 import type { Icon } from "@phosphor-icons/react";
 import { formatPrice } from "@/lib/suppliers";
@@ -60,8 +61,11 @@ export function SupplierContactCard({
   priceMin,
   priceMax,
   priceTypical,
+  entourageRateMin = null,
+  entourageRateMax = null,
   currency,
   verified,
+  responseTimeNote = null,
   channels,
   primary,
   presence,
@@ -69,8 +73,11 @@ export function SupplierContactCard({
   priceMin: number | null;
   priceMax: number | null;
   priceTypical: number | null;
+  entourageRateMin?: number | null;
+  entourageRateMax?: number | null;
   currency: string;
   verified: boolean;
+  responseTimeNote?: string | null;
   channels: ContactChannel[];
   primary: ContactChannel | null;
   presence: PresenceLink[];
@@ -78,12 +85,24 @@ export function SupplierContactCard({
   const headline = priceHeadline(priceMin, priceMax, priceTypical, currency);
   const secondary = channels.filter((c) => c.key !== primary?.key);
   const PrimaryIcon = primary ? ICONS[primary.key] : null;
+  // The bride rate alone hides most of a Filipino wedding bill: the entourage is
+  // charged per face, and 8-10 faces can exceed the bride's fee. Say it here, next
+  // to the headline, not buried in a package list.
+  const entourage =
+    entourageRateMin != null
+      ? `+ from ${formatPrice(entourageRateMin, currency)} per face`
+      : entourageRateMax != null
+        ? `+ up to ${formatPrice(entourageRateMax, currency)} per face`
+        : null;
 
   return (
     <div className="rounded-2xl border border-line bg-surface p-6 shadow-[0_2px_6px_rgba(88,24,36,0.05),0_12px_30px_rgba(88,24,36,0.06)]">
       <p className="font-serif text-3xl font-medium leading-none text-ink">
         {headline}
       </p>
+      {entourage && (
+        <p className="mt-1.5 text-sm font-medium text-ink">{entourage}</p>
+      )}
       {priceTypical != null && (priceMin != null || priceMax != null) && (
         <p className="mt-2 text-sm text-muted">
           Couples typically spend around{" "}
@@ -146,12 +165,23 @@ export function SupplierContactCard({
         </div>
       )}
 
-      {verified && (
-        <div className="mt-5 text-xs text-muted">
-          <p className="flex items-center gap-1.5">
-            <SealCheck size={14} weight="fill" className="shrink-0 text-accent-fg" />
-            Verified by The Vow Edit
-          </p>
+      {(verified || responseTimeNote) && (
+        <div className="mt-5 grid gap-1.5 text-xs text-muted">
+          {verified && (
+            <p className="flex items-center gap-1.5">
+              <SealCheck size={14} weight="fill" className="shrink-0 text-accent-fg" />
+              Verified by The Vow Edit
+            </p>
+          )}
+          {/* Editor-written, not vendor-claimed: how fast a vendor replies is the
+              thing couples act on, and a self-asserted "replies in 1 hour" is
+              unverifiable. It was stored and rendered nowhere until now. */}
+          {responseTimeNote && (
+            <p className="flex items-center gap-1.5">
+              <ClockClockwise size={14} className="shrink-0 text-accent-fg" />
+              {responseTimeNote}
+            </p>
+          )}
         </div>
       )}
     </div>

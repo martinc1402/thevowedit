@@ -75,6 +75,8 @@ export default async function PreviewPage({ params }: Params) {
             priceMin={applied.priceMin}
             priceMax={applied.priceMax}
             priceTypical={applied.priceTypical}
+            entourageRateMin={applied.entourageRateMin}
+            entourageRateMax={applied.entourageRateMax}
             currency={applied.currency}
             priceUnit={applied.priceUnit}
             category={applied.categories[0] ?? null}
