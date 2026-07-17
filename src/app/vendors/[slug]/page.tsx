@@ -185,6 +185,14 @@ export default async function SupplierPage({ params }: Params) {
                 </Reveal>
               </div>
 
+              {/* Desktop: the enquiry checklist lives in the main column so the
+                  sticky rail can hold just the (viewport-height) contact card. */}
+              <div className="hidden lg:block">
+                <Reveal>
+                  <QuoteChecklist category={s.categories[0] ?? null} />
+                </Reveal>
+              </div>
+
               {/* Trust stats — self-hides when absent. */}
               {(s.establishedYear != null || s.weddingsCount != null) && (
                 <Reveal>
@@ -236,9 +244,11 @@ export default async function SupplierPage({ params }: Params) {
                 items-start, its containing block is the tall grid, so it pins
                 below the nav and travels down, stopping at the grid's bottom
                 (before the footer). */}
+            {/* Desktop sticky rail: just the contact card, so it stays shorter
+                than the viewport and pins cleanly for the whole scroll. The
+                enquiry checklist lives in the left column above. */}
             <aside className="hidden self-start lg:sticky lg:top-24 lg:block">
               {contactCard}
-              <QuoteChecklist category={s.categories[0] ?? null} />
             </aside>
           </div>
         </div>
