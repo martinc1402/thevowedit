@@ -18,7 +18,7 @@ import {
 export const runtime = "nodejs";
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
-const MIN_EDGE = 1000; // px — floor for a crisp gallery on retina displays
+const MIN_EDGE = 800; // px — floor for a crisp gallery on retina displays
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -48,13 +48,19 @@ export async function POST(request: NextRequest) {
   const ext = EXT[file.type];
   if (!ext) {
     return NextResponse.json(
-      { error: "Use a JPEG, PNG or WebP image." },
+      { error: "That file type isn't supported. Please upload a JPEG, PNG or WebP photo." },
       { status: 400 },
     );
   }
-  if (file.size === 0 || file.size > MAX_BYTES) {
+  if (file.size === 0) {
     return NextResponse.json(
-      { error: "Image must be between 1 byte and 8 MB." },
+      { error: "That file looks empty. Please choose a photo and try again." },
+      { status: 400 },
+    );
+  }
+  if (file.size > MAX_BYTES) {
+    return NextResponse.json(
+      { error: "That photo is over 8 MB. Please upload a smaller file." },
       { status: 400 },
     );
   }
@@ -70,13 +76,15 @@ export async function POST(request: NextRequest) {
     height = meta.height ?? 0;
   } catch {
     return NextResponse.json(
-      { error: "That image couldn't be read. Try another file." },
+      { error: "We couldn't read that image. Please try a different photo." },
       { status: 400 },
     );
   }
   if (width < MIN_EDGE || height < MIN_EDGE) {
     return NextResponse.json(
-      { error: `Image must be at least ${MIN_EDGE}px on each side.` },
+      {
+        error: `This photo is too small to look sharp in your gallery. Please upload one at least ${MIN_EDGE}px wide and tall.`,
+      },
       { status: 400 },
     );
   }
