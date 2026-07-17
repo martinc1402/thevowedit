@@ -19,9 +19,11 @@ export const runtime = "nodejs";
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
 // Gallery quality floor, split by orientation so a normal wide crop passes but
-// genuinely small images don't: the longest side must clear 800px, the shortest 600px.
-const MIN_LONG_EDGE = 800; // px
-const MIN_SHORT_EDGE = 600; // px
+// genuinely small images don't: the longest side must clear 600px, the shortest 400px.
+// The gallery renders with object-cover/contain, so a small source is never
+// stretched — it can only look soft as the large cover (#1) photo.
+const MIN_LONG_EDGE = 600; // px
+const MIN_SHORT_EDGE = 400; // px
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
