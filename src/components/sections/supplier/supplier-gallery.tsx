@@ -91,20 +91,23 @@ export function SupplierGallery({
           </Tile>
         </div>
       ) : count === 2 ? (
-        /* Two photos: an even side-by-side pair, so the second photo is never
-           dropped (the collage needs 3, a single hero would hide it). */
-        <div className="hidden aspect-[3/2] w-full grid-cols-2 gap-2 overflow-hidden rounded-2xl md:grid">
+        /* Two photos: a 60/40 hero + smaller pair, so the second photo is never
+           dropped (the collage needs 3, a single hero would hide it) while photo 1
+           still leads. Both full height: hero ~square, second a 3:5 portrait. */
+        <div className="hidden aspect-[3/2] w-full grid-cols-5 gap-2 overflow-hidden rounded-2xl md:grid">
           <Tile
             src={images[0]}
             alt={`${name} - photo 1 of ${count}`}
             onClick={() => open(0)}
-            sizes="(max-width: 768px) 0px, 550px"
+            className="col-span-3"
+            sizes="(max-width: 768px) 0px, 660px"
           />
           <Tile
             src={images[1]}
             alt={`${name} - photo 2 of ${count}`}
             onClick={() => open(1)}
-            sizes="(max-width: 768px) 0px, 550px"
+            className="col-span-2"
+            sizes="(max-width: 768px) 0px, 440px"
           />
         </div>
       ) : (
