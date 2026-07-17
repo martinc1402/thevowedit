@@ -18,7 +18,10 @@ import {
 export const runtime = "nodejs";
 
 const MAX_BYTES = 8 * 1024 * 1024; // 8 MB
-const MIN_EDGE = 800; // px — floor for a crisp gallery on retina displays
+// Gallery quality floor, split by orientation so a normal wide crop passes but
+// genuinely small images don't: the longest side must clear 800px, the shortest 600px.
+const MIN_LONG_EDGE = 800; // px
+const MIN_SHORT_EDGE = 600; // px
 const EXT: Record<string, string> = {
   "image/jpeg": "jpg",
   "image/png": "png",
@@ -80,10 +83,12 @@ export async function POST(request: NextRequest) {
       { status: 400 },
     );
   }
-  if (width < MIN_EDGE || height < MIN_EDGE) {
+  const longEdge = Math.max(width, height);
+  const shortEdge = Math.min(width, height);
+  if (longEdge < MIN_LONG_EDGE || shortEdge < MIN_SHORT_EDGE) {
     return NextResponse.json(
       {
-        error: `This photo is too small to look sharp in your gallery. Please upload one at least ${MIN_EDGE}px wide and tall.`,
+        error: `This photo is too small to look sharp in your gallery. Please upload one at least ${MIN_LONG_EDGE}px on its longest side and ${MIN_SHORT_EDGE}px on the shortest.`,
       },
       { status: 400 },
     );
