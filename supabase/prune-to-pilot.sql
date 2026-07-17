@@ -1,0 +1,32 @@
+-- =====================================================================
+-- Prune the directory down to the single pilot vendor.
+--
+-- Makeup X Matthew is the only vendor we stand behind right now, so everything
+-- else comes out of the suppliers table.
+--
+-- WHAT THIS DELETES
+--   * 12 seed/demo vendors (all unpublished, no owner, no uploaded photos) that
+--     came from supabase/seed.sql — pure placeholder content.
+--   * Camcorder Stories by RR Films — NOT demo data. It was a real accepted
+--     application (Kamille Rebojo), a published + verified profile with 6 uploaded
+--     photos, and an unclaimed invitation to raymonrebojofilms@gmail.com. Removed
+--     deliberately, with that understood. Its storage folder is deleted separately
+--     (SQL cannot reach the storage bucket).
+--
+-- CASCADES
+--   supplier_owners.supplier_id references suppliers(id) on delete cascade, so the
+--   two owner rows (Matthew's claim, Camcorder's invitation) follow the suppliers.
+--   Matthew's is re-created below? No — his supplier row survives, so his owner row
+--   is untouched. Only Camcorder's invitation disappears.
+--
+-- WHAT THIS KEEPS
+--   * public.supplier_applications — the record that these businesses applied and
+--     were accepted. Those are people, not listings; deleting a profile does not
+--     un-apply them, and the table has no FK to suppliers.
+--   * inquiries / claim_attempts — both empty anyway.
+--
+-- A JSON backup of every table was taken before this ran.
+-- Safe to run more than once.
+-- =====================================================================
+delete from public.suppliers
+where slug <> 'makeupx-matthew';

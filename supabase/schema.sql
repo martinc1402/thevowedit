@@ -13,12 +13,26 @@ create table if not exists public.suppliers (
   serves_areas                text[] not null default '{}',   -- areas worked in (free text ok)
   categories                  text[] not null default '{}',   -- category slugs
   style_tags                  text[] not null default '{}',
+  services                    text[] not null default '{}',   -- flat list of services offered
   price_min                   int,
   price_max                   int,
   currency                    text not null default 'PHP',
   per_service_pricing         jsonb,                          -- { "photographers": {"min":..,"max":..}, ... }
+  price_typical               int,                            -- "typical amount couples spend"
+  pricing_notes               text,                           -- what's included / pricing FAQ
+  price_includes_sc_vat       boolean,                        -- caterer transparency (rate already includes SC + VAT?)
+  response_time_note          text,                           -- e.g. "usually replies within a day"
+  booking_terms               text,                           -- downpayment %, payment methods
+  availability_note           text,                           -- e.g. "Now booking 2026-2027" (inquiry driver)
+  established_year            int,                            -- first year of business; UI derives "X years"
+  weddings_count              int,                            -- approx. weddings worked (credibility stat)
+  faq                         jsonb,                          -- [{ q, a }] supplier-authored Q&A
+  specs                       jsonb,                          -- [{ label, value }] scannable facts (coverage, deliverables...)
   short_description           text,                           -- card blurb
   description                 text,                           -- long "About" copy
+  editorial_tagline           text,                           -- curator's one-line hero tagline
+  editor_note                 text,                           -- curator's "Why we picked" paragraph
+  editor_highlights           jsonb,                          -- [{ label, value }] curator highlight chips
   verified                    boolean not null default false,
   featured                    boolean not null default false,
   rating                      numeric,                        -- nullable; null treated as 0 in the UI
@@ -28,7 +42,6 @@ create table if not exists public.suppliers (
   instagram                   text,
   website                     text,
   facebook                    text,
-  portfolio_link              text,                           -- stored per spec (not yet rendered)
   email                       text,
   phone                       text,
   images                      text[] not null default '{}',   -- Supabase Storage public URLs; [0] = card hero
@@ -46,6 +59,32 @@ create table if not exists public.suppliers (
 alter table public.suppliers add column if not exists video_url text;
 alter table public.suppliers add column if not exists team_photo text;
 alter table public.suppliers add column if not exists bio text;
+alter table public.suppliers add column if not exists price_typical int;
+alter table public.suppliers add column if not exists pricing_notes text;
+alter table public.suppliers add column if not exists price_includes_sc_vat boolean;
+alter table public.suppliers add column if not exists response_time_note text;
+alter table public.suppliers add column if not exists booking_terms text;
+alter table public.suppliers add column if not exists availability_note text;
+alter table public.suppliers add column if not exists established_year int;
+alter table public.suppliers add column if not exists weddings_count int;
+alter table public.suppliers add column if not exists faq jsonb;
+alter table public.suppliers add column if not exists specs jsonb;
+-- Editorial / curation fields (The Vow Edit authored; nullable so other vendors
+-- render nothing). See supabase/add-editorial-fields.sql for the standalone migration.
+alter table public.suppliers add column if not exists services text[] not null default '{}';
+alter table public.suppliers add column if not exists editorial_tagline text;
+alter table public.suppliers add column if not exists editor_note text;
+alter table public.suppliers add column if not exists editor_highlights jsonb;
+-- Direct-contact channels (see supabase/add-contact-channels.sql for the standalone migration).
+alter table public.suppliers add column if not exists viber text;
+alter table public.suppliers add column if not exists whatsapp text;
+alter table public.suppliers add column if not exists preferred_channel text;
+-- Makeup-artist essentials: structured capacity (see supabase/add-mua-essentials.sql).
+alter table public.suppliers add column if not exists works_with text;      -- 'solo' | 'team'
+alter table public.suppliers add column if not exists group_capacity int;   -- faces the vendor can cover
+-- Structured essentials taxonomy (see supabase/add-essentials-taxonomy.sql).
+alter table public.suppliers add column if not exists essentials jsonb;     -- layered typed taxonomy
+alter table public.suppliers add column if not exists price_unit text;      -- 'per_event' | 'per_head' | 'per_hour'
 
 -- Contains-query indexes (GIN) for categories / serves_areas array lookups.
 create index if not exists suppliers_categories_gin   on public.suppliers using gin (categories);

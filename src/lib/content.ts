@@ -17,7 +17,8 @@ export type Category = {
 /** Core supplier categories. Tiles + search select + footer matrix all read from this. */
 export const categories: Category[] = [
   { slug: "photographers", label: "Photographers", href: "/photographers/cebu", blurb: "Full-day & elopement coverage", image: "/images/cebu/category-photographers.jpg", alt: "Wedding photographer in Cebu" },
-  { slug: "hmua", label: "Hair & Makeup", href: "/hmua/cebu", blurb: "Bridal HMUA & entourage", image: "/images/cebu/category-hmua.jpg", alt: "Hair and makeup artist in Cebu" },
+  { slug: "hair", label: "Hair", href: "/hair/cebu", blurb: "Bridal & entourage hairstyling", image: "/images/cebu/category-hmua.jpg", alt: "Bridal hairstylist in Cebu" },
+  { slug: "makeup", label: "Makeup", href: "/makeup/cebu", blurb: "Bridal & entourage makeup", image: "/images/cebu/category-hmua.jpg", alt: "Makeup artist in Cebu" },
   { slug: "catering", label: "Catering", href: "/catering/cebu", blurb: "Plated, buffet & grazing", image: "/images/cebu/category-catering.jpg", alt: "Wedding catering in Cebu" },
   { slug: "venues", label: "Venues", href: "/venues/cebu", blurb: "Beach, garden, ballroom", image: "/images/cebu/category-venues.jpg", alt: "Wedding venue in Cebu" },
   { slug: "florists", label: "Florists", href: "/florists/cebu", blurb: "Bouquets & installations", image: "/images/cebu/category-florists.jpg", alt: "Wedding florist in Cebu" },
