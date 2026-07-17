@@ -22,6 +22,7 @@ import { categories as CATEGORY_LIST } from "@/lib/content";
 import { inclusionsFor } from "@/lib/package-inclusions";
 import { styleTagsFor } from "@/lib/style-tags-vocab";
 import { hasEntourageRate } from "@/lib/category-fields";
+import { MODERATION_ENABLED } from "@/lib/moderation-config";
 import {
   essentialsToDraft,
   draftToEssentials,
@@ -108,6 +109,7 @@ type FormState = {
   viber: string;
   whatsapp: string;
   preferredChannel: string;
+  responseTimeNote: string;
   faq: KVDraft[]; // a = q, b = a
 };
 
@@ -199,6 +201,7 @@ function seed(s: Supplier): FormState {
     viber: s.viber ?? "",
     whatsapp: s.whatsapp ?? "",
     preferredChannel: s.preferredChannel ?? "",
+    responseTimeNote: s.responseTimeNote ?? "",
     faq: (p?.faq ?? s.faq ?? []).map((x) => ({ a: x.q, b: x.a })),
   };
 }
@@ -275,10 +278,10 @@ const STEPS = [
 ] as const;
 const PUBLISH_STEP = 5;
 
-// Steps whose fields are reviewed by an admin before going live (approval tier).
+// Steps whose fields are reviewed by an admin before going live (approval tier)
+// when moderation is ON. With moderation OFF (MODERATION_ENABLED) they publish
+// immediately like every other step.
 const APPROVAL_STEPS = new Set([3, 4]);
-// Steps whose fields publish immediately on save (all public).
-const IMMEDIATE_STEPS = new Set([0, 1, 2]);
 
 // Approval-tier form fields that live on each step (drives the "in review" pill).
 const STEP_PENDING_FIELDS: Record<number, string[]> = {
@@ -299,6 +302,7 @@ const STEP_KEYS: Record<number, (keyof FormState)[]> = {
     "viber",
     "whatsapp",
     "preferredChannel",
+    "responseTimeNote",
   ],
   1: [
     "styleTags",
@@ -544,6 +548,7 @@ export function ProfileWizard({
       <nav className="mb-8 flex flex-wrap gap-2">
         {STEPS.map((s, i) => {
           const hasPending =
+            MODERATION_ENABLED &&
             !isAdmin &&
             (STEP_PENDING_FIELDS[i] ?? []).some((f) => pending.has(f));
           const isCurrent = step === i;
@@ -577,7 +582,7 @@ export function ProfileWizard({
       </nav>
 
       <div className="rounded-2xl border border-line bg-surface px-5 py-6 sm:px-8 sm:py-8">
-        {APPROVAL_STEPS.has(step) && !isAdmin && (
+        {MODERATION_ENABLED && APPROVAL_STEPS.has(step) && !isAdmin && (
           <div className="mb-6 rounded-xl border border-accent/30 bg-accent/5 px-4 py-3 text-sm leading-relaxed text-muted">
             <span className="font-medium text-ink">
               Reviewed before it goes live.
@@ -587,11 +592,14 @@ export function ProfileWizard({
             review.
           </div>
         )}
-        {IMMEDIATE_STEPS.has(step) && (
-          <p className="mb-6 text-sm text-muted">
-            Everything on this step is public and goes live the moment you save.
-          </p>
-        )}
+        {/* With moderation off, the approval steps publish immediately too, so the
+            "goes live the moment you save" line covers every step but Publish. */}
+        {!(MODERATION_ENABLED && APPROVAL_STEPS.has(step) && !isAdmin) &&
+          step !== PUBLISH_STEP && (
+            <p className="mb-6 text-sm text-muted">
+              Everything on this step is public and goes live the moment you save.
+            </p>
+          )}
         {step === 0 && (
           <div className="grid gap-5">
             <div className="grid gap-4 sm:grid-cols-2">
@@ -662,13 +670,26 @@ export function ProfileWizard({
                 onChange={(v) => set("whatsapp", v)}
               />
             </div>
-            <div className="sm:max-w-sm">
+            <div className="grid gap-5 sm:max-w-sm">
               <Field label="Preferred contact channel">
                 <Select
                   value={form.preferredChannel}
                   onChange={(v) => set("preferredChannel", v)}
                   options={availableChannels(form)}
                   placeholder="No preference — we'll feature Instagram first (or your first available)"
+                />
+              </Field>
+              <Field
+                label="Typical reply time"
+                hint="(optional)"
+                help="Shown as a trust line on your profile. Set couples' expectations, e.g. how fast you usually get back to enquiries."
+              >
+                <input
+                  className={inputClass}
+                  value={form.responseTimeNote}
+                  maxLength={200}
+                  placeholder="Usually replies within a few hours"
+                  onChange={(e) => set("responseTimeNote", e.target.value)}
                 />
               </Field>
             </div>

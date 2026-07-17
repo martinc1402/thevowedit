@@ -19,6 +19,7 @@ import {
   hasEntourageRate,
 } from "@/lib/category-fields";
 import { isAdmin } from "@/lib/auth";
+import { MODERATION_ENABLED } from "@/lib/moderation-config";
 import { normalizeHandle, normalizePhonePH } from "@/lib/contact-normalize";
 import { SERVICE_KEYS } from "@/lib/services-vocab";
 import { STYLE_TAG_KEYS, styleTagsFor } from "@/lib/style-tags-vocab";
@@ -469,13 +470,15 @@ const ADMIN_ONLY_FIELDS = new Set([
   "editorHighlights",
   "verified",
   "featured",
-  "responseTimeNote",
 ]);
 
-// VENDOR APPROVAL-REQUIRED: a vendor's writes here land in `pending_changes`
-// (draft), not the live row, until an admin approves. Keyed by camelCase patch
-// key; the pending buffer stores them under their DB column. `essentials`'s
-// customEssentials sub-field is handled specially (split from the enum parts).
+// VENDOR APPROVAL-REQUIRED: when moderation is ON (MODERATION_ENABLED), a
+// vendor's writes here land in `pending_changes` (draft), not the live row,
+// until an admin approves. Keyed by camelCase patch key; the pending buffer
+// stores them under their DB column. `essentials`'s customEssentials sub-field
+// is handled specially (split from the enum parts). Inert when moderation is
+// off — these fields then write live like everything else — but the list stays
+// so re-enabling the switch restores the exact approval set with no rebuild.
 const VENDOR_APPROVAL_FIELDS = new Set([
   "name",
   "shortDescription",
@@ -574,7 +577,8 @@ const sameValue = (a: unknown, b: unknown) =>
 // Validate + write a partial profile update, enforcing the permission tiers:
 //   admin caller  -> every allowlisted field writes live.
 //   vendor caller -> admin-only fields dropped; approval fields buffered into
-//                    `pending_changes`; everything else writes live immediately.
+//                    `pending_changes` when moderation is ON, else written live;
+//                    everything else always writes live immediately.
 // Images are handled by the dedicated image actions below (also tier-aware).
 export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> {
   const own = await getMyOwnership();
@@ -623,13 +627,16 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
           cats[0] ?? null,
         ) as EssentialsData | null;
 
-        if (callerIsAdmin) {
-          live.essentials = coerced; // admin writes everything live, custom facts included
+        // Admin always writes everything live; so does a vendor when moderation is
+        // off (custom facts included, no pending split).
+        if (callerIsAdmin || !MODERATION_ENABLED) {
+          live.essentials = coerced;
           continue;
         }
 
-        // Vendor: enum/structured parts go live now; customEssentials drafts go to
-        // pending, preserving the custom facts already approved on the live row.
+        // Vendor, moderation ON: enum/structured parts go live now; customEssentials
+        // drafts go to pending, preserving the custom facts already approved on the
+        // live row.
         const cur = await currentEssentials(admin, own.supplierId);
         const liveEssentials = coerced ? { ...coerced } : null;
         if (liveEssentials) {
@@ -663,7 +670,7 @@ export async function updateMyProfile(patch: ProfilePatch): Promise<SaveResult> 
       }
       if (ADMIN_ONLY_FIELDS.has(key)) continue; // silently dropped for vendors
 
-      if (VENDOR_APPROVAL_FIELDS.has(key)) {
+      if (MODERATION_ENABLED && VENDOR_APPROVAL_FIELDS.has(key)) {
         // Buffer ONLY a real change.
         //
         // The wizard seeds every approval field on a step from the live value, so
@@ -762,10 +769,12 @@ export async function setPublished(published: boolean): Promise<SaveResult> {
   };
 }
 
-// Gallery images are APPROVAL-REQUIRED for vendors: their edits accumulate in
-// `pending_changes.images` (a draft, seeded from the live gallery) and replace
-// the live gallery only when an admin approves. Admins edit the live gallery
-// directly. Read both sets so we can route writes and clean storage safely.
+// Gallery images are APPROVAL-REQUIRED for vendors when moderation is ON: their
+// edits accumulate in `pending_changes.images` (a draft, seeded from the live
+// gallery) and replace the live gallery only when an admin approves. Admins —
+// and every caller when moderation is OFF (see `writesLive` in the actions
+// below) — edit the live gallery directly. Read both sets so we can route writes
+// and clean storage safely.
 async function readImageSets(
   admin: Admin,
   supplierId: string,
@@ -786,15 +795,16 @@ async function readImageSets(
   return { live, pending };
 }
 
-// Persist a gallery array to the right place: live for admins, pending for vendors.
+// Persist a gallery array to the right place: live when the caller writes live
+// (admin, or any caller while moderation is off), pending for a moderated vendor.
 async function saveImages(
   own: Ownership,
   images: string[],
-  callerIsAdmin: boolean,
+  writesLive: boolean,
 ): Promise<SaveResult> {
   const admin = getSupabaseAdmin();
   let update: Record<string, unknown>;
-  if (callerIsAdmin) {
+  if (writesLive) {
     update = { images };
   } else {
     const cur = await currentPending(admin, own.supplierId);
@@ -817,14 +827,15 @@ async function saveImages(
   };
 }
 
-// The gallery a caller is editing: the live set for admins; the draft (or a
-// seed-copy of live) for vendors.
+// The gallery a caller is editing: the live set when they write live (admin, or
+// any caller while moderation is off); the draft (or a seed-copy of live)
+// otherwise.
 function draftSet(
   live: string[],
   pending: string[] | null,
-  callerIsAdmin: boolean,
+  writesLive: boolean,
 ): string[] {
-  return callerIsAdmin ? live : (pending ?? live);
+  return writesLive ? live : (pending ?? live);
 }
 
 // Remove one gallery image from the caller's set; delete the storage object only
@@ -833,15 +844,16 @@ export async function deleteProfileImage(url: string): Promise<SaveResult> {
   const own = await getMyOwnership();
   if (!own) return { ok: false, error: "You do not have a linked profile." };
   const callerIsAdmin = await isAdmin();
+  const writesLive = callerIsAdmin || !MODERATION_ENABLED;
   const admin = getSupabaseAdmin();
   const { live, pending } = await readImageSets(admin, own.supplierId);
-  const target = draftSet(live, pending, callerIsAdmin);
+  const target = draftSet(live, pending, writesLive);
   if (!target.includes(url)) {
     const supplier = await getMySupplier();
     return supplier ? { ok: true, supplier } : { ok: false, error: GENERIC };
   }
   const next = target.filter((u) => u !== url);
-  const other = callerIsAdmin ? (pending ?? []) : live;
+  const other = writesLive ? (pending ?? []) : live;
 
   if (!other.includes(url) && !next.includes(url)) {
     // Best-effort storage cleanup within this supplier's own folder only.
@@ -854,7 +866,7 @@ export async function deleteProfileImage(url: string): Promise<SaveResult> {
       }
     }
   }
-  return saveImages(own, next, callerIsAdmin);
+  return saveImages(own, next, writesLive);
 }
 
 // Reorder the gallery. The new order must be a permutation of the caller's set.
@@ -862,14 +874,15 @@ export async function reorderProfileImages(urls: string[]): Promise<SaveResult> 
   const own = await getMyOwnership();
   if (!own) return { ok: false, error: "You do not have a linked profile." };
   const callerIsAdmin = await isAdmin();
+  const writesLive = callerIsAdmin || !MODERATION_ENABLED;
   const admin = getSupabaseAdmin();
   const { live, pending } = await readImageSets(admin, own.supplierId);
-  const target = draftSet(live, pending, callerIsAdmin);
+  const target = draftSet(live, pending, writesLive);
   const next = (Array.isArray(urls) ? urls : []).filter((u) =>
     target.includes(u),
   );
   for (const u of target) if (!next.includes(u)) next.push(u);
-  return saveImages(own, next, callerIsAdmin);
+  return saveImages(own, next, writesLive);
 }
 
 // A public storage URL is only acceptable if it points inside THIS supplier's own
@@ -891,9 +904,10 @@ export async function addProfileImageUrl(url: string): Promise<SaveResult> {
   }
 
   const callerIsAdmin = await isAdmin();
+  const writesLive = callerIsAdmin || !MODERATION_ENABLED;
   const admin = getSupabaseAdmin();
   const { live, pending } = await readImageSets(admin, own.supplierId);
-  const target = draftSet(live, pending, callerIsAdmin);
+  const target = draftSet(live, pending, writesLive);
   if (target.includes(url)) {
     const supplier = await getMySupplier();
     return supplier ? { ok: true, supplier } : { ok: false, error: GENERIC };
@@ -907,13 +921,14 @@ export async function addProfileImageUrl(url: string): Promise<SaveResult> {
       error: `You can have up to ${MAX_IMAGES} photos. Remove one to add another.`,
     };
   }
-  return saveImages(own, [...target, url], callerIsAdmin);
+  return saveImages(own, [...target, url], writesLive);
 }
 
 // Set the portrait from an already-uploaded public URL (the upload route calls
 // this for kind=portrait). Routes through updateMyProfile so `teamPhoto` keeps
-// its existing permission tier — a vendor's portrait lands in pending_changes for
-// review; an admin's writes live. No new permission surface.
+// its existing permission tier — a moderated vendor's portrait lands in
+// pending_changes for review; an admin (or any caller when moderation is off)
+// writes live. No new permission surface.
 export async function setTeamPhotoUrl(url: string): Promise<SaveResult> {
   const own = await getMyOwnership();
   if (!own) return { ok: false, error: "You do not have a linked profile." };
