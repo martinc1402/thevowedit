@@ -16,6 +16,8 @@ import {
   UploadSimple,
   CircleNotch,
   ArrowSquareOut,
+  Eye,
+  EyeSlash,
 } from "@phosphor-icons/react";
 import type { Supplier } from "@/lib/suppliers";
 import { categories as CATEGORY_LIST } from "@/lib/content";
@@ -343,6 +345,7 @@ export function ProfileWizard({
     supplier.pendingChanges?.images ?? supplier.images ?? [],
   );
   const [published, setPublishedState] = useState<boolean>(supplier.published);
+  const [publishing, setPublishing] = useState(false);
   const [pending, setPending] = useState<Set<string>>(() =>
     pendingFields(supplier),
   );
@@ -370,6 +373,18 @@ export function ProfileWizard({
     setForm((f) => ({ ...f, [key]: value }));
     setSavedStep(null);
     setDirty(true);
+  }
+
+  // Flip public visibility instantly — no save step. Shared by the header toggle
+  // and the step-5 panel so they stay single-sourced. setPublished revalidates the
+  // public /vendors/<slug> page, so hidden⇄live takes effect immediately.
+  async function togglePublished(next: boolean) {
+    setPublishing(true);
+    setError("");
+    const result = await setPublished(next);
+    setPublishing(false);
+    if (result.ok) setPublishedState(next);
+    else setError(result.error);
   }
 
   // Adopt what the server ACTUALLY stored. It normalizes hard (0917 123 4567 ->
@@ -525,7 +540,8 @@ export function ProfileWizard({
 
   return (
     <div>
-      <div className="mb-8">
+      <div className="mb-8 flex flex-wrap items-start justify-between gap-4">
+        <div>
         <h1 className="font-serif text-3xl font-medium text-ink sm:text-4xl">
           {form.name || "Your profile"}
         </h1>
@@ -540,6 +556,17 @@ export function ProfileWizard({
             </span>
           )}
         </p>
+        </div>
+        <PublishToggle
+          published={published}
+          reason={publishBlockReason(
+            published,
+            images.length,
+            form.description.trim().length > 0,
+          )}
+          busy={publishing}
+          onToggle={togglePublished}
+        />
       </div>
 
       <ProfileStrength result={strength} onJump={goToStep} />
@@ -1093,8 +1120,8 @@ export function ProfileWizard({
             published={published}
             imageCount={images.length}
             hasDescription={form.description.trim().length > 0}
-            onError={setError}
-            onPublished={setPublishedState}
+            busy={publishing}
+            onToggle={togglePublished}
           />
         )}
 
@@ -1731,35 +1758,12 @@ function KVEditor({
 // ---------------------------------------------------------------------
 // Publish step.
 // ---------------------------------------------------------------------
-function PublishStep({
-  slug,
-  published,
-  imageCount,
-  hasDescription,
-  onError,
-  onPublished,
-}: {
-  slug: string;
-  published: boolean;
-  imageCount: number;
-  hasDescription: boolean;
-  onError: (msg: string) => void;
-  onPublished: (v: boolean) => void;
-}) {
-  const [busy, setBusy] = useState(false);
-
-  async function toggle(next: boolean) {
-    setBusy(true);
-    onError("");
-    const result = await setPublished(next);
-    setBusy(false);
-    if (result.ok) onPublished(next);
-    else onError(result.error);
-  }
-
-  // `todo` is the imperative form used when the item is what's blocking publish —
-  // the label doesn't survive being dropped into a sentence.
-  const checklist = [
+// The publish-readiness checklist. `todo` is the imperative form used when the item
+// is what's blocking publish (the label doesn't survive being dropped into a
+// sentence). Shared by the header toggle and the step-5 panel so the two can never
+// disagree about whether the profile is allowed to go live.
+function publishChecklist(imageCount: number, hasDescription: boolean) {
+  return [
     {
       ok: imageCount > 0,
       label: "At least one photo uploaded",
@@ -1771,9 +1775,95 @@ function PublishStep({
       todo: "Write your About story to publish.",
     },
   ];
-  // The checklist used to be decorative: you could publish an empty profile. It
-  // now blocks the PUBLISH direction only, never the unpublish one, so a vendor
-  // is never trapped on a live page.
+}
+
+// The reason string shown when the PUBLISH direction is blocked, or null when it is
+// allowed. Blocks the publish direction only, never unpublish, so a vendor is never
+// trapped on a live page.
+function publishBlockReason(
+  published: boolean,
+  imageCount: number,
+  hasDescription: boolean,
+): string | null {
+  if (published) return null;
+  const missing = publishChecklist(imageCount, hasDescription).filter(
+    (c) => !c.ok,
+  );
+  if (missing.length === 0) return null;
+  return missing.length === 1
+    ? missing[0].todo
+    : "Finish the checklist to publish.";
+}
+
+// Compact Live/Hidden switch shown at the top-right of every editor step. Flips the
+// profile's public visibility instantly (setPublished writes immediately). The
+// PUBLISH direction is gated by the readiness checklist; unpublish is always allowed.
+function PublishToggle({
+  published,
+  reason,
+  busy,
+  onToggle,
+}: {
+  published: boolean;
+  reason: string | null;
+  busy: boolean;
+  onToggle: (next: boolean) => void;
+}) {
+  const blocked = !published && reason != null;
+  return (
+    <div className="flex flex-col items-end gap-1">
+      <button
+        type="button"
+        onClick={() => onToggle(!published)}
+        disabled={busy || blocked}
+        aria-pressed={published}
+        title={
+          blocked
+            ? (reason ?? "Finish the checklist to publish.")
+            : published
+              ? "Visible to couples. Click to hide."
+              : "Hidden from couples. Click to make live."
+        }
+        className={`inline-flex items-center gap-1.5 rounded-full border px-3.5 py-1.5 text-sm font-medium transition-colors active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 ${
+          published
+            ? "border-accent/30 bg-accent/5 text-ink hover:bg-accent/10"
+            : "border-line bg-surface-2 text-muted hover:text-ink"
+        }`}
+      >
+        {busy ? (
+          <CircleNotch size={14} className="animate-spin" />
+        ) : published ? (
+          <Eye size={14} weight="bold" className="text-accent-fg" />
+        ) : (
+          <EyeSlash size={14} />
+        )}
+        {published ? "Live" : "Hidden"}
+      </button>
+      {blocked && reason && (
+        <span className="max-w-[15rem] text-right text-xs text-muted">
+          {reason}
+        </span>
+      )}
+    </div>
+  );
+}
+
+function PublishStep({
+  slug,
+  published,
+  imageCount,
+  hasDescription,
+  busy,
+  onToggle,
+}: {
+  slug: string;
+  published: boolean;
+  imageCount: number;
+  hasDescription: boolean;
+  busy: boolean;
+  onToggle: (next: boolean) => void;
+}) {
+  const checklist = publishChecklist(imageCount, hasDescription);
   const missing = checklist.filter((c) => !c.ok);
   const blocked = !published && missing.length > 0;
 
@@ -1825,7 +1915,7 @@ function PublishStep({
       <div className="flex flex-wrap items-center gap-3">
         <button
           type="button"
-          onClick={() => toggle(!published)}
+          onClick={() => onToggle(!published)}
           disabled={busy || blocked}
           className={`inline-flex items-center gap-2 rounded-xl px-6 py-3 text-sm font-medium transition-colors active:scale-[0.98] disabled:pointer-events-none disabled:opacity-60 ${
             published

@@ -1,9 +1,12 @@
 import type { Metadata } from "next";
+import Link from "next/link";
 import { notFound } from "next/navigation";
+import { EyeSlash } from "@phosphor-icons/react/dist/ssr";
 import { SiteNav } from "@/components/site-nav";
 import { SiteFooter } from "@/components/site-footer";
 import { Reveal } from "@/components/reveal";
 import { getSupplierBySlug, formatPrice } from "@/lib/suppliers";
+import { getSupplierBySlugForViewer } from "@/lib/supplier-access";
 import { isSupplierClaimed } from "@/lib/claim-status";
 import {
   buildContactChannels,
@@ -35,8 +38,15 @@ type Params = { params: Promise<{ slug: string }> };
 
 export async function generateMetadata({ params }: Params): Promise<Metadata> {
   const { slug } = await params;
-  const s = await getSupplierBySlug(slug);
-  if (!s) return { title: "Supplier not found" };
+  let s = await getSupplierBySlug(slug);
+  // Hidden profile: only surfaces for the owner/admin, and must never be indexed.
+  let hidden = false;
+  if (!s) {
+    const preview = await getSupplierBySlugForViewer(slug);
+    if (!preview) return { title: "Supplier not found" };
+    s = preview.supplier;
+    hidden = preview.notLive;
+  }
 
   const cat = s.categories[0] ? labelFor(s.categories[0]) : "Wedding supplier";
   const title = `${s.name} - ${cat} in ${s.location}`;
@@ -47,6 +57,7 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
   return {
     title,
     description,
+    ...(hidden ? { robots: { index: false, follow: false } } : {}),
     alternates: { canonical: `/vendors/${s.slug}` },
     openGraph: {
       title,
@@ -60,8 +71,18 @@ export async function generateMetadata({ params }: Params): Promise<Metadata> {
 
 export default async function SupplierPage({ params }: Params) {
   const { slug } = await params;
-  const supplier = await getSupplierBySlug(slug);
-  if (!supplier) notFound();
+
+  // Published pages read via the anon client (no cookies) so they stay cacheable.
+  // Only when that misses do we check whether the viewer is the owner or an admin
+  // allowed to preview a hidden profile; public visitors fall through to notFound().
+  let supplier = await getSupplierBySlug(slug);
+  let notLive = false;
+  if (!supplier) {
+    const preview = await getSupplierBySlugForViewer(slug);
+    if (!preview) notFound();
+    supplier = preview.supplier;
+    notLive = preview.notLive;
+  }
 
   const s = supplier;
   const claimed = await isSupplierClaimed(s.id);
@@ -93,6 +114,25 @@ export default async function SupplierPage({ params }: Params) {
     <>
       <SiteNav />
       <main className="theme-light bg-bg text-ink">
+        {notLive && (
+          <div className="border-b border-accent/30 bg-accent/5">
+            <div className="mx-auto flex max-w-[1120px] flex-wrap items-center gap-x-2.5 gap-y-1 px-4 py-3 text-sm sm:px-6">
+              <EyeSlash size={16} weight="bold" className="text-accent-fg" />
+              <span className="font-medium text-ink">
+                This profile is hidden.
+              </span>
+              <span className="text-muted">
+                Only you can see it. It is not live to couples.
+              </span>
+              <Link
+                href="/dashboard"
+                className="ml-auto text-accent-fg underline underline-offset-2 transition-colors hover:text-ink"
+              >
+                Manage in dashboard
+              </Link>
+            </div>
+          </div>
+        )}
         <div className="mx-auto max-w-[1120px] px-4 pb-28 pt-8 sm:px-6 sm:pb-20 sm:pt-12">
           {/* Hero: quiet header, gallery as the focal point, one primary
               direct-contact CTA. */}
