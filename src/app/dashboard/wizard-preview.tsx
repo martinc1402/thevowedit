@@ -138,6 +138,7 @@ function body(
     });
     const primary = pickPrimaryChannel(channels, d.preferredChannel || null);
     const presence = buildPresenceLinks({
+      instagram: orNull(d.instagram),
       facebook: orNull(d.facebook),
       website: orNull(d.website),
     });

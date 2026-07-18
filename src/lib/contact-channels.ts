@@ -120,7 +120,7 @@ export function buildContactChannels(s: ContactFields): ContactChannel[] {
 // "Presence" links are browsing destinations ("see more of me"), distinct from
 // the contact actions above — they take you somewhere to look around rather than
 // message the vendor. Rendered as a quiet, demoted tier in the contact card.
-export type PresenceKey = "facebook" | "website";
+export type PresenceKey = "instagram" | "facebook" | "website";
 export type PresenceLink = { key: PresenceKey; label: string; href: string };
 
 // A URL for an href — prepend https:// when the vendor omitted the protocol.
@@ -136,15 +136,24 @@ const hostLabel = (v: string) => {
 };
 
 export type PresenceFields = {
+  instagram: string | null;
   facebook: string | null;
   website: string | null;
 };
 
-// The Facebook Page derives from the same handle as Messenger (m.me vs
-// facebook.com — same identity, different intent). Website shows a clean host
-// label. Only the fields the vendor provided are returned, in a fixed order.
+// "See more of me" destinations, distinct from the contact actions. Instagram and
+// the Facebook Page point at the same profiles the contact tier can message (a
+// browse link vs a message link — same identity, different intent); website shows a
+// clean host label. Only the fields the vendor provided are returned, in a fixed
+// (Instagram-first) order.
 export function buildPresenceLinks(s: PresenceFields): PresenceLink[] {
   const out: PresenceLink[] = [];
+  if (s.instagram)
+    out.push({
+      key: "instagram",
+      label: "Instagram",
+      href: `https://instagram.com/${handle(s.instagram)}`,
+    });
   if (s.facebook)
     out.push({
       key: "facebook",
