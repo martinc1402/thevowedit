@@ -10,6 +10,7 @@ import {
   TAXONOMY_COLUMNS,
   ENTOURAGE_COLUMNS,
   IMAGE_FOCUS_COLUMNS,
+  RESPONSE_TIME_COLUMNS,
   mapSupplierRow,
   type Supplier,
 } from "@/lib/suppliers";
@@ -29,7 +30,7 @@ import { INCLUSION_KEYS } from "@/lib/package-inclusions";
 // Full column projection for the authenticated dashboard reads — mirrors
 // getSupplierBySlug so the wizard loads the newer contact-channel + essentials
 // columns (which live outside the base SUPPLIER_COLUMNS list), plus drafts.
-const DASHBOARD_COLUMNS = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, ${IMAGE_FOCUS_COLUMNS}, pending_changes`;
+const DASHBOARD_COLUMNS = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, ${IMAGE_FOCUS_COLUMNS}, ${RESPONSE_TIME_COLUMNS}, pending_changes`;
 
 // The same projection minus the newest columns. Dashboard reads are resilient the
 // way the public read already is: if a migration has not been applied yet, selecting
@@ -258,6 +259,18 @@ const enumArray = (v: unknown, set: Set<string>, max: number) =>
 
 const coercePriceUnit = (v: unknown) => inSet(v, VOCAB_KEYS.priceUnit);
 
+// Reply-time: a positive int clamped to 1..99 (blank/invalid -> null, which hides
+// the trust line), and a unit restricted to the three allowed keys (default hours).
+const coerceResponseValue = (v: unknown) => {
+  const n = intOrNull(v);
+  return n != null && n >= 1 ? Math.min(99, n) : null;
+};
+const RESPONSE_TIME_UNITS = ["hours", "days", "weeks"] as const;
+const coerceResponseUnit = (v: unknown) =>
+  (RESPONSE_TIME_UNITS as readonly string[]).includes(String(v))
+    ? String(v)
+    : "hours";
+
 // Deep-validate the essentials jsonb: enums against vocab, numbers/bools coerced,
 // unknown keys dropped, custom facts capped at 3. Built as a plain object then
 // cast (every value has been validated).
@@ -430,7 +443,8 @@ const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   currency: ["currency", (v) => cap(v, 8) || "PHP"],
   pricingNotes: ["pricing_notes", (v) => capOrNull(v, 2000)],
   packages: ["packages", coercePackages],
-  responseTimeNote: ["response_time_note", (v) => capOrNull(v, 200)],
+  responseTimeValue: ["response_time_value", coerceResponseValue],
+  responseTimeUnit: ["response_time_unit", coerceResponseUnit],
   establishedYear: ["established_year", intOrNull],
   weddingsCount: ["weddings_count", intOrNull],
   instagram: ["instagram", coerceHandle],

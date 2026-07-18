@@ -94,7 +94,10 @@ export type Supplier = {
   reviewCount: number;
   worksWithOverseasCouples: boolean;
   travelFeeNote: string | null;
-  responseTimeNote: string | null;
+  // Structured reply-time for the "Usually replies within {n} {unit}" trust line.
+  // Value null = the line is hidden. Unit is 'hours' | 'days' | 'weeks'.
+  responseTimeValue: number | null;
+  responseTimeUnit: string | null;
   bookingTerms: string | null;
   availabilityNote: string | null;
   establishedYear: number | null;
@@ -163,7 +166,6 @@ export const SUPPLIER_COLUMNS = [
   "review_count",
   "works_with_overseas_couples",
   "travel_fee_note",
-  "response_time_note",
   "booking_terms",
   "availability_note",
   "established_year",
@@ -206,6 +208,10 @@ export const ENTOURAGE_COLUMNS = "entourage_rate_min, entourage_rate_max";
 // read degrades gracefully if the migration has not been applied yet.
 export const IMAGE_FOCUS_COLUMNS = "image_focus";
 
+// Structured reply-time (supabase/add-response-time.sql). Optional group, same
+// degrade-gracefully reason as the groups above.
+export const RESPONSE_TIME_COLUMNS = "response_time_value, response_time_unit";
+
 // TIERED projections, newest first. A missing column fails the WHOLE query, so the
 // retry must drop ONE migration's columns at a time.
 //
@@ -215,6 +221,7 @@ export const IMAGE_FOCUS_COLUMNS = "image_focus";
 // contact channels) with it — the profile rendered with no Specialties row and the
 // browse filters matched nothing. Degrade one step at a time instead.
 const PROJECTIONS = [
+  `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, ${IMAGE_FOCUS_COLUMNS}, ${RESPONSE_TIME_COLUMNS}`,
   `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, ${IMAGE_FOCUS_COLUMNS}`,
   `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}`,
   `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}`,
@@ -271,7 +278,8 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
     reviewCount: (r.review_count as number) ?? 0,
     worksWithOverseasCouples: Boolean(r.works_with_overseas_couples),
     travelFeeNote: (r.travel_fee_note as string) ?? null,
-    responseTimeNote: (r.response_time_note as string) ?? null,
+    responseTimeValue: (r.response_time_value as number) ?? null,
+    responseTimeUnit: (r.response_time_unit as string) ?? null,
     bookingTerms: (r.booking_terms as string) ?? null,
     availabilityNote: (r.availability_note as string) ?? null,
     establishedYear: (r.established_year as number) ?? null,
