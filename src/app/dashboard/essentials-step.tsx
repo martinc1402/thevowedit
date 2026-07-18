@@ -86,9 +86,14 @@ function SpecField({
   );
 
   if (spec.kind === "bool") {
+    // Fall back to the spec default when the value is unset, so a default-checked box
+    // (e.g. groupIncludesBride) matches the public copy without a stored value.
     return (
       <>
-        <CheckboxRow checked={value === true} onChange={onChange}>
+        <CheckboxRow
+          checked={(value ?? spec.default) === true}
+          onChange={onChange}
+        >
           {spec.label}
         </CheckboxRow>
         {help}
