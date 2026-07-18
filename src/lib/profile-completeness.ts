@@ -84,7 +84,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "contact",
     label: "Add a way for couples to reach you",
     why: "Every button on your profile opens a direct message to you. With none of these, a couple who wants to book you has nowhere to go.",
-    step: 0,
+    step: 1,
     weight: W.critical,
     progress: input.contacts.some(filled) ? 1 : 0,
   });
@@ -94,7 +94,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "priceMin",
     label: "Publish your starting price",
     why: "Couples filter by budget. With no price you are left out of every budget filter — and “Price on enquiry” is what they scroll past.",
-    step: 1,
+    step: 2,
     weight: W.critical,
     progress: filled(input.priceMin) ? 1 : 0,
   });
@@ -104,7 +104,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
       key: "entourageRate",
       label: "Add your per-face entourage rate",
       why: "Eight faces can cost a couple more than the bride does. It is the number they actually budget on, and almost no one publishes it — which is exactly why publishing it wins you the enquiry.",
-      step: 1,
+      step: 2,
       weight: W.high,
       progress: filled(input.entourageRateMin) ? 1 : 0,
     });
@@ -114,7 +114,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "coverageAreas",
     label: "Say which areas you cover",
     why: "Coverage areas are what the location filter searches. With none set, a couple browsing your own area will never see you.",
-    step: 1,
+    step: 2,
     weight: W.high,
     progress: e.coverageAreas.length > 0 ? 1 : 0,
   });
@@ -123,7 +123,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "bookingStatus",
     label: "Set your booking status",
     why: "Couples filter for who is still open for their date. An out-of-date status costs you enquiries you would have taken.",
-    step: 1,
+    step: 2,
     weight: W.low,
     progress: filled(e.bookingStatus) ? 1 : 0,
   });
@@ -132,7 +132,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "paymentMethods",
     label: "List how you take payment",
     why: "GCash, bank transfer or cash — one of the last questions before a couple commits. Answer it before they have to ask.",
-    step: 1,
+    step: 2,
     weight: W.low,
     progress: e.paymentMethods.length > 0 ? 1 : 0,
   });
@@ -141,7 +141,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "depositPercent",
     label: "State your deposit",
     why: "What it costs to hold the date is the question that turns an enquiry into a booking.",
-    step: 1,
+    step: 2,
     weight: W.low,
     progress: filled(e.depositPercent) ? 1 : 0,
   });
@@ -153,7 +153,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
       key: "categoryFields",
       label: `Fill in your ${set.title.toLowerCase()}`,
       why: "These are the specifics couples compare you against, and several of them power the filters. Blanks read as “doesn’t offer it”.",
-      step: 1,
+      step: 2,
       weight: W.high,
       progress: ratio(answered, total),
       detail: `${answered} of ${total} answered`,
@@ -165,7 +165,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "services",
     label: "Tick the services you offer",
     why: "Couples scan for the one thing they came for — hair as well as makeup, a prenup shoot, a second look.",
-    step: 2,
+    step: 3,
     weight: W.medium,
     progress: input.services.length > 0 ? 1 : 0,
   });
@@ -179,7 +179,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
         ? "Add a package with a price"
         : "Put a real price on every package",
     why: "“Price on enquiry” is what every other directory shows. A number is the reason a couple messages you instead of scrolling on.",
-    step: 2,
+    step: 3,
     weight: W.high,
     progress: named.length === 0 ? 0 : priced / named.length,
     detail:
@@ -197,7 +197,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
         ? "Add your first photo"
         : `Build your gallery out to ${TARGET_PHOTOS} photos`,
     why: "Photos are the first thing a couple looks at and often the only thing. A profile with no gallery does not get read, it gets closed.",
-    step: 3,
+    step: 0,
     weight: W.critical,
     progress: ratio(n, TARGET_PHOTOS),
     detail: `${n} of ${TARGET_PHOTOS} photos`,
@@ -207,7 +207,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "description",
     label: "Write your About story",
     why: "The couples who message you have read it. It is where they decide you are the person they want beside them at 4 AM.",
-    step: 3,
+    step: 0,
     weight: W.high,
     progress: filled(input.description) ? 1 : 0,
   });
@@ -216,7 +216,7 @@ export function buildChecks(input: CompletenessInput): Check[] {
     key: "shortDescription",
     label: "Write your tagline",
     why: "One line, and it is the only thing shown on your card in the browse grid.",
-    step: 3,
+    step: 0,
     weight: W.medium,
     progress: filled(input.shortDescription) ? 1 : 0,
   });
