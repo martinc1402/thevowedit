@@ -21,6 +21,7 @@ export function SupplierGallery({
 }) {
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+  const [gridOpen, setGridOpen] = useState(false); // "view all photos" grid
 
   // object-position for a cover-cropped photo; undefined keeps the CSS default centre.
   const objPos = (url: string): string | undefined => {
@@ -37,9 +38,15 @@ export function SupplierGallery({
   };
 
   useEffect(() => {
-    if (!lightbox) return;
+    if (!lightbox && !gridOpen) return;
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === "Escape") setLightbox(false);
+      // Escape peels one layer: the lightbox first (it sits above the grid), then
+      // the grid. Arrows only page while the single-photo lightbox is open.
+      if (e.key === "Escape") {
+        if (lightbox) setLightbox(false);
+        else setGridOpen(false);
+      }
+      if (!lightbox) return;
       if (e.key === "ArrowRight") go(1);
       if (e.key === "ArrowLeft") go(-1);
     };
@@ -50,7 +57,7 @@ export function SupplierGallery({
       document.body.style.overflow = "";
     };
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [lightbox, count]);
+  }, [lightbox, gridOpen, count]);
 
   if (count === 0) {
     return (
@@ -94,15 +101,19 @@ export function SupplierGallery({
           />
           <Tile
             src={images[2]}
-            alt={`${name} - photo 3 of ${count}`}
-            onClick={() => open(2)}
+            alt={
+              count > 3
+                ? `View all ${count} photos`
+                : `${name} - photo 3 of ${count}`
+            }
+            onClick={() => (count > 3 ? setGridOpen(true) : open(2))}
             sizes="(max-width: 768px) 0px, 320px"
             objectPosition={objPos(images[2])}
           >
             {count > 3 && (
               <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
                 <Images size={14} weight="fill" />
-                {count - 3} more
+                View all {count} photos
               </span>
             )}
           </Tile>
@@ -146,6 +157,55 @@ export function SupplierGallery({
             className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           />
         </button>
+      )}
+
+      {/* "View all photos" grid: a full-screen wall of every photo. Clicking one
+          opens the single-photo lightbox (z-[80]) above this grid (z-[70]), so
+          closing the lightbox returns here and closing the grid returns to the page. */}
+      {gridOpen && (
+        <div
+          className="theme-light fixed inset-0 z-[70] overflow-y-auto bg-bg"
+          role="dialog"
+          aria-modal="true"
+          aria-label={`All ${count} photos of ${name}`}
+        >
+          <div className="sticky top-0 z-10 flex items-center justify-between border-b border-line bg-bg/90 px-4 py-3 backdrop-blur-md sm:px-6">
+            <p className="text-sm font-medium text-ink">
+              All photos <span className="text-muted">&middot; {count}</span>
+            </p>
+            <button
+              type="button"
+              onClick={() => setGridOpen(false)}
+              aria-label="Close gallery"
+              className="inline-flex h-10 w-10 items-center justify-center rounded-full text-ink transition-colors hover:bg-surface-2"
+            >
+              <X size={20} />
+            </button>
+          </div>
+          <div className="mx-auto max-w-[1120px] px-4 py-6 sm:px-6 sm:py-8">
+            <div className="grid grid-cols-1 gap-3 sm:grid-cols-2 lg:grid-cols-3">
+              {images.map((url, i) => (
+                <button
+                  key={url}
+                  type="button"
+                  onClick={() => open(i)}
+                  aria-label={`${name} - photo ${i + 1} of ${count}`}
+                  className="group relative aspect-[4/3] overflow-hidden rounded-xl bg-surface-2"
+                >
+                  <Image
+                    src={url}
+                    alt=""
+                    fill
+                    loading="lazy"
+                    sizes="(max-width: 640px) 100vw, (max-width: 1024px) 50vw, 360px"
+                    style={objPos(url) ? { objectPosition: objPos(url) } : undefined}
+                    className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
+                  />
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Lightbox */}
