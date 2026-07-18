@@ -61,6 +61,8 @@ type PreviewData = {
   phone: string;
   email: string;
   preferredChannel: string;
+  responseTimeValue: string;
+  responseTimeUnit: string;
   faq: { a: string; b: string }[];
 };
 
@@ -145,6 +147,8 @@ function body(
           {...price}
           category={d.categories[0] ?? null}
           verified={editor.verified}
+          responseTimeValue={numOrNull(d.responseTimeValue)}
+          responseTimeUnit={d.responseTimeUnit || null}
           channels={channels}
           primary={primary}
           presence={presence}

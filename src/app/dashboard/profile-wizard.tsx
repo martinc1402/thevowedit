@@ -1224,6 +1224,8 @@ export function ProfileWizard({
             phone: form.phone,
             email: form.email,
             preferredChannel: form.preferredChannel,
+            responseTimeValue: form.responseTimeValue,
+            responseTimeUnit: form.responseTimeUnit,
             faq: form.faq,
           }}
           editor={{
