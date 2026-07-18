@@ -80,6 +80,7 @@ export default async function PreviewPage({ params }: Params) {
             currency={applied.currency}
             priceUnit={applied.priceUnit}
             category={applied.categories[0] ?? null}
+            categories={applied.categories}
             essentials={applied.essentials}
           />
           <SupplierOfferings

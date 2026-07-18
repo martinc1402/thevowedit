@@ -17,6 +17,7 @@ export function SupplierEssentials({
   currency,
   priceUnit,
   category,
+  categories,
   essentials,
 }: {
   priceMin: number | null;
@@ -27,6 +28,7 @@ export function SupplierEssentials({
   currency: string;
   priceUnit: string | null;
   category: string | null;
+  categories: string[];
   essentials: EssentialsData | null;
 }) {
   const rows = buildEssentialsRows({
@@ -38,6 +40,7 @@ export function SupplierEssentials({
     currency,
     priceUnit,
     category,
+    categories,
     essentials,
   });
 
