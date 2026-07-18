@@ -51,7 +51,6 @@ export type PendingChanges = {
   description?: string | null;
   bio?: string | null;
   team_photo?: string | null;
-  video_url?: string | null;
   faq?: SupplierFaq[];
   images?: string[];
   essentials_custom?: { label: string; value: string }[];
@@ -127,7 +126,6 @@ export type Supplier = {
   imageFocus: Record<string, [number, number]>;
   packages: SupplierPackage[];
   reviews: SupplierReview[];
-  videoUrl: string | null;
   teamPhoto: string | null;
   location: string;
   published: boolean;
@@ -180,7 +178,6 @@ export const SUPPLIER_COLUMNS = [
   "images",
   "packages",
   "reviews",
-  "video_url",
   "team_photo",
   "location",
   "published",
@@ -305,7 +302,6 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
         : {},
     packages: Array.isArray(r.packages) ? (r.packages as SupplierPackage[]) : [],
     reviews: Array.isArray(r.reviews) ? (r.reviews as SupplierReview[]) : [],
-    videoUrl: (r.video_url as string) ?? null,
     teamPhoto: (r.team_photo as string) ?? null,
     location: (r.location as string) ?? "Cebu",
     published: Boolean(r.published),
