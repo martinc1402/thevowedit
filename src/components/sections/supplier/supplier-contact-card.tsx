@@ -35,6 +35,7 @@ const ICONS: Record<ChannelKey, Icon> = {
 };
 
 const PRESENCE_ICONS: Record<PresenceKey, Icon> = {
+  instagram: InstagramLogo,
   facebook: FacebookLogo,
   website: Globe,
 };
