@@ -48,7 +48,7 @@ export type FieldSpec = {
   | { kind: "number"; max: number }
   | { kind: "time" } // "HH:MM", 24h
   | { kind: "text"; maxLength: number }
-  | { kind: "bool" }
+  | { kind: "bool"; default?: boolean } // checkbox state when the value is unset
 );
 
 export type CategoryFieldSet = {
@@ -67,7 +67,7 @@ const MAKEUP: CategoryFieldSet = {
     { kind: "select", key: "trialStatus", label: "Trial makeup", vocab: TRIAL_STATUSES, half: true },
     { kind: "text", key: "trialNote", label: "Trial note", hint: "(optional)", maxLength: 120, showIf: { key: "trialStatus", truthy: true } },
     { kind: "number", key: "groupMaxFaces", label: "Group capacity", max: 60, half: true, help: "Whether you work solo or with a team is set by the Team field above." },
-    { kind: "bool", key: "groupIncludesBride", label: "Count includes the bride", half: true },
+    { kind: "bool", key: "groupIncludesBride", label: "Show “Bride +” before the face count", default: true, half: true, showIf: { key: "groupMaxFaces", truthy: true }, help: "Ticked shows “Bride + up to N faces”; unticked shows “Up to N faces”." },
     { kind: "select", key: "retouchTier", label: "Retouch", vocab: RETOUCH_TIERS },
     { kind: "number", key: "retouchHours", label: "Standby hours", hint: "(optional)", max: 24, half: true, showIf: { key: "retouchTier", equals: "unlimited" } },
     { kind: "text", key: "retouchNote", label: "Retouch note", hint: "(optional)", maxLength: 120, showIf: { key: "retouchTier", truthy: true } },
