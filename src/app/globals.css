@@ -56,6 +56,13 @@
     background-color: var(--accent);
     color: var(--accent-ink);
   }
+  /* Tailwind v4 Preflight sets buttons to `cursor: default`; restore the v3 pointer
+     for enabled clickable controls (dashboard editor, CTAs, etc.). Disabled buttons
+     keep the default cursor since they aren't clickable. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
+  }
 }
 
 @media (prefers-reduced-motion: reduce) {
