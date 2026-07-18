@@ -280,10 +280,10 @@ function buildPatch(form: FormState, keys: (keyof FormState)[]): ProfilePatch {
 
 // Steps mirror the public profile sections. (5 = Publish self-saves.)
 const STEPS = [
+  "About & photos",
   "Contact",
   "The essentials",
   "Services & packages",
-  "About & photos",
   "In their words",
   "Review & submit",
 ] as const;
@@ -291,13 +291,13 @@ const PUBLISH_STEP = 5;
 
 // Steps whose fields are reviewed by an admin before going live (approval tier)
 // when moderation is ON. With moderation OFF (MODERATION_ENABLED) they publish
-// immediately like every other step.
-const APPROVAL_STEPS = new Set([3, 4]);
+// immediately like every other step. (About & photos = 0, In their words = 4.)
+const APPROVAL_STEPS = new Set([0, 4]);
 
 // Approval-tier form fields that live on each step (drives the "in review" pill).
 const STEP_PENDING_FIELDS: Record<number, string[]> = {
-  1: ["customEssentials"],
-  3: ["name", "shortDescription", "description", "bio", "teamPhoto", "images"],
+  0: ["name", "shortDescription", "description", "bio", "teamPhoto", "images"],
+  2: ["customEssentials"],
   4: ["faq"],
 };
 
@@ -305,6 +305,15 @@ const STEP_PENDING_FIELDS: Record<number, string[]> = {
 // self-saves its gallery via PhotosStep, but saves its text fields here.)
 const STEP_KEYS: Record<number, (keyof FormState)[]> = {
   0: [
+    "name",
+    "categories",
+    "shortDescription",
+    "description",
+    "bio",
+    "teamPhoto",
+    "videoUrl",
+  ],
+  1: [
     "instagram",
     "facebook",
     "website",
@@ -316,7 +325,7 @@ const STEP_KEYS: Record<number, (keyof FormState)[]> = {
     "responseTimeValue",
     "responseTimeUnit",
   ],
-  1: [
+  2: [
     "styleTags",
     "establishedYear",
     "weddingsCount",
@@ -329,16 +338,7 @@ const STEP_KEYS: Record<number, (keyof FormState)[]> = {
     "priceUnit",
     "essentials",
   ],
-  2: ["services", "packages", "pricingNotes"],
-  3: [
-    "name",
-    "categories",
-    "shortDescription",
-    "description",
-    "bio",
-    "teamPhoto",
-    "videoUrl",
-  ],
+  3: ["services", "packages", "pricingNotes"],
   4: ["faq"],
 };
 
@@ -437,7 +437,8 @@ export function ProfileWizard({
   async function saveStep(): Promise<boolean> {
     const keys = STEP_KEYS[step];
     if (!keys) return true;
-    if (step === 0) {
+    if (step === 1) {
+      // Contact step: validate phone numbers before saving.
       const badPhone = [form.phone, form.viber, form.whatsapp].some(
         (v) => v.trim() !== "" && !normalizePhonePH(v).ok,
       );
@@ -642,7 +643,7 @@ export function ProfileWizard({
               Everything on this step is public and goes live the moment you save.
             </p>
           )}
-        {step === 0 && (
+        {step === 1 && (
           <div className="grid gap-5">
             <div className="grid gap-4 sm:grid-cols-2">
               <Field
@@ -750,7 +751,7 @@ export function ProfileWizard({
           </div>
         )}
 
-        {step === 1 && (
+        {step === 2 && (
           <div className="grid gap-8">
             <div className="grid gap-5">
               <div className="grid gap-4 sm:grid-cols-3">
@@ -883,7 +884,7 @@ export function ProfileWizard({
           </div>
         )}
 
-        {step === 2 && (
+        {step === 3 && (
           <div className="grid gap-6">
             <div>
               <span className={labelClass}>Services offered</span>
@@ -1015,7 +1016,7 @@ export function ProfileWizard({
           </div>
         )}
 
-        {step === 3 && (
+        {step === 0 && (
           <div className="grid gap-5">
             <Field label="Business name">
               <input

@@ -97,12 +97,12 @@ export function StepPreview({
       <div className="theme-light rounded-xl border border-line bg-bg p-5 text-ink sm:p-6">
         {body(step, data, images, editor)}
       </div>
-      {step === 0 && (
+      {step === 1 && (
         <p className="mt-2 text-xs italic text-muted">
           This card sits beside your profile and follows couples as they scroll.
         </p>
       )}
-      {step === 1 && (
+      {step === 2 && (
         <p className="mt-2 text-xs italic text-muted">
           Rows appear only when filled in.
         </p>
@@ -127,7 +127,7 @@ function body(
   };
 
   // Contact — the real sticky contact card, derived exactly like the public page.
-  if (step === 0) {
+  if (step === 1) {
     const channels = buildContactChannels({
       instagram: orNull(d.instagram),
       facebook: orNull(d.facebook),
@@ -160,7 +160,7 @@ function body(
   // The essentials. Style tags are edited on this step but render inside the
   // About section on the public page, so preview them here too — otherwise the
   // vendor edits them and sees nothing change.
-  if (step === 1) {
+  if (step === 2) {
     return (
       <>
         <SupplierEssentials
@@ -178,7 +178,7 @@ function body(
   }
 
   // Services & packages.
-  if (step === 2) {
+  if (step === 3) {
     return (
       <SupplierOfferings
         name={d.name || "Your studio"}
@@ -190,7 +190,7 @@ function body(
   }
 
   // About & photos — title (with locked editor tagline/badges), verdict, gallery, about.
-  if (step === 3) {
+  if (step === 0) {
     return (
       <div className="space-y-8">
         <SupplierTitle
