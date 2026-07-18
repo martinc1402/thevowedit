@@ -113,7 +113,8 @@ type FormState = {
   viber: string;
   whatsapp: string;
   preferredChannel: string;
-  responseTimeNote: string;
+  responseTimeValue: string; // number as string; blank hides the trust line
+  responseTimeUnit: string; // 'hours' | 'days' | 'weeks'
   faq: KVDraft[]; // a = q, b = a
 };
 
@@ -126,6 +127,11 @@ const PRICE_UNIT_OPTS = [
   { value: "per_event", label: "Per event / package" },
   { value: "per_head", label: "Per head" },
   { value: "per_hour", label: "Per hour" },
+];
+const RESPONSE_UNIT_OPTS = [
+  { value: "hours", label: "Hours" },
+  { value: "days", label: "Days" },
+  { value: "weeks", label: "Weeks" },
 ];
 const CHANNEL_LABELS: Record<string, string> = {
   instagram: "Instagram DM",
@@ -205,7 +211,8 @@ function seed(s: Supplier): FormState {
     viber: s.viber ?? "",
     whatsapp: s.whatsapp ?? "",
     preferredChannel: s.preferredChannel ?? "",
-    responseTimeNote: s.responseTimeNote ?? "",
+    responseTimeValue: num(s.responseTimeValue),
+    responseTimeUnit: s.responseTimeUnit || "hours",
     faq: (p?.faq ?? s.faq ?? []).map((x) => ({ a: x.q, b: x.a })),
   };
 }
@@ -306,7 +313,8 @@ const STEP_KEYS: Record<number, (keyof FormState)[]> = {
     "viber",
     "whatsapp",
     "preferredChannel",
-    "responseTimeNote",
+    "responseTimeValue",
+    "responseTimeUnit",
   ],
   1: [
     "styleTags",
@@ -716,15 +724,27 @@ export function ProfileWizard({
               <Field
                 label="Typical reply time"
                 hint="(optional)"
-                help="Shown as a trust line on your profile. Set couples' expectations, e.g. how fast you usually get back to enquiries."
+                help="Shows as “Usually replies within …” on your profile. Leave the number blank to hide it."
               >
-                <input
-                  className={inputClass}
-                  value={form.responseTimeNote}
-                  maxLength={200}
-                  placeholder="Usually replies within a few hours"
-                  onChange={(e) => set("responseTimeNote", e.target.value)}
-                />
+                <div className="flex flex-wrap items-center gap-2">
+                  <span className="text-sm text-muted">
+                    Usually replies within
+                  </span>
+                  <input
+                    className={`${inputClass} w-20`}
+                    inputMode="numeric"
+                    value={form.responseTimeValue}
+                    placeholder="24"
+                    onChange={(e) => set("responseTimeValue", e.target.value)}
+                  />
+                  <div className="w-32">
+                    <Select
+                      value={form.responseTimeUnit}
+                      onChange={(v) => set("responseTimeUnit", v)}
+                      options={RESPONSE_UNIT_OPTS}
+                    />
+                  </div>
+                </div>
               </Field>
             </div>
           </div>

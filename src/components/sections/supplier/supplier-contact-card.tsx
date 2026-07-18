@@ -67,7 +67,8 @@ export function SupplierContactCard({
   currency,
   category = null,
   verified,
-  responseTimeNote = null,
+  responseTimeValue = null,
+  responseTimeUnit = null,
   channels,
   primary,
   presence,
@@ -80,7 +81,8 @@ export function SupplierContactCard({
   currency: string;
   category?: string | null;
   verified: boolean;
-  responseTimeNote?: string | null;
+  responseTimeValue?: number | null;
+  responseTimeUnit?: string | null;
   channels: ContactChannel[];
   primary: ContactChannel | null;
   presence: PresenceLink[];
@@ -171,7 +173,7 @@ export function SupplierContactCard({
         </div>
       )}
 
-      {(verified || responseTimeNote) && (
+      {(verified || responseTimeValue != null) && (
         <div className="mt-5 grid gap-1.5 text-xs text-muted">
           {verified && (
             <p className="flex items-center gap-1.5">
@@ -179,13 +181,16 @@ export function SupplierContactCard({
               Verified by The Vow Edit
             </p>
           )}
-          {/* Editor-written, not vendor-claimed: how fast a vendor replies is the
-              thing couples act on, and a self-asserted "replies in 1 hour" is
-              unverifiable. It was stored and rendered nowhere until now. */}
-          {responseTimeNote && (
+          {/* Locked "Usually replies within {n} {unit}": the vendor sets only a
+              number + unit, so the phrasing stays on-brand and pluralises correctly.
+              Hidden entirely when no number is set. */}
+          {responseTimeValue != null && (
             <p className="flex items-center gap-1.5">
               <ClockClockwise size={14} className="shrink-0 text-accent-fg" />
-              {responseTimeNote}
+              Usually replies within {responseTimeValue}{" "}
+              {responseTimeValue === 1
+                ? (responseTimeUnit ?? "hours").replace(/s$/, "")
+                : (responseTimeUnit ?? "hours")}
             </p>
           )}
         </div>

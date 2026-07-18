@@ -103,7 +103,8 @@ export default async function SupplierPage({ params }: Params) {
       currency={s.currency}
       category={s.categories[0] ?? null}
       verified={s.verified}
-      responseTimeNote={s.responseTimeNote}
+      responseTimeValue={s.responseTimeValue}
+      responseTimeUnit={s.responseTimeUnit}
       channels={channels}
       primary={primary}
       presence={presence}
