@@ -13,10 +13,13 @@ export function GalleryCarousel({
   images,
   name,
   onOpen,
+  focus,
 }: {
   images: string[];
   name: string;
   onOpen?: (index: number) => void;
+  // Per-photo crop anchor keyed by URL: [x, y] in 0-100 percent. Absent = centre.
+  focus?: Record<string, [number, number]>;
 }) {
   const trackRef = useRef<HTMLDivElement>(null);
   const [active, setActive] = useState(0);
@@ -64,6 +67,7 @@ export function GalleryCarousel({
         className="flex snap-x snap-mandatory overflow-x-auto overflow-y-hidden rounded-2xl [-ms-overflow-style:none] [scrollbar-width:none] [&::-webkit-scrollbar]:hidden"
       >
         {images.map((src, i) => {
+          const f = focus?.[src];
           const img = (
             <Image
               src={src}
@@ -71,6 +75,7 @@ export function GalleryCarousel({
               fill
               loading="lazy"
               sizes="(max-width: 767px) calc(100vw - 2rem), 100vw"
+              style={f ? { objectPosition: `${f[0]}% ${f[1]}%` } : undefined}
               className="object-cover"
             />
           );

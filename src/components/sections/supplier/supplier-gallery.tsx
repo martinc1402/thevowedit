@@ -12,12 +12,21 @@ import { GalleryCarousel } from "@/components/sections/supplier/gallery-carousel
 export function SupplierGallery({
   images,
   name,
+  focus,
 }: {
   images: string[];
   name: string;
+  // Per-photo crop anchor keyed by URL: [x, y] in 0-100 percent. Absent = centre.
+  focus?: Record<string, [number, number]>;
 }) {
   const [active, setActive] = useState(0);
   const [lightbox, setLightbox] = useState(false);
+
+  // object-position for a cover-cropped photo; undefined keeps the CSS default centre.
+  const objPos = (url: string): string | undefined => {
+    const f = focus?.[url];
+    return f ? `${f[0]}% ${f[1]}%` : undefined;
+  };
 
   const count = images.length;
   const go = (delta: number) =>
@@ -57,7 +66,12 @@ export function SupplierGallery({
     <div>
       {/* Mobile: single-photo swipe carousel with dots (tap opens the lightbox). */}
       <div className="md:hidden">
-        <GalleryCarousel images={images} name={name} onOpen={open} />
+        <GalleryCarousel
+          images={images}
+          name={name}
+          onOpen={open}
+          focus={focus}
+        />
       </div>
 
       {/* Desktop collage: one large hero + two stacked, outer corners clipped. */}
@@ -69,18 +83,21 @@ export function SupplierGallery({
             onClick={() => open(0)}
             className="col-span-2 row-span-2"
             sizes="(max-width: 768px) 0px, 640px"
+            objectPosition={objPos(images[0])}
           />
           <Tile
             src={images[1]}
             alt={`${name} - photo 2 of ${count}`}
             onClick={() => open(1)}
             sizes="(max-width: 768px) 0px, 320px"
+            objectPosition={objPos(images[1])}
           />
           <Tile
             src={images[2]}
             alt={`${name} - photo 3 of ${count}`}
             onClick={() => open(2)}
             sizes="(max-width: 768px) 0px, 320px"
+            objectPosition={objPos(images[2])}
           >
             {count > 3 && (
               <span className="pointer-events-none absolute bottom-3 right-3 inline-flex items-center gap-1.5 rounded-full bg-black/55 px-3 py-1.5 text-xs font-medium text-white backdrop-blur-sm">
@@ -101,6 +118,7 @@ export function SupplierGallery({
             onClick={() => open(0)}
             className="col-span-3"
             sizes="(max-width: 768px) 0px, 660px"
+            objectPosition={objPos(images[0])}
           />
           <Tile
             src={images[1]}
@@ -108,6 +126,7 @@ export function SupplierGallery({
             onClick={() => open(1)}
             className="col-span-2"
             sizes="(max-width: 768px) 0px, 440px"
+            objectPosition={objPos(images[1])}
           />
         </div>
       ) : (
@@ -123,6 +142,7 @@ export function SupplierGallery({
             alt={`${name} - photo 1 of ${count}`}
             fill
             sizes="(max-width: 768px) 0px, 1100px"
+            style={objPos(images[0]) ? { objectPosition: objPos(images[0]) } : undefined}
             className="object-cover transition-transform duration-500 group-hover:scale-[1.02]"
           />
         </button>
@@ -202,6 +222,7 @@ function Tile({
   onClick,
   sizes,
   className = "",
+  objectPosition,
   priority = false,
   children,
 }: {
@@ -210,6 +231,7 @@ function Tile({
   onClick: () => void;
   sizes: string;
   className?: string;
+  objectPosition?: string;
   priority?: boolean;
   children?: React.ReactNode;
 }) {
@@ -226,6 +248,7 @@ function Tile({
         fill
         priority={priority}
         sizes={sizes}
+        style={objectPosition ? { objectPosition } : undefined}
         className="object-cover transition-transform duration-500 group-hover:scale-[1.03]"
       />
       {children}

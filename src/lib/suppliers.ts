@@ -119,6 +119,9 @@ export type Supplier = {
   essentials: EssentialsData | null;
   priceUnit: string | null; // 'per_event' | 'per_head' | 'per_hour'
   images: string[]; // full public URLs; [0] is the hero
+  // Per-photo crop anchor keyed by image URL: [x, y] in 0-100 percent. Applied as
+  // object-position wherever the image is cover-cropped. Absent url = centre.
+  imageFocus: Record<string, [number, number]>;
   packages: SupplierPackage[];
   reviews: SupplierReview[];
   videoUrl: string | null;
@@ -199,6 +202,10 @@ export const TAXONOMY_COLUMNS = "essentials, price_unit";
 // that migration is applied.
 export const ENTOURAGE_COLUMNS = "entourage_rate_min, entourage_rate_max";
 
+// Per-photo focal points (supabase/add-image-focus.sql). Optional group so a public
+// read degrades gracefully if the migration has not been applied yet.
+export const IMAGE_FOCUS_COLUMNS = "image_focus";
+
 // TIERED projections, newest first. A missing column fails the WHOLE query, so the
 // retry must drop ONE migration's columns at a time.
 //
@@ -208,6 +215,7 @@ export const ENTOURAGE_COLUMNS = "entourage_rate_min, entourage_rate_max";
 // contact channels) with it — the profile rendered with no Specialties row and the
 // browse filters matched nothing. Degrade one step at a time instead.
 const PROJECTIONS = [
+  `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, ${IMAGE_FOCUS_COLUMNS}`,
   `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}`,
   `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}`,
   SUPPLIER_COLUMNS,
@@ -283,6 +291,10 @@ export function mapSupplierRow(r: Record<string, unknown>): Supplier {
     essentials: (r.essentials as EssentialsData) ?? null,
     priceUnit: (r.price_unit as string) ?? null,
     images: arr(r.images),
+    imageFocus:
+      r.image_focus && typeof r.image_focus === "object" && !Array.isArray(r.image_focus)
+        ? (r.image_focus as Record<string, [number, number]>)
+        : {},
     packages: Array.isArray(r.packages) ? (r.packages as SupplierPackage[]) : [],
     reviews: Array.isArray(r.reviews) ? (r.reviews as SupplierReview[]) : [],
     videoUrl: (r.video_url as string) ?? null,

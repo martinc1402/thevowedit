@@ -147,7 +147,11 @@ export default async function SupplierPage({ params }: Params) {
 
           <div className="mt-6">
             {s.images.length > 0 ? (
-              <SupplierGallery images={s.images} name={s.name} />
+              <SupplierGallery
+                images={s.images}
+                name={s.name}
+                focus={s.imageFocus}
+              />
             ) : (
               <GalleryPlaceholder slug={s.slug} name={s.name} />
             )}

@@ -18,6 +18,7 @@ import {
   ArrowSquareOut,
   Eye,
   EyeSlash,
+  Crosshair,
 } from "@phosphor-icons/react";
 import type { Supplier } from "@/lib/suppliers";
 import { categories as CATEGORY_LIST } from "@/lib/content";
@@ -35,6 +36,7 @@ import {
   setPublished,
   deleteProfileImage,
   reorderProfileImages,
+  setImageFocus,
   type ProfilePatch,
 } from "@/lib/actions/profile";
 import {
@@ -344,6 +346,9 @@ export function ProfileWizard({
   const [images, setImages] = useState<string[]>(
     supplier.pendingChanges?.images ?? supplier.images ?? [],
   );
+  const [imageFocus, setImageFocusState] = useState<
+    Record<string, [number, number]>
+  >(supplier.imageFocus ?? {});
   const [published, setPublishedState] = useState<boolean>(supplier.published);
   const [publishing, setPublishing] = useState(false);
   const [pending, setPending] = useState<Set<string>>(() =>
@@ -397,6 +402,7 @@ export function ProfileWizard({
     setForm(fresh);
     baselineRef.current = fresh;
     setImages(next.pendingChanges?.images ?? next.images ?? []);
+    setImageFocusState(next.imageFocus ?? {});
     setPending(pendingFields(next));
     setDirty(false);
   }
@@ -405,6 +411,7 @@ export function ProfileWizard({
   // same step as free-text fields, so a full re-seed would wipe unsaved typing.
   function absorbImages(next: Supplier) {
     setImages(next.pendingChanges?.images ?? next.images ?? []);
+    setImageFocusState(next.imageFocus ?? {});
     setPending(pendingFields(next));
   }
 
@@ -1095,8 +1102,10 @@ export function ProfileWizard({
               <span className={labelClass}>Gallery photos</span>
               <PhotosStep
                 images={images}
+                focus={imageFocus}
                 slug={supplier.slug}
                 onImages={setImages}
+                onFocus={setImageFocusState}
                 onError={setError}
               />
             </div>
@@ -1364,19 +1373,41 @@ function PortraitField({
 
 function PhotosStep({
   images,
+  focus,
   slug,
   onImages,
+  onFocus,
   onError,
 }: {
   images: string[];
+  focus: Record<string, [number, number]>;
   slug: string;
   onImages: (imgs: string[]) => void;
+  onFocus: (next: Record<string, [number, number]>) => void;
   onError: (msg: string) => void;
 }) {
   const [busy, setBusy] = useState(false);
   const [dragFrom, setDragFrom] = useState<number | null>(null);
   const [dragOver, setDragOver] = useState<number | null>(null);
+  const [focusFor, setFocusFor] = useState<string | null>(null); // url whose editor is open
   const fileRef = useRef<HTMLInputElement>(null);
+
+  // object-position for a thumbnail, from the saved focal point (default centre).
+  const objPos = (url: string): string | undefined => {
+    const f = focus[url];
+    return f ? `${f[0]}% ${f[1]}%` : undefined;
+  };
+
+  // Persist a focal point. Optimistic like reorder/remove; revert on failure.
+  async function saveFocus(url: string, x: number, y: number) {
+    const prev = focus;
+    onFocus({ ...focus, [url]: [Math.round(x), Math.round(y)] as [number, number] });
+    const result = await setImageFocus(url, x, y);
+    if (!result.ok) {
+      onFocus(prev);
+      onError(result.error);
+    }
+  }
 
   async function upload(files: FileList | null) {
     if (!files || files.length === 0) return;
@@ -1499,6 +1530,7 @@ function PhotosStep({
                   alt=""
                   fill
                   sizes="(max-width: 640px) 50vw, 33vw"
+                  style={objPos(url) ? { objectPosition: objPos(url) } : undefined}
                   className="object-cover"
                 />
               </div>
@@ -1507,7 +1539,27 @@ function PhotosStep({
                   <Star size={10} weight="fill" /> Cover
                 </span>
               )}
+              {focusFor === url && (
+                <FocusEditor
+                  url={url}
+                  value={focus[url] ?? [50, 50]}
+                  onCommit={(x, y) => saveFocus(url, x, y)}
+                  onClose={() => setFocusFor(null)}
+                />
+              )}
               <div className="flex items-center justify-end gap-1 p-2">
+                <button
+                  type="button"
+                  onClick={() => setFocusFor((u) => (u === url ? null : url))}
+                  title="Adjust focus"
+                  aria-label={`Adjust the focal point of photo ${i + 1}`}
+                  aria-pressed={focusFor === url}
+                  className={`mr-auto inline-flex h-8 w-8 items-center justify-center rounded-lg transition-colors hover:bg-surface hover:text-ink ${
+                    focusFor === url ? "bg-surface text-ink" : "text-muted"
+                  }`}
+                >
+                  <Crosshair size={15} weight="bold" />
+                </button>
                 <button
                   type="button"
                   onClick={() => move(i, i - 1)}
@@ -1557,6 +1609,118 @@ function PhotosStep({
           No photos yet. Your gallery is what couples look at first.
         </div>
       )}
+    </div>
+  );
+}
+
+// ---------------------------------------------------------------------
+// Focal-point editor: drag a marker over the FULL (uncropped) photo to choose
+// what stays in frame when it's cover-cropped on the profile. Commits on release
+// (and on each arrow-key nudge) so a drag is one save, not one per frame.
+// ---------------------------------------------------------------------
+function FocusEditor({
+  url,
+  value,
+  onCommit,
+  onClose,
+}: {
+  url: string;
+  value: [number, number];
+  onCommit: (x: number, y: number) => void;
+  onClose: () => void;
+}) {
+  const boxRef = useRef<HTMLDivElement>(null);
+  const [pos, setPos] = useState<[number, number]>(value);
+  const dragging = useRef(false);
+  const clamp = (n: number) => Math.max(0, Math.min(100, n));
+
+  function pointFrom(e: React.PointerEvent): [number, number] | null {
+    const box = boxRef.current;
+    if (!box) return null;
+    const r = box.getBoundingClientRect();
+    return [
+      clamp(((e.clientX - r.left) / r.width) * 100),
+      clamp(((e.clientY - r.top) / r.height) * 100),
+    ];
+  }
+
+  function down(e: React.PointerEvent) {
+    dragging.current = true;
+    e.currentTarget.setPointerCapture(e.pointerId);
+    const p = pointFrom(e);
+    if (p) setPos(p);
+  }
+  function move(e: React.PointerEvent) {
+    if (!dragging.current) return;
+    const p = pointFrom(e);
+    if (p) setPos(p);
+  }
+  function up(e: React.PointerEvent) {
+    if (!dragging.current) return;
+    dragging.current = false;
+    e.currentTarget.releasePointerCapture(e.pointerId);
+    onCommit(Math.round(pos[0]), Math.round(pos[1]));
+  }
+  function key(e: React.KeyboardEvent) {
+    const step = 2;
+    let [x, y] = pos;
+    if (e.key === "ArrowLeft") x = clamp(x - step);
+    else if (e.key === "ArrowRight") x = clamp(x + step);
+    else if (e.key === "ArrowUp") y = clamp(y - step);
+    else if (e.key === "ArrowDown") y = clamp(y + step);
+    else return;
+    e.preventDefault();
+    setPos([x, y]);
+    onCommit(Math.round(x), Math.round(y));
+  }
+
+  const objectPosition = `${pos[0]}% ${pos[1]}%`;
+
+  return (
+    <div className="border-t border-line bg-surface-2 p-2">
+      <div
+        ref={boxRef}
+        role="slider"
+        tabIndex={0}
+        aria-label="Focal point: drag, or use arrow keys"
+        aria-valuetext={`${Math.round(pos[0])}% from left, ${Math.round(pos[1])}% from top`}
+        onPointerDown={down}
+        onPointerMove={move}
+        onPointerUp={up}
+        onKeyDown={key}
+        className="relative aspect-[4/3] w-full cursor-crosshair touch-none select-none overflow-hidden rounded-lg bg-black/5 outline-none ring-accent focus-visible:ring-2"
+      >
+        <Image
+          src={url}
+          alt=""
+          fill
+          sizes="(max-width: 640px) 50vw, 33vw"
+          className="object-contain"
+        />
+        <span
+          className="pointer-events-none absolute h-6 w-6 -translate-x-1/2 -translate-y-1/2 rounded-full border-2 border-white bg-accent/70 shadow-[0_1px_4px_rgba(0,0,0,0.4)] ring-1 ring-black/20"
+          style={{ left: `${pos[0]}%`, top: `${pos[1]}%` }}
+        />
+      </div>
+      <div className="mt-2 flex items-center gap-2">
+        <span className="text-xs text-muted">In frame:</span>
+        <span className="relative block h-11 w-11 overflow-hidden rounded-md bg-surface">
+          <Image src={url} alt="" fill sizes="44px" style={{ objectPosition }} className="object-cover" />
+        </span>
+        <span className="relative block h-11 w-16 overflow-hidden rounded-md bg-surface">
+          <Image src={url} alt="" fill sizes="64px" style={{ objectPosition }} className="object-cover" />
+        </span>
+        <button
+          type="button"
+          onClick={onClose}
+          className="ml-auto rounded-lg px-3 py-1.5 text-xs font-medium text-accent-fg transition-colors hover:text-ink"
+        >
+          Done
+        </button>
+      </div>
+      <p className="mt-1 text-xs text-muted">
+        Drag the dot (or use arrow keys) to choose what stays in frame.
+      </p>
     </div>
   );
 }
