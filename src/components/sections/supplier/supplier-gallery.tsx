@@ -83,7 +83,7 @@ export function SupplierGallery({
 
       {/* Desktop collage: one large hero + two stacked, outer corners clipped. */}
       {collage ? (
-        <div className="hidden aspect-[3/2] w-full grid-cols-3 grid-rows-2 gap-2 overflow-hidden rounded-2xl md:grid">
+        <div className="hidden aspect-[3/2] w-full grid-cols-3 grid-rows-2 gap-2 overflow-hidden rounded-2xl md:grid md:max-h-[80dvh]">
           <Tile
             src={images[0]}
             alt={`${name} - photo 1 of ${count}`}
@@ -122,7 +122,7 @@ export function SupplierGallery({
         /* Two photos: a 60/40 hero + smaller pair, so the second photo is never
            dropped (the collage needs 3, a single hero would hide it) while photo 1
            still leads. Both full height: hero ~square, second a 3:5 portrait. */
-        <div className="hidden aspect-[3/2] w-full grid-cols-5 gap-2 overflow-hidden rounded-2xl md:grid">
+        <div className="hidden aspect-[3/2] w-full grid-cols-5 gap-2 overflow-hidden rounded-2xl md:grid md:max-h-[80dvh]">
           <Tile
             src={images[0]}
             alt={`${name} - photo 1 of ${count}`}
@@ -145,7 +145,7 @@ export function SupplierGallery({
         <button
           type="button"
           onClick={() => open(0)}
-          className="group relative hidden aspect-[3/2] w-full overflow-hidden rounded-2xl bg-surface-2 md:block"
+          className="group relative hidden aspect-[3/2] w-full overflow-hidden rounded-2xl bg-surface-2 md:block md:max-h-[80dvh]"
           aria-label={`View ${name} photos`}
         >
           <Image

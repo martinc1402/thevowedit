@@ -39,7 +39,7 @@ export function GalleryPlaceholder({
       </div>
 
       {/* Desktop: one large hero (2x2) + two stacked frames, clipped as one card. */}
-      <div className="hidden aspect-[3/2] w-full grid-cols-3 grid-rows-2 gap-2 overflow-hidden rounded-2xl md:grid">
+      <div className="hidden aspect-[3/2] w-full grid-cols-3 grid-rows-2 gap-2 overflow-hidden rounded-2xl md:grid md:max-h-[80dvh]">
         <div className="relative col-span-2 row-span-2 bg-surface-2">
           <Image
             src={seedUrl(key, 0, 1000, 1000)}
