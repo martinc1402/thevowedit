@@ -176,6 +176,7 @@ export default async function SupplierPage({ params }: Params) {
                   currency={s.currency}
                   priceUnit={s.priceUnit}
                   category={s.categories[0] ?? null}
+                  categories={s.categories}
                   essentials={s.essentials}
                 />
               </Reveal>

@@ -258,6 +258,9 @@ export type EssentialsInput = {
   currency: string;
   priceUnit: string | null;
   category: string | null;
+  // The supplier's full category list. Used to de-duplicate rows that a category
+  // already conveys (e.g. "Hair services" is redundant once they're categorised Hair).
+  categories?: string[];
   essentials: EssentialsData | null;
 };
 
@@ -419,6 +422,9 @@ const groupCapacityRow: RowDef = {
 const hairServicesRow: RowDef = {
   label: "Hair services",
   format: (i) => {
+    // Redundant once they're categorised as Hair — the category already says they
+    // do hair, so drop the descriptor row.
+    if (i.categories?.includes("hair")) return null;
     const key = str(mk(i).hairServices);
     return key && key in HAIR_SERVICE_LABEL
       ? HAIR_SERVICE_LABEL[key as HairServiceKey]

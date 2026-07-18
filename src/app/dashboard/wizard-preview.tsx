@@ -167,6 +167,7 @@ function body(
           {...price}
           priceUnit={d.priceUnit || null}
           category={d.categories[0] ?? null}
+          categories={d.categories}
           essentials={draftToEssentials(
             d.essentials,
             d.categories[0] ?? null,
