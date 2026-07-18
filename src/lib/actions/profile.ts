@@ -9,6 +9,7 @@ import {
   MUA_ESSENTIALS_COLUMNS,
   TAXONOMY_COLUMNS,
   ENTOURAGE_COLUMNS,
+  IMAGE_FOCUS_COLUMNS,
   mapSupplierRow,
   type Supplier,
 } from "@/lib/suppliers";
@@ -28,7 +29,7 @@ import { INCLUSION_KEYS } from "@/lib/package-inclusions";
 // Full column projection for the authenticated dashboard reads — mirrors
 // getSupplierBySlug so the wizard loads the newer contact-channel + essentials
 // columns (which live outside the base SUPPLIER_COLUMNS list), plus drafts.
-const DASHBOARD_COLUMNS = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, pending_changes`;
+const DASHBOARD_COLUMNS = `${SUPPLIER_COLUMNS}, ${CONTACT_CHANNEL_COLUMNS}, ${MUA_ESSENTIALS_COLUMNS}, ${TAXONOMY_COLUMNS}, ${ENTOURAGE_COLUMNS}, ${IMAGE_FOCUS_COLUMNS}, pending_changes`;
 
 // The same projection minus the newest columns. Dashboard reads are resilient the
 // way the public read already is: if a migration has not been applied yet, selecting
@@ -936,4 +937,58 @@ export async function setTeamPhotoUrl(url: string): Promise<SaveResult> {
     return { ok: false, error: "Invalid image reference." };
   }
   return updateMyProfile({ teamPhoto: url });
+}
+
+// Set a photo's crop anchor (focal point). Stored in the `image_focus` jsonb map
+// keyed by URL as [x, y] in 0-100 percent, applied as object-position wherever the
+// image is cover-cropped. Ownership + URL validation reuse the same session-based
+// checks as the gallery actions; the value is clamped so a client can't inject an
+// out-of-range position. Writes live (gallery edits are already live with moderation
+// off); a URL with no entry keeps the default centre.
+export async function setImageFocus(
+  url: string,
+  x: number,
+  y: number,
+): Promise<SaveResult> {
+  const own = await getMyOwnership();
+  if (!own) return { ok: false, error: "You do not have a linked profile." };
+  if (!ownsImageUrl(own, url)) {
+    return { ok: false, error: "Invalid image reference." };
+  }
+
+  const clamp = (n: number) => Math.max(0, Math.min(100, Math.round(Number(n))));
+  const focus: [number, number] = [clamp(x), clamp(y)];
+  if (Number.isNaN(focus[0]) || Number.isNaN(focus[1])) {
+    return { ok: false, error: GENERIC };
+  }
+
+  const admin = getSupabaseAdmin();
+  const { data: cur } = await admin
+    .from("suppliers")
+    .select("image_focus")
+    .eq("id", own.supplierId)
+    .maybeSingle();
+  const prev = (cur as { image_focus?: unknown } | null)?.image_focus;
+  const map: Record<string, [number, number]> =
+    prev && typeof prev === "object" && !Array.isArray(prev)
+      ? { ...(prev as Record<string, [number, number]>) }
+      : {};
+  map[url] = focus;
+
+  const { data, error } = await withColumnFallback((columns) =>
+    admin
+      .from("suppliers")
+      .update({ image_focus: map })
+      .eq("id", own.supplierId)
+      .select(columns)
+      .single(),
+  );
+
+  if (error || !data) return { ok: false, error: GENERIC };
+  revalidatePath(`/vendors/${own.slug}`);
+  revalidatePath("/dashboard");
+  return {
+    ok: true,
+    supplier: mapSupplierRow(data as unknown as Record<string, unknown>),
+  };
 }
