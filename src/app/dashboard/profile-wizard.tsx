@@ -91,7 +91,6 @@ type FormState = {
   description: string;
   bio: string;
   teamPhoto: string;
-  videoUrl: string;
   establishedYear: string;
   weddingsCount: string;
   priceMin: string;
@@ -182,7 +181,6 @@ function seed(s: Supplier): FormState {
     description: p?.description ?? s.description ?? "",
     bio: p?.bio ?? s.bio ?? "",
     teamPhoto: p?.team_photo ?? s.teamPhoto ?? "",
-    videoUrl: p?.video_url ?? s.videoUrl ?? "",
     establishedYear: num(s.establishedYear),
     weddingsCount: num(s.weddingsCount),
     priceMin: num(s.priceMin),
@@ -228,7 +226,6 @@ function pendingFields(s: Supplier): Set<string> {
     description: "description",
     bio: "bio",
     teamPhoto: "team_photo",
-    videoUrl: "video_url",
     faq: "faq",
     images: "images",
     customEssentials: "essentials_custom",
@@ -311,7 +308,6 @@ const STEP_KEYS: Record<number, (keyof FormState)[]> = {
     "description",
     "bio",
     "teamPhoto",
-    "videoUrl",
   ],
   1: [
     "instagram",
@@ -731,19 +727,24 @@ export function ProfileWizard({
                   <span className="text-sm text-muted">
                     Usually replies within
                   </span>
-                  <input
-                    className={`${inputClass} w-20`}
-                    inputMode="numeric"
-                    value={form.responseTimeValue}
-                    placeholder="24"
-                    onChange={(e) => set("responseTimeValue", e.target.value)}
-                  />
-                  <div className="w-32">
-                    <Select
-                      value={form.responseTimeUnit}
-                      onChange={(v) => set("responseTimeUnit", v)}
-                      options={RESPONSE_UNIT_OPTS}
+                  {/* Number + unit stay side by side (nested so they never wrap
+                      apart); the number is small since it's only 1-2 digits. */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      className={`${inputClass} w-14 text-center`}
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={form.responseTimeValue}
+                      placeholder="24"
+                      onChange={(e) => set("responseTimeValue", e.target.value)}
                     />
+                    <div className="w-28">
+                      <Select
+                        value={form.responseTimeUnit}
+                        onChange={(v) => set("responseTimeUnit", v)}
+                        options={RESPONSE_UNIT_OPTS}
+                      />
+                    </div>
                   </div>
                 </div>
               </Field>
@@ -1111,14 +1112,6 @@ export function ProfileWizard({
                 onError={setError}
               />
             </div>
-            <Field label="Video URL" hint="(YouTube or Vimeo, optional)">
-              <input
-                className={inputClass}
-                value={form.videoUrl}
-                onChange={(e) => set("videoUrl", e.target.value)}
-                placeholder="https://youtube.com/watch?v=..."
-              />
-            </Field>
             <div className="border-t border-line pt-6">
               <span className={labelClass}>Gallery photos</span>
               <PhotosStep

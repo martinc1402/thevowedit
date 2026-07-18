@@ -24,7 +24,6 @@ import { SupplierEditorNote } from "@/components/sections/supplier/supplier-edit
 import { SupplierEssentials } from "@/components/sections/supplier/supplier-essentials";
 import { SupplierOfferings } from "@/components/sections/supplier/supplier-offerings";
 import { SupplierAbout } from "@/components/sections/supplier/supplier-about";
-import { VideoEmbed } from "@/components/sections/supplier/video-embed";
 import { SupplierFaq } from "@/components/sections/supplier/supplier-faq";
 
 const labelFor = (slug: string) =>
@@ -226,9 +225,6 @@ export default async function SupplierPage({ params }: Params) {
                   styleTags={s.styleTags}
                   category={s.categories[0] ?? null}
                 />
-              </Reveal>
-              <Reveal>
-                <VideoEmbed videoUrl={s.videoUrl} name={s.name} />
               </Reveal>
               <Reveal>
                 <SupplierFaq faq={s.faq} />

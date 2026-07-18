@@ -432,7 +432,6 @@ const FIELDS: Record<string, [string, (v: unknown) => any]> = {
   description: ["description", (v) => capOrNull(v, 6000)],
   bio: ["bio", (v) => capOrNull(v, 2000)],
   teamPhoto: ["team_photo", (v) => capOrNull(v, 800)],
-  videoUrl: ["video_url", (v) => capOrNull(v, 500)],
   priceMin: ["price_min", intOrNull],
   priceMax: ["price_max", intOrNull],
   priceTypical: ["price_typical", intOrNull],
@@ -501,7 +500,6 @@ const VENDOR_APPROVAL_FIELDS = new Set([
   "bio",
   "faq",
   "teamPhoto",
-  "videoUrl",
 ]);
 
 // Gallery cap. Enforced in addProfileImageUrl as a refusal, not a truncation.
@@ -568,7 +566,6 @@ const APPROVAL_COLUMNS = [
   "bio",
   "faq",
   "team_photo",
-  "video_url",
 ] as const;
 
 async function currentApprovalValues(

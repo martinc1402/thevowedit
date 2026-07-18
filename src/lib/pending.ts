@@ -17,7 +17,6 @@ export function applyPending(s: Supplier): Supplier {
     bio: p.bio !== undefined ? p.bio : s.bio,
     teamPhoto: p.team_photo !== undefined ? p.team_photo : s.teamPhoto,
     faq: p.faq ?? s.faq,
-    videoUrl: p.video_url !== undefined ? p.video_url : s.videoUrl,
     images: p.images ?? s.images,
     // An empty essentials_custom is a real instruction ("remove my custom facts"),
     // not an absence — so test for the key, never for truthiness.
@@ -37,7 +36,6 @@ const PENDING_LABELS: Record<string, string> = {
   description: "About copy",
   bio: "Bio",
   team_photo: "Portrait photo",
-  video_url: "Video",
   faq: "Q&A",
   images: "Gallery photos",
   essentials_custom: "Custom essentials",
