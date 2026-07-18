@@ -727,19 +727,24 @@ export function ProfileWizard({
                   <span className="text-sm text-muted">
                     Usually replies within
                   </span>
-                  <input
-                    className={`${inputClass} w-20`}
-                    inputMode="numeric"
-                    value={form.responseTimeValue}
-                    placeholder="24"
-                    onChange={(e) => set("responseTimeValue", e.target.value)}
-                  />
-                  <div className="w-32">
-                    <Select
-                      value={form.responseTimeUnit}
-                      onChange={(v) => set("responseTimeUnit", v)}
-                      options={RESPONSE_UNIT_OPTS}
+                  {/* Number + unit stay side by side (nested so they never wrap
+                      apart); the number is small since it's only 1-2 digits. */}
+                  <div className="flex items-center gap-2">
+                    <input
+                      className={`${inputClass} w-14 text-center`}
+                      inputMode="numeric"
+                      maxLength={2}
+                      value={form.responseTimeValue}
+                      placeholder="24"
+                      onChange={(e) => set("responseTimeValue", e.target.value)}
                     />
+                    <div className="w-28">
+                      <Select
+                        value={form.responseTimeUnit}
+                        onChange={(v) => set("responseTimeUnit", v)}
+                        options={RESPONSE_UNIT_OPTS}
+                      />
+                    </div>
                   </div>
                 </div>
               </Field>
